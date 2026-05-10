@@ -1,0 +1,121 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# PyTorch / model checkpoints
+*.pt
+*.pth
+*.ckpt
+*.onnx
+
+# Jupyter
+.ipynb_checkpoints
+*.ipynb_checkpoints
+
+# Hydra outputs
+outputs/
+multirun/
+
+# MLflow
+mlruns/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.cache
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+.ruff_cache/
+
+# ---------------------------------------------------------------------------
+# Project-specific
+# ---------------------------------------------------------------------------
+
+# Raw data — too large, downloaded from public sources
+data/raw/*.xlsx
+data/raw/*.zip
+data/raw/*.csv
+
+# Keep manifest and README under version control
+!data/raw/MANIFEST.txt
+!data/raw/README.md
+!data/raw/.gitkeep
+
+# Processed data — regeneratable from raw
+data/processed/*.csv
+data/processed/*.parquet
+data/processed/*.feather
+!data/processed/.gitkeep
+!data/processed/README.md
+
+# Results and figures — regeneratable
+results/*.csv
+results/*.json
+results/*.npy
+results/*.pkl
+!results/.gitkeep
+!results/README.md
+figures/*.png
+figures/*.pdf
+figures/*.svg
+!figures/.gitkeep
+
+# LaTeX build artefacts (when paper drafting begins)
+paper/build/
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+
+# Local secrets / API keys
+.env
+.env.local
+*.key
+secrets/
+
+# Solver licences
+gurobi.lic

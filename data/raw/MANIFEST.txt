@@ -1,0 +1,32 @@
+# NHS England COVID-19 Hospital Activity download manifest
+# Generated: 2026-05-10 13:26:32 GMT Daylight Time
+# Source portal: https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
+
+label:       daily_admissions_beds_2020-08_to_2021-04
+description: Daily Admissions and Beds, 1 August 2020 up to 6 April 2021. Regional and national level.
+url:         https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/02/COVID-19-daily-admissions-and-beds-20210406-DQnotes.xlsx
+file:        COVID-19-daily-admissions-and-beds-20210406-DQnotes.xlsx
+size:        194885
+sha256:      3b7426e422715c8c3622b7356867dce6b4407211d189b02f5be43eea613cb84f
+
+label:       daily_admissions_beds_2021-04_to_2021-09
+description: Daily Admissions and Beds, 7 April 2021 up to 30 September 2021. Regional and national level.
+url:         https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/02/COVID-19-daily-admissions-and-beds-20211207-20210407-20210930-DQnotes.xlsx
+file:        COVID-19-daily-admissions-and-beds-20211207-20210407-20210930-DQnotes.xlsx
+size:        73072
+sha256:      0ce5c8175073eee4918b28ab4b6b579b86cc1519493db756922ccc39bde9ca71
+
+label:       daily_admissions_beds_2021-10_to_2022-03
+description: Daily Admissions and Beds, 1 October 2021 up to 31 March 2022. Regional and national level.
+url:         https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/05/COVID-19-daily-admissions-and-beds-20220512-211001-220331-v2.xlsx
+file:        COVID-19-daily-admissions-and-beds-20220512-211001-220331-v2.xlsx
+size:        81235
+sha256:      d4e57cc494b90902e4fccefcd1333acd72d74004840764c7bcaafb125140ea54
+
+label:       daily_admissions_beds_2022-04_to_2022-08
+description: Daily Admissions and Beds, 1 April 2022 up to 31 August 2022. Regional and national level. Daily publication ceased after this date; NHS England moved to weekly reporting.
+url:         https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/11/COVID-19-daily-admissions-and-beds-20220831-v2_DQnotes.xlsx
+file:        COVID-19-daily-admissions-and-beds-20220831-v2_DQnotes.xlsx
+size:        97255
+sha256:      8c2d3a395748f8691e750d0337fe28dec2ca7540a272a0a23fdacdd3936e6802
+
