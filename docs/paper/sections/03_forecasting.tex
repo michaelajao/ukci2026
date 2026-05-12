@@ -55,6 +55,7 @@ hospitalisation alone. \Cref{eq:seird} reflects this refinement.
 \begin{tikzpicture}[
   font=\footnotesize,
   >={Stealth[length=1.6mm,width=1.2mm]},
+  x=14mm, y=14mm,
   comp/.style={
     draw, circle, minimum size=8mm, inner sep=0pt,
     line width=0.4pt, font=\small\bfseries,
@@ -62,61 +63,55 @@ hospitalisation alone. \Cref{eq:seird} reflects this refinement.
   observed/.style={fill=NavyBlue!10},
   terminal/.style={fill=black!8},
   edge/.style={->, line width=0.5pt, shorten >=1pt, shorten <=1pt},
-  lab/.style={font=\scriptsize, inner sep=1pt, fill=white, fill opacity=0.85, text opacity=1},
-  node distance=12mm,
+  elabel/.style={font=\scriptsize, midway, fill=white,
+                 inner sep=1pt, fill opacity=0.92, text opacity=1},
 ]
-% --- top spine: S - E - I_s - H - C - (death) ---
-\node[comp]                       (S)   at (0,0)         {$S$};
-\node[comp, right=of S]           (E)                    {$E$};
-\node[comp, right=of E]           (Is)                   {$I_s$};
-\node[comp, observed, right=of Is](H)                    {$H$};
-\node[comp, observed, right=of H] (C)                    {$C$};
-\node[comp, terminal, right=of C] (D)                    {$D$};
-% --- bottom row: I_a (split from E) and R (sink) ---
-\node[comp, below=10mm of Is]    (Ia)                   {$I_{a}$};
-\node[comp, terminal, below=10mm of C] (R)              {$R$};
+% --- Top spine: S — E — I_s — H — C — D
+\node[comp]                       (S)  at (0, 0)  {$S$};
+\node[comp]                       (E)  at (1, 0)  {$E$};
+\node[comp]                       (Is) at (2, 0)  {$I_s$};
+\node[comp, observed]             (H)  at (3, 0)  {$H$};
+\node[comp, observed]             (C)  at (4, 0)  {$C$};
+\node[comp, terminal]             (D)  at (5, 0)  {$D$};
+% --- Bottom row: I_a (below E/Is midpoint) and R (below C)
+\node[comp]                       (Ia) at (1.5,-1) {$I_{a}$};
+\node[comp, terminal]             (R)  at (4,  -1) {$R$};
 
-% --- forward flow edges ---
-\draw[edge] (S)  -- node[lab,above] {$\beta_r S(I_s{+}I_a)/N$} (E);
-\draw[edge] (E)  -- node[lab,above] {$\alpha\rho$}              (Is);
-\draw[edge] (E)  -- node[lab,right,pos=0.45] {$\alpha(1{-}\rho)$} (Ia);
-\draw[edge] (Is) -- node[lab,above] {$d_s\,\omega$}              (H);
-\draw[edge] (H)  -- node[lab,above] {$\phi\,d_H$}                (C);
+% --- Forward flow on top spine -----------------------------------------
+\draw[edge] (S)  -- node[elabel,above] {$\beta_r$}     (E);
+\draw[edge] (E)  -- node[elabel,above] {$\alpha\rho$}  (Is);
+\draw[edge] (Is) -- node[elabel,above] {$d_s\,\omega$} (H);
+\draw[edge] (H)  -- node[elabel,above] {$\phi\,d_H$}   (C);
+\draw[edge] (C)  -- node[elabel,above] {$\delta_{c,r}$}(D);
 
-% --- mortality from H and C ---
-\draw[edge] (H.south east) .. controls +(2mm,-4mm) and +(0,8mm) ..
-  node[lab,pos=0.55] {$\mu$} (D.north west);
-\draw[edge] (C) -- node[lab,above] {$\delta_{c,r}$} (D);
+% --- E -> I_a (the asymptomatic branch) --------------------------------
+\draw[edge] (E)  -- node[elabel,right=1pt,pos=0.6] {$\alpha(1{-}\rho)$}  (Ia);
 
-% --- recovery into R ---
-\draw[edge] (Ia) -- node[lab,below] {$d_a$} (R);
-\draw[edge] (Is.south) .. controls +(0,-8mm) and +(-4mm,4mm) ..
-  node[lab,pos=0.7] {$d_s(1{-}\omega)$} (R.north west);
-\draw[edge] (H.south) .. controls +(-2mm,-6mm) and +(0,8mm) ..
-  node[lab,pos=0.65] {$(1{-}\phi)d_H$} (R.north);
-\draw[edge] (C.south) -- node[lab,right] {$\gamma_{c,r}$} (R);
+% --- Recovery flows into R --------------------------------------------
+\draw[edge] (Ia) -- node[elabel,above=1pt] {$d_a$}                       (R);
+\draw[edge] (Is) -- node[elabel,left=1pt,pos=0.55]  {$d_s(1{-}\omega)$}   (R);
+\draw[edge] (H)  -- node[elabel,right=1pt,pos=0.45] {$(1{-}\phi)\,d_H$}   (R);
+\draw[edge] (C)  -- node[elabel,right=1pt] {$\gamma_{c,r}$}              (R);
 
-% --- waning immunity R -> S ---
-\draw[edge] (R.south west) .. controls +(-15mm,-6mm) and +(-2mm,-10mm) ..
-  node[lab,below,pos=0.5] {$\eta_r$} (S.south);
+% --- Mortality H -> D (curved up above the spine to avoid collisions) --
+\draw[edge] (H.north) .. controls +(0, 0.55) and +(0, 0.55) ..
+  node[elabel] {$\mu$} (D.north);
 
-% --- legend caption-style ---
-\node[anchor=south west, font=\scriptsize, align=left]
-  at ([yshift=-9mm,xshift=-5mm]Ia.south west)
-  {\textbf{Observed:} $H$, $C$ (NHS daily series)
-   \quad\textbf{Time-varying:} $\beta_r, \gamma_{c,r}, \delta_{c,r}, \eta_r$};
-
+% --- Waning immunity R -> S (curved below) -----------------------------
+\draw[edge] (R.south west) .. controls +(0,-0.55) and +(0,-0.55) ..
+  node[elabel] {$\eta_r$} (S.south east);
 \end{tikzpicture}
-\caption{Refined $SEI_aI_sHCRD$ compartmental model. The flow $E\!\to\!I_s
-\!\to\! H \!\to\! C$ carries the hospitalisation ratio $\omega$ and the
-critical-care escalation $\phi$ as \emph{separate} parameters --- the
-former determined by severity at admission, the latter by in-hospital
-deterioration. Shaded nodes ($H$, $C$) are observed compartments
-constraining the PINN loss; the terminal $R$ and $D$ nodes absorb
-non-observed flows. Region-specific time-varying parameters
-$(\beta_r, \gamma_{c,r}, \delta_{c,r}, \eta_r)$ are emitted by the
-PINN parameter network; the remaining rates are fixed clinical
-constants.}
+\caption{Refined $SEI_aI_sHCRD$ compartmental model. The flow
+$E\!\to\!I_s\!\to\! H \!\to\! C$ carries the hospitalisation ratio
+$\omega$ ($I_s\!\to\!H$) and the critical-care escalation $\phi$
+($H\!\to\!C$) as \emph{separate} parameters --- the former determined
+by severity at admission, the latter by in-hospital deterioration.
+Blue-shaded nodes $H$ and $C$ are observed compartments anchoring the
+PINN data loss; grey nodes $R$ and $D$ absorb non-observed flows.
+Region-specific time-varying parameters
+$(\beta_r,\gamma_{c,r},\delta_{c,r},\eta_r)$ are emitted by the PINN
+parameter network; the remaining rates ($\alpha, \rho, d_s, d_a, d_H,
+\mu, \omega, \phi$) are fixed clinical constants.}
 \label{fig:seird}
 \end{figure}
 
