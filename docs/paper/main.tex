@@ -29,6 +29,9 @@
 
 % --- Graphics, tables --------------------------------------------------------
 \usepackage{graphicx}
+% Figures live in repo-root figures/. Build runs from docs/paper/out/, so
+% reach back three levels: docs/paper/out/ -> docs/paper/ -> docs/ -> repo.
+\graphicspath{{../../../figures/}{../figures/}{figures/}}
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{array}
@@ -53,6 +56,7 @@
 \newcommand{\Iset}{\mathcal{I}}
 \newcommand{\Jset}{\mathcal{J}}
 \newcommand{\Hset}{\mathcal{H}}
+\newcommand{\Qset}{\mathcal{Q}}
 \newcommand{\E}{\mathbb{E}}
 
 % =============================================================================
@@ -80,30 +84,32 @@
 % --- Abstract ----------------------------------------------------------------
 \begin{abstract}
 Epidemic waves create rapid, spatially uneven pressure on critical-care
-services, requiring health systems to decide where to expand surge capacity
-and how to allocate patients under demand uncertainty. We propose a
-forecast-to-decision optimisation framework for critical-care surge capacity
-planning in NHS England. A regional physics-informed neural epidemic
-forecasting module estimates multi-horizon demand using a refined
-$SEI_aI_sHCRD$ compartmental model with distinct hospitalisation and
-critical-care escalation parameters, trained with a decision-aware loss that
-asymmetrically penalises forecast underestimation. Quantile forecasts are
-discretised into demand scenarios that drive a robust multi-objective
-location-allocation model balancing infrastructure cost, unmet demand,
-patient-transfer burden, and equity, subject to capacity, budget, and
-travel-time constraints. We compare exact mixed-integer linear programming,
-scenario-based robust MILP, a Genetic Algorithm with linear-programming
-slave, the Non-dominated Sorting Genetic Algorithm II, and Simulated
-Annealing on NHS England COVID-19 hospital activity and critical-care
-capacity data. Allocation policies are evaluated on unmet demand, coverage,
-mean travel burden, worst-case shortage, and a regional shortage-equity
-index. The framework links predictive modelling with prescriptive
-optimisation to support transparent, robust, and equitable critical-care
-surge planning.
+services, requiring health systems to decide how to pre-position surge
+capacity and route patients under forecast uncertainty. We propose a
+forecast-to-decision pipeline that couples a per-region physics-informed
+neural forecaster on the refined $SEI_aI_sHCRD$ compartmental system to
+a robust mixed-integer-linear allocation model. The forecaster is
+trained directly on a multi-quantile pinball loss, which is decision-
+aware by construction (the $q^{(0.9)}$ component penalises
+under-prediction nine-to-one), and uses a learnable level-and-trend
+anchor that residual-connects the most recent observation to every
+horizon-quantile prediction. Quantile forecasts are discretised into
+three demand scenarios that drive a regional bed-surge allocation
+problem solved exactly via PuLP+CBC and approximately via a Genetic
+Algorithm, the Non-dominated Sorting Genetic Algorithm II, and
+Simulated Annealing on a shared LP-slave fitness oracle. On a
+seven-region NHS England case study spanning $1$~August~$2020$ to
+$31$~August~$2022$, the proposed forecaster reduces $14$-day RMSE by
+$19\%$ over per-origin re-fitted ARIMA and the $28$-day under-
+estimation rate by four-fold; the tail-risk robust MILP achieves
+the lowest transfer burden in the policy set ($4.6\times$ below
+population-proportional) at no cost in expected or worst-case
+coverage. A four-axis sensitivity sweep (forecaster, surge budget,
+CVaR weight, mutual-aid travel cap) clarifies when each control binds.
 
-\keywords{physics-informed neural networks, robust optimisation,
-          metaheuristics, NSGA-II, critical-care planning,
-          epidemic forecasting, NHS England}
+\keywords{physics-informed neural networks, decision-aware forecasting,
+          pinball loss, robust optimisation, metaheuristics, NSGA-II,
+          critical-care planning, NHS England}
 \end{abstract}
 
 % =============================================================================

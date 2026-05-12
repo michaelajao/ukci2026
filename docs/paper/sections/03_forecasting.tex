@@ -17,7 +17,9 @@ using a refined eight-compartment $SEI_aI_sHCRD$ system. Let
 $U^r(t) = (S_r, E_r, I_{a,r}, I_{s,r}, H_r, C_r, R_r, D_r)$ denote
 susceptible, exposed, asymptomatic infectious, symptomatic infectious,
 hospitalised, critical-care, recovered, and deceased compartments
-respectively. The system evolves according to
+respectively. \Cref{fig:seird} shows the flow topology, in which the
+distinct probabilities $\omega$ ($I_s\!\to\! H$) and $\phi$ ($H\!\to\! C$)
+disambiguate the two clinical thresholds. The system evolves according to
 \begin{equation}\label{eq:seird}
 \begin{aligned}
 \dot{S}_r     &= -\beta_r S_r (I_{s,r}+I_{a,r})/N_r + \eta_r R_r \\
@@ -46,6 +48,77 @@ biologically distinct: the first is determined by clinical severity at
 admission, the second by in-hospital deterioration. We separate them by
 introducing $\phi$ for the $H \to C$ escalation, leaving $\omega$ for
 hospitalisation alone. \Cref{eq:seird} reflects this refinement.
+
+% --- Figure 2 : SEIRD compartment graph --------------------------------------
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  font=\footnotesize,
+  >={Stealth[length=1.6mm,width=1.2mm]},
+  comp/.style={
+    draw, circle, minimum size=8mm, inner sep=0pt,
+    line width=0.4pt, font=\small\bfseries,
+  },
+  observed/.style={fill=NavyBlue!10},
+  terminal/.style={fill=black!8},
+  edge/.style={->, line width=0.5pt, shorten >=1pt, shorten <=1pt},
+  lab/.style={font=\scriptsize, inner sep=1pt, fill=white, fill opacity=0.85, text opacity=1},
+  node distance=12mm,
+]
+% --- top spine: S - E - I_s - H - C - (death) ---
+\node[comp]                       (S)   at (0,0)         {$S$};
+\node[comp, right=of S]           (E)                    {$E$};
+\node[comp, right=of E]           (Is)                   {$I_s$};
+\node[comp, observed, right=of Is](H)                    {$H$};
+\node[comp, observed, right=of H] (C)                    {$C$};
+\node[comp, terminal, right=of C] (D)                    {$D$};
+% --- bottom row: I_a (split from E) and R (sink) ---
+\node[comp, below=10mm of Is]    (Ia)                   {$I_{a}$};
+\node[comp, terminal, below=10mm of C] (R)              {$R$};
+
+% --- forward flow edges ---
+\draw[edge] (S)  -- node[lab,above] {$\beta_r S(I_s{+}I_a)/N$} (E);
+\draw[edge] (E)  -- node[lab,above] {$\alpha\rho$}              (Is);
+\draw[edge] (E)  -- node[lab,right,pos=0.45] {$\alpha(1{-}\rho)$} (Ia);
+\draw[edge] (Is) -- node[lab,above] {$d_s\,\omega$}              (H);
+\draw[edge] (H)  -- node[lab,above] {$\phi\,d_H$}                (C);
+
+% --- mortality from H and C ---
+\draw[edge] (H.south east) .. controls +(2mm,-4mm) and +(0,8mm) ..
+  node[lab,pos=0.55] {$\mu$} (D.north west);
+\draw[edge] (C) -- node[lab,above] {$\delta_{c,r}$} (D);
+
+% --- recovery into R ---
+\draw[edge] (Ia) -- node[lab,below] {$d_a$} (R);
+\draw[edge] (Is.south) .. controls +(0,-8mm) and +(-4mm,4mm) ..
+  node[lab,pos=0.7] {$d_s(1{-}\omega)$} (R.north west);
+\draw[edge] (H.south) .. controls +(-2mm,-6mm) and +(0,8mm) ..
+  node[lab,pos=0.65] {$(1{-}\phi)d_H$} (R.north);
+\draw[edge] (C.south) -- node[lab,right] {$\gamma_{c,r}$} (R);
+
+% --- waning immunity R -> S ---
+\draw[edge] (R.south west) .. controls +(-15mm,-6mm) and +(-2mm,-10mm) ..
+  node[lab,below,pos=0.5] {$\eta_r$} (S.south);
+
+% --- legend caption-style ---
+\node[anchor=south west, font=\scriptsize, align=left]
+  at ([yshift=-9mm,xshift=-5mm]Ia.south west)
+  {\textbf{Observed:} $H$, $C$ (NHS daily series)
+   \quad\textbf{Time-varying:} $\beta_r, \gamma_{c,r}, \delta_{c,r}, \eta_r$};
+
+\end{tikzpicture}
+\caption{Refined $SEI_aI_sHCRD$ compartmental model. The flow $E\!\to\!I_s
+\!\to\! H \!\to\! C$ carries the hospitalisation ratio $\omega$ and the
+critical-care escalation $\phi$ as \emph{separate} parameters --- the
+former determined by severity at admission, the latter by in-hospital
+deterioration. Shaded nodes ($H$, $C$) are observed compartments
+constraining the PINN loss; the terminal $R$ and $D$ nodes absorb
+non-observed flows. Region-specific time-varying parameters
+$(\beta_r, \gamma_{c,r}, \delta_{c,r}, \eta_r)$ are emitted by the
+PINN parameter network; the remaining rates are fixed clinical
+constants.}
+\label{fig:seird}
+\end{figure}
 
 \subsection{Per-Region PINN-SEIRD}\label{ssec:pinn}
 

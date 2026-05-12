@@ -3,12 +3,20 @@
 % =============================================================================
 
 We presented a forecast-to-decision optimisation framework for NHS
-critical-care surge-capacity planning that links per-region
-physics-informed epidemic forecasting (with a refined $SEI_aI_sHCRD$
-compartmental structure and a decision-aware composite loss) to a
-multi-objective robust mixed-integer programme, solved exactly at
-regional scale and via GA, NSGA-II, and Simulated Annealing at trust
-scale. By aligning forecast errors with downstream operational cost and
-exposing equity--efficiency trade-offs explicitly, the framework supports
-transparent and reproducible critical-care surge planning on open NHS
-data.
+critical-care surge-capacity planning. A per-region physics-informed
+forecaster on the refined $SEI_aI_sHCRD$ system, trained with a
+decision-aware multi-quantile pinball loss and a level-and-trend
+anchor, achieves a $19\%$ RMSE reduction over re-fitted ARIMA at the
+operational $14$-day horizon and a four-fold reduction in
+underestimation rate at $h = 28$. Its quantile outputs drive a
+hybrid-regional bed-surge allocation problem solved exactly via a
+PuLP+CBC MILP and approximately via GA, NSGA-II, and Simulated
+Annealing on the same LP-slave fitness oracle. On the seven-region
+NHS England case study the tail-risk robust MILP achieves the
+lowest transfer burden in the policy set at no cost in coverage, the
+deterministic--robust gap quantifies the operational cost of
+optimising the median scenario alone, and a four-axis sensitivity
+sweep (forecaster, surge budget, CVaR weight, mutual-aid travel cap)
+clarifies when each control binds. The pipeline is released as a set
+of installable Python console commands on open NHS data, supporting
+reproducibility and operational re-use.

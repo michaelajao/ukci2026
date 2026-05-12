@@ -1,44 +1,70 @@
 % =============================================================================
 \section{Discussion and Limitations}\label{sec:discussion}
-% Target length: ~0.75 pages (~350-400 words)
+% Target length: ~0.75 page (~350-400 words)
 % =============================================================================
 
-\paragraph{Equity versus efficiency.}
-The Pareto-front analysis highlights a recurring tension in
-allocation policy: the lowest-cost configuration concentrates surge
-capacity in the largest-demand regions, but achieves higher
-maximum-regional-shortage ratios than the equity-aware variant. The
-equity-linearised constraint (\Cref{eq:equity_per_region,eq:equity_max})
-shifts the front toward more uniform per-capita coverage at a modest cost
-premium. This trade-off is operationally relevant: equity-blind allocation
-can leave outlying regions exposed, while strict equity weighting can
-under-utilise concentrated capacity. The framework gives planners a
-principled way to elicit and explore that trade-off rather than burying it
-in a single objective.
+\paragraph{Decision-aware loss carries the forecasting story.}
+Ablating the multi-quantile pinball loss back to MSE
+(\Cref{tab:forecast_accuracy}, \emph{w/o decision-aware loss})
+inflates $h = 14$ RMSE by $29\%$ ($14.46 \to 18.70$) and the
+under\-estimation rate at $h = 28$ rises from $10.3\%$ to $44\%+$
+across the classical baselines. The level-and-trend anchor and the
+PINN parameter features are individually necessary too --- removing
+the parameter features inflates $h = 14$ RMSE almost two-fold
+($14.46 \to 27.25$). Together these results support the central
+methodological claim of the paper: under operational asymmetry,
+choosing the loss is as load-bearing as choosing the architecture.
 
-\paragraph{Forecast quality, decision quality, and asymmetry.}
-The forecast-value experiment shows a roughly \todo{Z}\% gap in unmet
-demand between the proposed forecaster and a historical-median baseline,
-and a \todo{W}\% gap to oracle forecasts. The asymmetric underestimation
-penalty (\Cref{eq:under_loss}) is doing meaningful work: ablating it
-raises the underestimation rate by \todo{X} percentage points
-(\Cref{tab:forecast_accuracy}) without proportionally improving root mean
-squared error. Better accuracy on the wrong side of the forecast
-distribution still produces shortages: this is the operational point of
-decision-aware training. At regional scale, deterministic and robust MILP
-solve exactly in seconds; at trust scale the LP-slave metaheuristics
-match within \todo{X}\% of MILP at \todo{Y}$\times$ lower runtime,
-extending applicability to operational instance sizes.
+\paragraph{Robust MILP wins the routing game, not the coverage game.}
+At the operating budget ($B = 213$~beds, $\tau = 240$~min) every
+budget-exhausting policy in \Cref{tab:allocation} reaches the same
+expected and worst-case unmet floor; what separates them is transfer
+burden. The robust MILP achieves $672$~bed-km, $4.6\times$ below
+population-proportional ($3120$) and $1.7\times$ below greedy
+shortage-first ($1140$), at no cost in coverage. The deterministic
+MILP --- optimising only the median scenario --- spends only $51$ of
+the $213$ available surge beds and pays for this with $\sim 3\times$
+the expected and worst-case unmet of the budget-exhausting policies,
+illustrating the operational value of optimising the
+$\pi_s$-weighted expectation rather than the median alone.
+
+\paragraph{The CVaR machinery is informative even when non-binding.}
+The $\lambda_3$ sweep (\Cref{tab:e6}) shows that the robust MILP's
+allocation coincides with the expectation-minimising one for every
+$\lambda_3 \in [0, 4]$ at the operating budget. This is not a defect
+but a measurement: at $20\%$ surge budget the high-scenario tail
+($q^{(0.9)}$) is fully cleared by the budget-exhausting expectation
+solution, so the CVaR constraint is slack. A tighter budget ($\leq
+15\%$, where the worst-case scenario admits residual unmet) would
+re-engage $\lambda_3$ as a free control; this is the regime in which
+the robust formulation would diverge from the deterministic median
+optimum even after the LP-slave re-evaluation.
+
+\paragraph{Forecast quality matters at the q$^{0.9}$ margin.}
+The five-forecaster E5 sweep (\Cref{tab:e5}) shows that all
+forecasters but seasonal-naive($7$) over-state the realised peak at
+the chosen origin; PinnGRU is the most conservative ($q^{(0.9)}$ sum
+of $1421$~beds vs.\ a realised peak total of $797$). Because the
+Delta-peak baseline is generous relative to the realised Omicron MV
+peak, realised unmet is zero across the board including the oracle.
+The operational reading is that the value of forecast quality in this
+regime lies in \emph{calibration of the $q^{(0.9)}$ margin}: a tighter
+$q^{(0.9)}$ buys efficiency (fewer pre-positioned beds), but the same
+$q^{(0.9)}$ becomes the safety margin in a future wave whose realised
+peak exceeds the Delta-peak ceiling. Seasonal-naive's
+$q^{(0.9)}$-equivalent of $745$~beds falls $52$~beds below the
+realised peak, the only baseline that would have under-provisioned.
 
 \paragraph{Limitations.}
-Costs $F_j, g_j, c_{ij}$ are reported in scaled units; operational use
-would require commissioning-context calibration. The SEIRD model assumes
-well-mixed regional populations. Travel times are approximated by
-detour-scaled great-circle distances; an OSRM-derived matrix may shift
-particular assignments without changing qualitative conclusions. The
-framework is configured for NHS England structures; transfer to other
-health systems would require re-specifying demand units, capacity
-categories, and equity proxies, though the optimisation core is general.
-Natural extensions include graph-based forecasting backbones, a
-rolling-horizon online formulation, and a coupled budget-allocation upper
-level.
+Inter-regional travel times are approximated by detour-scaled
+great-circle distances between regional centroids; an OSRM-derived
+matrix would refine particular pair-wise routings without changing
+qualitative conclusions. The compartmental model assumes well-mixed
+regional populations and a fixed clinical-pathway structure; coupling
+to age-stratified pathways~\cite{shamseddin2025optimization} is a
+natural extension. Costs in the objective are reported as bed and
+bed-km quantities; converting to monetary units would require
+commissioning-context calibration. Finally, the framework is
+configured around NHS England's seven-region structure; transfer to
+other health systems would require re-specifying demand units,
+capacity categories, and travel infrastructure.

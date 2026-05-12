@@ -321,9 +321,9 @@ def _pretty(label: str) -> str:
 
 
 def _evaluate_under_realised(p, b_peak: "np.ndarray", realised) -> dict[str, float]:
-    """Given a chosen allocation ``b_peak`` and realised single-scenario demand,
-    re-solve the LP slave under the realised path and return ``(realised_unmet,
-    realised_transfer, total_surge_beds)``."""
+    """Given a chosen allocation ``b_peak`` and a realised single-scenario
+    demand path ``realised`` of shape ``(R, H, 1)``, re-solve the LP slave
+    against the realised path and return the resulting metrics."""
     from dataclasses import replace
     from optimization.regional_allocation import _lp_slave
     p_real = replace(
@@ -344,7 +344,7 @@ def _evaluate_under_realised(p, b_peak: "np.ndarray", realised) -> dict[str, flo
 def _solve_robust_get_b(forecast_model: str, **load_kwargs) -> tuple["np.ndarray", object]:
     p = load_allocation_problem(forecast_model=forecast_model, **load_kwargs)
     sol = solve_robust(p)
-    return sol.b.max(axis=1), p
+    return sol.b.max(axis=1), p, sol
 
 
 def run_allocation_sweeps_main() -> int:
@@ -371,6 +371,16 @@ def run_allocation_sweeps_main() -> int:
           f"{realised.max(axis=1).flatten().round(0)}")
 
     # -------- E5: forecast-quality robustness ----------------------------
+    #
+    # Each forecaster's q^{0.9} (or its point prediction, for non-quantile
+    # baselines) drives the robust MILP. We report (a) the chosen surge
+    # investment (beds), (b) the forecast peak that drove it, (c) the
+    # realised peak demand at the same origin, (d) the over- or under-
+    # provisioning gap, and (e) the realised unmet under the chosen
+    # allocation. At the Delta-peak baseline used here the budget is
+    # operationally generous, so realised unmet is typically zero; the
+    # paper-meaningful signal is in the forecast-peak / realised-peak gap
+    # — a forecaster that over-states peaks spends the budget unnecessarily.
     forecasters = (
         "pinn_gru",
         "arima_per_region",
@@ -380,27 +390,46 @@ def run_allocation_sweeps_main() -> int:
     )
     print("\n=== E5: forecast-quality robustness ===")
     rows = []
+    real_peak_per_region = realised.max(axis=1).flatten()  # (R,)
+    real_peak_total = float(real_peak_per_region.sum())
     for fc in forecasters:
-        b_peak, p_fc = _solve_robust_get_b(fc)
+        b_peak, p_fc, sol_fc = _solve_robust_get_b(fc)
+        forecast_peak_per_region = p_fc.demand[:, :, 2].max(axis=1)  # high scenario peak
+        forecast_peak_total = float(forecast_peak_per_region.sum())
         metrics = _evaluate_under_realised(p_fc, b_peak, realised)
-        rows.append({"forecaster": fc, **metrics})
+        rows.append({
+            "forecaster": fc,
+            "forecast_peak_total": forecast_peak_total,
+            "realised_peak_total": real_peak_total,
+            "over_provision_beds": forecast_peak_total - real_peak_total,
+            "expected_unmet_at_solve": sol_fc.expected_unmet,
+            **metrics,
+        })
         print(f"  {fc:25s}  beds={metrics['total_surge_beds']:6.1f}  "
-              f"realised unmet={metrics['realised_unmet']:6.1f}  "
-              f"realised transfer={metrics['realised_transfer_km']:8.1f}")
+              f"q90 peak total={forecast_peak_total:6.0f}  "
+              f"realised peak={real_peak_total:6.0f}  "
+              f"realised unmet={metrics['realised_unmet']:5.1f}")
     # Oracle: surge MILP under perfect-foresight demand
     from dataclasses import replace
     realised_3s = np.repeat(realised, 3, axis=2)
     p_oracle = replace(
         p0, demand=realised_3s,
-        scenarios=["realised", "realised", "realised"],
+        scenarios=["low", "median", "high"],          # keep canonical labels
         scenario_weights=np.array([0.2, 0.6, 0.2], dtype=float),
     )
-    b_oracle = solve_robust(p_oracle).b.max(axis=1)
+    b_oracle = solve_robust(p_oracle, cvar_lambda=0.0).b.max(axis=1)
     metrics_oracle = _evaluate_under_realised(p0, b_oracle, realised)
-    rows.append({"forecaster": "oracle (y_true)", **metrics_oracle})
+    rows.append({
+        "forecaster": "oracle (y_true)",
+        "forecast_peak_total": real_peak_total,
+        "realised_peak_total": real_peak_total,
+        "over_provision_beds": 0.0,
+        "expected_unmet_at_solve": metrics_oracle["realised_unmet"],
+        **metrics_oracle,
+    })
     print(f"  {'oracle (y_true)':25s}  beds={metrics_oracle['total_surge_beds']:6.1f}  "
-          f"realised unmet={metrics_oracle['realised_unmet']:6.1f}  "
-          f"realised transfer={metrics_oracle['realised_transfer_km']:8.1f}")
+          f"q90 peak total={real_peak_total:6.0f}  realised peak={real_peak_total:6.0f}  "
+          f"realised unmet={metrics_oracle['realised_unmet']:5.1f}")
     pd.DataFrame(rows).to_csv(OUT_DIR / "e5_forecast_robustness.csv", index=False)
 
     # -------- E6a: budget sweep ------------------------------------------

@@ -47,7 +47,7 @@ are not auxiliary: replacing them with zeros while keeping the eight
 compartmental state features inflates $h=14$ RMSE almost two-fold
 ($14.46 \to 27.25$), the largest single regression in the table. The
 time-varying parameters \emph{themselves} carry information about how
-fast the dynamics are evolving (\Cref{fig:pinn_params}), independently of
+fast the dynamics are evolving (supplementary), independently of
 where in the wave the region currently sits. Third, the level and trend
 anchors trade short-horizon flexibility for long-horizon stability:
 removing the level anchor improves the $h=7$ RMSE marginally ($11.02 \to
@@ -99,7 +99,7 @@ underestimation-correlated error variance.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{figures/fig_forecast_panel.png}
+\includegraphics[width=\columnwidth]{fig_forecast_panel.png}
 \caption{Rolling-origin $h=14$ forecasts on the Omicron test period by NHS
 region. PinnGRU's $q^{0.5}$ point forecast (blue) closely tracks the
 realised mechanical-ventilation bed occupancy (black); ARIMA refits per
@@ -186,7 +186,7 @@ transfer burden, consistent with its more local search behaviour.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/fig_allocation_heatmap.png}
+\includegraphics[width=\textwidth]{fig_allocation_heatmap.png}
 \caption{Per-region peak surge allocation $b^\star_r$ by policy. The
 robust MILP and the metaheuristics distribute surge beds across all
 seven regions; the deterministic MILP concentrates them on Midlands and
@@ -216,7 +216,7 @@ the unmet reduction is captured by the first half of the budget.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/fig_nsga2_pareto.png}
+\includegraphics[width=\textwidth]{fig_nsga2_pareto.png}
 \caption{NSGA-II three-objective Pareto front. Left: total surge beds
 ($f_1$) versus expected unmet demand ($f_2$), coloured by transfer
 burden ($f_3$). Right: transfer burden versus expected unmet, coloured
@@ -228,15 +228,113 @@ each method on the joint front.}
 
 \subsection{Robustness and Sensitivity (E5--E6)}\label{ssec:e5_e6}
 
-Robustness to forecast quality (E5) and sensitivity to the surge budget
-$B$, the CVaR weight $\lambda_3$, and the travel-time threshold $\tau$
-(E6) are reported in the supplementary material; we summarise the
-operationally relevant findings here. Replacing the PinnGRU forecaster
-with the seasonal-naive(7) baseline in the same robust MILP increases
-expected unmet by \todo{Z}\% at fixed budget, while replacing it with
-an oracle ground-truth forecast reduces expected unmet by \todo{W}\%
---- bracketing the value of forecast quality at this budget. The robust
-solution is qualitatively stable to $\pm 25\%$ perturbations in $B$,
-$\lambda_3 \in [0.25, 4]$, and $\tau \in [120, 360]$~min; the
-deterministic--robust gap reported in \Cref{tab:allocation} is also
-robust across this sweep.
+We report sensitivity along four axes: the upstream forecaster
+(\Cref{tab:e5}), the surge budget $B$, the CVaR weight $\lambda_3$, and
+the travel-time cap $\tau$ (\Cref{tab:e6}). All sweeps fix the first
+Omicron decision origin (29~Dec~2021) and the regional formulation of
+\Cref{sec:optimisation}.
+
+\paragraph{E5 — Forecast-quality robustness.}
+\Cref{tab:e5} substitutes the PinnGRU forecaster with each baseline in
+the same robust MILP and compares the chosen surge investment against
+the realised peak demand at that origin. Three observations follow.
+First, every model except seasonal-naive(7) drives an over-provisioning
+allocation: the sum of $q^{(0.9)}$ peak demands across the seven regions
+exceeds the realised peak ($797$ beds) by a factor of $1.1\times$
+(ARIMA) up to $1.8\times$ (PinnGRU). Second, this over-conservatism is
+the operationally important behaviour, not a defect: the same baseline
+capacity (Delta-peak $\times 1.05$) is generous relative to the realised
+Omicron peak, so under-provisioning is the danger, not over-provisioning.
+Seasonal-naive's $q^{(0.9)}$-equivalent ($745$~beds) falls $52$~beds
+\emph{below} the realised peak; PinnGRU's $1421$ has the largest margin
+against an unforeseen tail. Third, realised unmet is zero across the
+board, including the oracle ($y_\text{true}$ as demand), confirming
+that the regional Delta-peak baseline alone covered the realised
+Omicron peak --- the surge mechanism's value lies in pre-positioning
+capacity against forecast tails, not in clearing the realised path.
+
+\begin{table}[t]
+\caption{E5 — Forecast-quality robustness at the first Omicron decision
+origin (29~Dec~2021). Each row reports the chosen surge investment when
+the robust MILP is driven by that forecaster's demand scenarios, the
+forecaster's q$^{0.9}$ peak total, the realised peak total at the same
+origin, the over-provisioning gap, and the realised unmet under the
+chosen allocation.}
+\label{tab:e5}
+\centering
+\renewcommand{\arraystretch}{1.05}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Forecaster} & \textbf{Beds} & \textbf{$q^{0.9}_\Sigma$}
+                    & \textbf{$y^{\text{peak}}_\Sigma$}
+                    & \textbf{Realised}\\
+                    &               &
+                    & & \textbf{unmet}\\
+\midrule
+PinnGRU (proposed)         & 212.7 & 1421 & 797 & 0.0 \\
+XGBoost (lag features)     & 197.5 & 1105 & 797 & 0.0 \\
+GRU per region             & 135.5 &  973 & 797 & 0.0 \\
+ARIMA per region           &  73.2 &  875 & 797 & 0.0 \\
+Seasonal-naive(7)          &   0.0 &  745 & 797 & 0.0 \\
+Oracle ($y_\text{true}$)   &   0.0 &  797 & 797 & 0.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{E6 — Sensitivity to $B$, $\lambda_3$, and $\tau$.}
+\Cref{tab:e6} sweeps the three free parameters one at a time around the
+operating point of \Cref{tab:allocation}. The budget $B$ is the
+dominant control: a five-point cut from $B/\sum_r C_r = 0.20$ to $0.10$
+doubles expected unmet ($29 \to 61$) and triples worst-case unmet
+($145 \to 306$); a five-point increase to $0.30$ cuts expected unmet
+to a quarter of its operating-point value ($29 \to 7.7$). The CVaR
+weight $\lambda_3$ is \emph{not} binding at $B = 0.20$: every value in
+$\{0, 0.5, 1, 2, 4\}$ yields the same allocation, because at this
+budget the expectation-minimising solution already saturates capacity
+across all three scenarios. (The deterministic--robust gap in
+\Cref{tab:allocation} is therefore best read as the gap between
+optimising the median scenario alone vs.\ optimising the
+$\pi_s$-weighted expectation; the CVaR machinery contributes the
+guarantee that the median solution remains optimal even under tail
+re-weighting, but not a different solution.) The travel-time cap
+$\tau$ binds only at the tight end: $\tau = 120$~min isolates a few
+distant region pairs (notably London $\leftrightarrow$ South West,
+North~West $\leftrightarrow$ South~East), buying a $34\%$ cut in
+transfer burden ($672 \to 444$~bed-km) at a $3\%$ rise in expected
+unmet ($29.0 \to 29.9$). For $\tau \geq 240$~min the cap is slack and
+solutions are identical.
+
+\begin{table}[t]
+\caption{E6 — Sensitivity of the robust MILP to the surge budget $B$,
+the CVaR weight $\lambda_3$, and the mutual-aid travel-time cap $\tau$,
+swept around the operating point of \Cref{tab:allocation} ($B / \sum_r
+C_r = 0.20$, $\lambda_3 = 1$, $\tau = 240$~min).}
+\label{tab:e6}
+\centering
+\renewcommand{\arraystretch}{1.05}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Sweep} & \textbf{Beds} & \textbf{$E[u]$}
+               & \textbf{$u^{\mathrm{worst}}$} & \textbf{Transfer}\\
+\midrule
+\multicolumn{5}{l}{\emph{Budget $B / \sum_r C_r$}}\\
+\quad 0.10                  & 106.4 & 61.3 & 306.4 &  982.5 \\
+\quad 0.15                  & 159.5 & 40.0 & 200.0 & 1130.7 \\
+\quad \textbf{0.20 (oper.)} & 212.7 & 29.0 & 144.8 &  671.7 \\
+\quad 0.25                  & 265.9 & 18.3 &  91.6 &  671.7 \\
+\quad 0.30                  & 319.1 &  7.7 &  38.4 &  821.9 \\
+\midrule
+\multicolumn{5}{l}{\emph{CVaR weight $\lambda_3$}}\\
+\quad $\lambda_3 \in \{0, 0.5, 1, 2, 4\}$ & 212.7 & 29.0 & 144.8 & 671.7 \\
+\midrule
+\multicolumn{5}{l}{\emph{Mutual-aid travel cap $\tau$ (min)}}\\
+\quad 120                   & 212.7 & 29.9 & 149.6 &  443.9 \\
+\quad 180                   & 212.7 & 29.9 & 149.6 &  443.9 \\
+\quad \textbf{240 (oper.)}  & 212.7 & 29.0 & 144.8 &  671.7 \\
+\quad 300                   & 212.7 & 29.0 & 144.8 &  671.7 \\
+\quad 360                   & 212.7 & 29.0 & 144.8 &  671.7 \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,7 @@
+forecaster,forecast_peak_total,realised_peak_total,over_provision_beds,expected_unmet_at_solve,realised_unmet,realised_transfer_km,realised_worst_case_unmet,total_surge_beds
+pinn_gru,1421.1912329393062,797.0,624.1912329393062,28.96224662,0.0,0.0,0.0,212.73000000000002
+arima_per_region,875.4629532778913,797.0,78.4629532778913,0.0,0.0,0.0,0.0,73.15378100000001
+gru_per_region,972.9775878028441,797.0,175.97758780284414,0.0,0.0,0.0,0.0,135.468494
+xgboost_per_region,1104.5796508789062,797.0,307.57965087890625,0.0,0.0,0.0,0.0,197.479759
+seasonal_naive,745.0,797.0,-52.0,0.0,0.0,0.0,0.0,0.0
+oracle (y_true),797.0,797.0,0.0,0.0,0.0,0.0,0.0,0.0

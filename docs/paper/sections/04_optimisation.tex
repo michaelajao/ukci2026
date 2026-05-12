@@ -8,20 +8,20 @@ beds to provide in each NHS region, and how excess demand should be
 redistributed to neighbouring regions through inter-regional patient
 transfers, given the quantile forecasts $\hat q^{(0.1)}, \hat q^{(0.5)},
 \hat q^{(0.9)}$ produced in \Cref{sec:forecasting}. We present a
-deterministic mixed-integer-linear programme, a CVaR-flavoured robust
-extension, and three metaheuristic comparators.
+deterministic mixed-integer-linear programme, a tail-risk robust
+objective, and three metaheuristic comparators.
 
 \subsection{Sets, Parameters and Decision Variables}\label{ssec:notation}
 
 The scope is \emph{hybrid regional}: candidate sites coincide with the
 seven NHS England commissioning regions, so the demand-node and
 capacity-site indices collapse to a single set
-$\Rset = \{r_1, \ldots, r_7\}$ with $|\Rset| = 7$. Every region is
+$\R = \{r_1, \ldots, r_7\}$ with $|\R| = 7$. Every region is
 always ``open'' (no facility-opening binary), and per-bed surge cost is
 uniform across regions, so the model decides only how many surge beds to
 place in each region and how to route patients between them.
 
-Indices are: regions $r, r' \in \Rset$; forecast horizons
+Indices are: regions $r, r' \in \R$; forecast horizons
 $h \in \Hset = \{7, 14, 21, 28\}$~days; demand scenarios
 $s \in \Sset = \{\text{low}, \text{median}, \text{high}\}$ corresponding
 to the $q^{(0.1)}, q^{(0.5)}, q^{(0.9)}$ quantile forecasts with weights
@@ -31,7 +31,7 @@ capacity $C_r$ (regional Delta-peak occupancy $\times 1.05$ safety
 margin); per-region surge cap $K_r = 0.5\, C_r$; total surge budget
 $B = 0.20 \sum_r C_r$; great-circle inter-centroid distance
 $D_{r r'}$ in km (scaled by a 1.3 detour factor on the road network);
-inter-regional travel time $T_{r r'} = D_{r r'} / 80\text{ km/h}$ in
+inter-regional travel time $T_{r r'} = 60 D_{r r'} / 80\text{ km/h}$ in
 minutes; and the mutual-aid travel-time cap $\tau = 240$~min (four
 hours). Decision variables are: surge-bed allocation
 $b_{r,h} \in [0, K_r]$; inter-regional transfer flow
@@ -39,19 +39,17 @@ $z_{r r', h}^s \geq 0$, defined only for $(r, r')$ pairs with
 $T_{r r'} \leq \tau$; and unmet demand $u_{r,h}^s \geq 0$. Auxiliary
 $W \geq 0$ tracks the upper-quantile tail in the robust extension.
 
-\subsection{Deterministic MILP Formulation}\label{ssec:milp}
+\subsection{Forecast-Driven Regional MILP}\label{ssec:milp}
 
 The deterministic model places surge capacity and routes patients to
-minimise an expectation-weighted sum of unmet demand and transfer
-burden:
-\begin{equation}\label{eq:obj}
+minimise unmet demand and transfer burden under the median forecast
+scenario. Let $m$ denote the median scenario, corresponding to
+$q^{(0.5)}$:
+\begin{equation}\label{eq:deterministic_objective}
 \min\;
-\sum_{s \in \Sset} \pi_s
-\Big(
-\underbrace{\textstyle\sum_{r, h} u_{r,h}^s}_{\text{unmet demand}}
+\underbrace{\textstyle\sum_{r, h} u_{r,h}^{m}}_{\text{unmet demand}}
 \;+\;\rho
-\underbrace{\textstyle\sum_{r \neq r',\, h} D_{r r'}\, z_{r r', h}^s}_{\text{transfer burden}}
-\Big),
+\underbrace{\textstyle\sum_{r \neq r',\, h} D_{r r'}\, z_{r r', h}^{m}}_{\text{transfer burden}},
 \end{equation}
 where $\rho = 10^{-3}$ is a small weight that breaks ties towards
 allocations using fewer long-distance transfers without distorting the
@@ -59,27 +57,27 @@ primary unmet-demand objective. The model is subject to demand
 satisfaction, capacity, expansion-cap, budget, and travel-time
 constraints:
 \begin{align}
-\textstyle\sum_{r' : T_{r r'} \leq \tau}\! z_{r r', h}^s + u_{r,h}^s
-  &\geq d_{r,h}^s
-  && \forall r \in \Rset,\, h \in \Hset,\, s \in \Sset,
+\textstyle\sum_{r' : T_{r r'} \leq \tau}\! z_{r r', h}^{m} + u_{r,h}^{m}
+  &\geq d_{r,h}^{m}
+  && \forall r \in \R,\, h \in \Hset,
   \label{eq:demand}\\
-\textstyle\sum_{r' : T_{r' r} \leq \tau}\! z_{r' r, h}^s
+\textstyle\sum_{r' : T_{r' r} \leq \tau}\! z_{r' r, h}^{m}
   &\leq C_r + b_{r,h}
-  && \forall r \in \Rset,\, h \in \Hset,\, s \in \Sset,
+  && \forall r \in \R,\, h \in \Hset,
   \label{eq:capacity}\\
 b_{r,h} &\leq K_r
-  && \forall r \in \Rset,\, h \in \Hset,
+  && \forall r \in \R,\, h \in \Hset,
   \label{eq:expansion}\\
 \textstyle\sum_r \max_h\, b_{r,h} &\leq B,
   && \label{eq:budget}\\
-z_{r r', h}^s &= 0
+z_{r r', h}^{m} &= 0
   && \text{if } T_{r r'} > \tau,
   \label{eq:travel}\\
-b_{r,h},\; z_{r r', h}^s,\; u_{r,h}^s &\geq 0.
+b_{r,h},\; z_{r r', h}^{m},\; u_{r,h}^{m} &\geq 0.
 \end{align}
-\Cref{eq:demand} ensures that the demand $d_{r,h}^s$ in region $r$ at
-horizon $h$ under scenario $s$ is either treated locally, received from
-elsewhere, or recorded as unmet. \Cref{eq:capacity} caps each region's
+\Cref{eq:demand} ensures that the demand $d_{r,h}^{m}$ in region $r$ at
+horizon $h$ under the median scenario is either treated locally, received
+from elsewhere, or recorded as unmet. \Cref{eq:capacity} caps each region's
 inbound flow at its augmented capacity (baseline plus surge).
 \Cref{eq:expansion} enforces the per-region expansion cap.
 \Cref{eq:budget} bounds the total surge investment in the peak-horizon
@@ -88,15 +86,17 @@ serve every horizon up to and including peak load).
 \Cref{eq:travel} suppresses transfers exceeding the four-hour mutual-aid
 window.
 
-\subsection{Robust Extension}\label{ssec:robust}
+\subsection{Tail-Risk Robust Objective}\label{ssec:robust}
 
 To explicitly hedge against the upper-quantile demand realisation
-($s = \text{high}$, $q^{(0.9)}$) we add a CVaR-flavoured tail term to
-the objective. Define the worst-case scenario subset
-$\Sset_w = \{\text{high}\}$ and the auxiliary
-$W \geq \sum_{r, h} u_{r,h}^s$ for every $s \in \Sset_w$. The robust
-objective replaces \eqref{eq:obj} with
-\begin{equation}\label{eq:obj_robust}
+($s = \text{high}$, $q^{(0.9)}$), the robust model generalises the
+median formulation by imposing the demand and capacity constraints for
+every $s \in \Sset$ and adding a tail-risk penalty. Define the tail
+scenario subset
+$\Sset_{\mathrm{tail}} = \{\text{high}\}$ and the auxiliary
+$W \geq \sum_{r, h} u_{r,h}^s$ for every
+$s \in \Sset_{\mathrm{tail}}$. The robust objective is
+\begin{equation}\label{eq:robust_objective}
 \min\;
 \sum_{s \in \Sset} \pi_s
 \Big(
@@ -105,12 +105,13 @@ z_{r r', h}^s
 \Big)
 \;+\;\lambda_3\, W,
 \end{equation}
-where $\lambda_3 = 0$ recovers \eqref{eq:obj} and $\lambda_3 \to \infty$
-yields a worst-case (min-max) policy on the high-demand scenario. We
-report results for $\lambda_3 = 1$, giving equal weight to the expected
-and tail-scenario shortage.
+where $\lambda_3 = 0$ recovers the risk-neutral three-scenario
+objective and $\lambda_3 \to \infty$ yields a worst-case (min-max)
+policy on the high-demand scenario. We report results for
+$\lambda_3 = 1$, giving equal weight to expected shortage and
+high-scenario tail shortage.
 
-\subsection{Solution Methods}\label{ssec:solvers}
+\subsection{Exact and Metaheuristic Solvers}\label{ssec:solvers}
 
 For the regional formulation the model has 28 surge-bed variables, up
 to $7 \times 7 \times 4 \times 3 = 588$ transfer-flow variables, and
@@ -125,7 +126,7 @@ optimises only the median scenario by construction, and the achieved
 allocation is then re-evaluated by an LP slave over the full three-
 scenario set to obtain honest expected- and worst-case unmet metrics.
 The robust model optimises all three scenarios with the
-$\lambda_3 = 1$ CVaR term active. Both runs finish in well under a
+$\lambda_3 = 1$ tail-risk term active. Both runs finish in well under a
 second on the seven-region instance.
 
 \paragraph{Master--slave structure for the metaheuristics.}
