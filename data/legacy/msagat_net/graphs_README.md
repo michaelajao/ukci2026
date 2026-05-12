@@ -24,7 +24,7 @@ The seven NHS England regions (alphabetical by canonical name):
 
 ## Reconciliation tasks (D2)
 
-When `scripts/build_regional_dataset.py` runs and produces `data/processed/regional_daily.csv`, we recover the canonical NHS region naming and ordering from the XLSX archives. At that point:
+When `ukci-build-regional-dataset` runs and produces `data/processed/regional_daily.csv`, we recover the canonical NHS region naming and ordering from the XLSX archives. At that point:
 
 1. Compute correlation between each column of `data/nhs_timeseries.txt` and each region's MV-bed time series in the fresh `regional_daily.csv`.
 2. The column with highest correlation gives the region label for that index.

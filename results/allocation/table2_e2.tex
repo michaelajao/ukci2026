@@ -1,0 +1,13 @@
+\begin{tabular}{lcccc}
+\toprule
+Policy & Expected & Worst-case & Transfer & Total surge\\
+       & unmet    & unmet      & burden   & beds\\
+\midrule
+Status quo (no surge) & 103.8 & 519.1 & 10197.5 & 0 \\
+Population-proportional & 29.0 & 144.8 & 3119.8 & 213 \\
+Demand-proportional & 29.0 & 144.8 & 2615.3 & 213 \\
+Greedy shortage-first & 29.0 & 144.8 & 1140.0 & 213 \\
+Deterministic MILP & 83.3 & 416.4 & 1175.1 & 51 \\
+Robust MILP (CVaR, $\lambda_3{=}1$) & 29.0 & 144.8 & 671.7 & 213 \\
+\bottomrule
+\end{tabular}

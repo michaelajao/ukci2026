@@ -24,7 +24,7 @@ Ajao-Olarinoye et al. (2025) Table 1, with the refinement noted above.
 Note on units: alpha, d_s, d_a, d_H are RATES (inverse-days). Their reciprocals
 are clinical periods (e.g. 1/alpha = 5 days incubation period).
 
-Usage (see scripts/train_pinn.py for full training loop):
+Usage (see ``forecasting.train_forecasters`` for the full training loop):
 
     from forecasting.pinn_seird import (
         SEIRDFixedParams, RegionalPINN, pinn_loss

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Exploratory data analysis for the UKCI 2026 NHS critical-care surge paper.
 
-Loads the tidy regional CSV produced by ``scripts/build_regional_dataset.py``
+Loads the tidy regional CSV produced by ``ukci-build-regional-dataset``
 and emits paper-quality figures into ``figures/`` plus summary tables into
 ``results/eda/``.
 
@@ -20,15 +20,14 @@ fig_autocorrelation.{pdf,png}       §4 — national ACF + PACF, motivates GRU w
 fig_regional_acf.{pdf,png}          §4 / appendix — per-region ACF (robustness)
 fig_lead_lag.{pdf,png}              §4 — admissions→MV beds lag structure
 fig_weekly_seasonality.{pdf,png}    §4 — day-of-week reporting effect
-fig_mobility_overlay.{pdf,png}      §3 / §4 — Mobility (lagged 21d) vs MV
-fig_region_context.{pdf,png}        §3 / §5 — population + IMD per region
+fig_region_context.{pdf,png}        §3 / §5 — population + peak MV per region
 table_regional_summary.csv          Appendix Table A1 — region × wave statistics
 table_wave_summary.csv              §5 inline numbers — per-wave aggregate stats
 ==================================  ============================================
 
 Run from the repository root:
 
-    python scripts/run_eda.py
+    ukci-run-eda
 """
 
 from __future__ import annotations
@@ -41,8 +40,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "src"))
+from utils import repo_root
+
+REPO_ROOT = repo_root()
 
 from evaluation.figures import (  # noqa: E402
     COLUMN_WIDTH_IN,
@@ -61,7 +61,6 @@ from evaluation.figures import (  # noqa: E402
 # ---------------------------------------------------------------------------
 
 REGIONAL_CSV = REPO_ROOT / "data" / "processed" / "regional_daily.csv"
-MOBILITY_CSV = REPO_ROOT / "data" / "processed" / "regional_mobility.csv"
 STATIC_CSV = REPO_ROOT / "data" / "processed" / "regional_static.csv"
 EDA_OUT = REPO_ROOT / "results" / "eda"
 
@@ -664,77 +663,16 @@ def figure_weekly_seasonality(df: pd.DataFrame) -> Path:
 
 
 # ---------------------------------------------------------------------------
-# Figure: mobility overlay vs MV beds (§3 / §4)
-# ---------------------------------------------------------------------------
-
-
-def figure_mobility_overlay(df: pd.DataFrame) -> Path:
-    """Two-panel overlay of Google Mobility (already +21d shifted) and
-    MV-bed occupancy per NHS region, on a shared time axis.
-
-    Shows that mobility dips on lockdowns precede MV-bed surges, and
-    motivates including mobility as a forecasting covariate.
-    """
-    mob = pd.read_csv(MOBILITY_CSV, parse_dates=["date"])
-    mob = mob[(mob["date"] >= df["date"].min()) & (mob["date"] <= df["date"].max())]
-    region_codes = ("Y56", "Y58", "Y59", "Y60", "Y61", "Y62", "Y63")
-    code_to_name = (
-        df[["region_code", "region_name"]].drop_duplicates().set_index("region_code")[
-            "region_name"
-        ]
-        .to_dict()
-    )
-
-    fig, (ax_top, ax_bot) = plt.subplots(
-        2, 1, figsize=(FULL_WIDTH_IN, 4.6), sharex=True,
-        gridspec_kw={"height_ratios": [1, 1], "hspace": 0.1},
-        layout="constrained",
-    )
-    for ax in (ax_top, ax_bot):
-        overlay_wave_bands(ax, alpha=0.35)
-    for code, colour in zip(region_codes, REGION_PALETTE, strict=False):
-        sub_mv = df[df["region_code"] == code]
-        ax_top.plot(sub_mv["date"], sub_mv["mv_beds"], color=colour, linewidth=0.9,
-                    label=code_to_name[code])
-        sub_mob = mob[mob["nhs_code"] == code].sort_values("date").copy()
-        # Smooth out weekday/weekend oscillations so the trend is readable.
-        sub_mob["workplaces_smooth"] = (
-            sub_mob["workplaces"].rolling(7, center=True, min_periods=4).mean()
-        )
-        ax_bot.plot(sub_mob["date"], sub_mob["workplaces_smooth"],
-                    color=colour, linewidth=1.1)
-    ax_top.set_ylabel("MV beds occupied")
-    ax_bot.set_ylabel("Workplaces mobility (% vs baseline)")
-    ax_bot.axhline(0, color="black", linewidth=0.5)
-    ax_bot.set_xlabel("Date")
-    ax_top.set_title(
-        "Workplaces mobility (Google, +21d forward shift) vs MV-bed occupancy by NHS region"
-    )
-    ax_bot.xaxis.set_major_locator(mdates.MonthLocator(bymonth=(1, 7)))
-    ax_bot.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
-    handles, labels = ax_top.get_legend_handles_labels()
-    wave_idx = [i for i, lab in enumerate(labels) if lab in WAVE_PERIODS]
-    region_idx = [i for i in range(len(labels)) if i not in wave_idx]
-    ordered = [handles[i] for i in region_idx + wave_idx]
-    ordered_labels = [labels[i] for i in region_idx + wave_idx]
-    fig.legend(
-        ordered, ordered_labels, ncol=5, loc="outside lower center",
-        frameon=False, fontsize=8,
-    )
-    return save_figure(fig, "fig_mobility_overlay")
-
-
-# ---------------------------------------------------------------------------
-# Figure: per-region context (population + IMD)
+# Figure: per-region context (population + observed peak)
 # ---------------------------------------------------------------------------
 
 
 def figure_region_context(df: pd.DataFrame) -> Path:
-    """Per-region static context: ONS population, IMD score, peak MV beds.
+    """Per-region static context: ONS population and observed peak MV beds.
 
-    Sets up the operational comparison: London is large, deprived, and
-    surged hardest in Alpha; the North West and N.E.+Yorkshire are the
-    most deprived; the South East / East are larger but less deprived.
+    Sets up the operational comparison: London is large and surged hardest
+    in Alpha; the South East / East are larger; the smaller regions
+    nonetheless approached saturation.
     """
     static = pd.read_csv(STATIC_CSV)
     region_order = ("Y56", "Y58", "Y59", "Y60", "Y61", "Y62", "Y63")
@@ -743,8 +681,8 @@ def figure_region_context(df: pd.DataFrame) -> Path:
     static["peak_mv_beds"] = static["region_code"].map(region_peaks)
     static["population_millions"] = static["population"] / 1e6
 
-    fig, (ax_pop, ax_imd, ax_peak) = plt.subplots(
-        1, 3, figsize=(FULL_WIDTH_IN, 3.6), layout="constrained",
+    fig, (ax_pop, ax_peak) = plt.subplots(
+        1, 2, figsize=(FULL_WIDTH_IN, 3.6), layout="constrained",
         gridspec_kw={"wspace": 0.15},
     )
     positions = list(range(len(static), 0, -1))
@@ -760,16 +698,6 @@ def figure_region_context(df: pd.DataFrame) -> Path:
     for bar, v in zip(bars_pop, static["population_millions"]):
         ax_pop.text(bar.get_width() + 0.1, bar.get_y() + bar.get_height() / 2,
                     f"{v:.1f}M", va="center", fontsize=7)
-    ax_imd.barh(
-        positions, static["imd_pop_weighted_score"], color=colours,
-        edgecolor="black", linewidth=0.6, height=0.6,
-    )
-    ax_imd.set_yticks(positions)
-    ax_imd.set_yticklabels([""] * len(positions))
-    ax_imd.set_xlabel("IMD score (higher = more deprived)")
-    ax_imd.set_title("English IMD 2019", fontsize=9)
-    for pos, v in zip(positions, static["imd_pop_weighted_score"]):
-        ax_imd.text(v + 0.3, pos, f"{v:.1f}", va="center", fontsize=7)
     ax_peak.barh(
         positions, static["peak_mv_beds"], color=colours,
         edgecolor="black", linewidth=0.6, height=0.6,
@@ -781,7 +709,7 @@ def figure_region_context(df: pd.DataFrame) -> Path:
     for pos, v in zip(positions, static["peak_mv_beds"]):
         ax_peak.text(v + 15, pos, f"{int(v)}", va="center", fontsize=7)
     fig.suptitle(
-        "Per-region context: population, deprivation, and observed peak load",
+        "Per-region context: population and observed peak load",
         fontsize=10,
     )
     return save_figure(fig, "fig_region_context")
@@ -850,7 +778,7 @@ def main() -> int:
     if not REGIONAL_CSV.exists():
         raise FileNotFoundError(
             f"Tidy regional CSV not found at {REGIONAL_CSV}. "
-            f"Run scripts/build_regional_dataset.py first."
+            f"Run ukci-build-regional-dataset first."
         )
     apply_paper_style()
     df = load_tidy_csv()
@@ -867,8 +795,6 @@ def main() -> int:
     outputs.append(figure_regional_acf(df))
     outputs.append(figure_lead_lag(df))
     outputs.append(figure_weekly_seasonality(df))
-    if MOBILITY_CSV.exists():
-        outputs.append(figure_mobility_overlay(df))
     if STATIC_CSV.exists():
         outputs.append(figure_region_context(df))
     outputs.append(table_regional_summary(df))

@@ -47,25 +47,40 @@ critical-care surge capacity.
 
 We close that gap with a four-phase forecast-to-decision pipeline. A
 per-region PINN-SEIRD module produces multi-horizon point and quantile
-forecasts of admissions and critical-care occupancy, trained with a
-composite loss combining a Huber data fit, an ODE-residual physics
-regulariser, an asymmetric underestimation penalty, and a temporal
-smoothness term. Forecast quantiles are discretised into demand scenarios
-that drive a robust multi-objective location-allocation model, solved
-exactly via mixed-integer linear programming (MILP) at NHS regional scale,
-and via metaheuristics --- a Genetic Algorithm (GA), the Non-dominated
-Sorting Genetic Algorithm II (NSGA-II)~\cite{deb2002fast}, and Simulated
-Annealing --- at trust-level scale. Our contributions are: (1) a four-phase
-forecast-to-decision pipeline reproducible on open NHS data;
-(2) a \emph{decision-aware} training objective penalising operationally
-costly forecast errors; (3) a robust multi-objective allocation model
-balancing infrastructure cost, unmet demand, transfer burden, and equity,
-with explicit MILP/GA/NSGA-II/SA comparison; (4) a refined $SEI_aI_sHCRD$
-compartmental model that separates the hospitalisation ratio $\omega$
-($I_s\to H$) from the critical-care escalation proportion $\phi$
-($H\to C$), correcting an over-loading of $\omega$ in earlier
-work~\cite{ajao2025hybrid}; and (5) an NHS England case study evaluating
-allocation policies against operational, equity, and robustness metrics.
+forecasts of mechanical-ventilation bed occupancy. The PINN is first
+pre-trained to satisfy the refined $SEI_aI_sHCRD$ ODE system, producing
+twelve time-varying physics-informed features (eight compartmental states
+and four transmission/clinical parameters) that are then fed --- frozen ---
+into a temporal GRU head. The GRU emits the $10$th, $50$th and $90$th
+predictive quantiles per horizon \emph{directly} via a multi-quantile
+\emph{pinball loss} (decision-aware by construction, since the $q^{0.9}$
+component asymmetrically penalises under-prediction nine-to-one), with no
+post-hoc Monte-Carlo sampling. The head augments the GRU output with a
+learnable level-and-trend anchor that residual-connects the most recent
+observation and recent weekly slope to every horizon-quantile prediction,
+trading short-horizon flexibility for long-horizon stability. Forecast
+quantiles are discretised into demand scenarios that drive a robust
+multi-objective location-allocation model, solved exactly via mixed-integer
+linear programming (MILP) at NHS regional scale, and via metaheuristics ---
+a Genetic Algorithm (GA), the Non-dominated Sorting Genetic Algorithm II
+(NSGA-II)~\cite{deb2002fast}, and Simulated Annealing --- as a comparison
+of decision-quality versus runtime trade-offs.
+
+Our contributions are: (1) a four-phase forecast-to-decision pipeline
+reproducible on open NHS data; (2) a \emph{decision-aware} multi-quantile
+pinball training objective coupled with a level-and-trend anchor skip
+connection, jointly responsible for the proposed forecaster's $19\%$
+improvement over ARIMA at the $14$-day operational horizon and four-fold
+lower underestimation rate at $h=28$; (3) a robust multi-objective
+allocation model balancing infrastructure cost, unmet demand, transfer
+burden, and equity, with explicit MILP/GA/NSGA-II/SA comparison;
+(4) a refined $SEI_aI_sHCRD$ compartmental model that separates the
+hospitalisation ratio $\omega$ ($I_s\to H$) from the critical-care
+escalation proportion $\phi$ ($H\to C$), correcting an over-loading of
+$\omega$ in earlier work~\cite{ajao2025hybrid}; and (5) an NHS England
+case study evaluating allocation policies against operational, equity,
+and robustness metrics under PinnGRU, ARIMA, and seasonal-naive forecast
+inputs, quantifying the value of decision-aware forecasting downstream.
 \Cref{sec:related_work} reviews related work;
 \Cref{sec:forecasting,sec:optimisation} describe the forecasting and
 optimisation modules; \Cref{sec:case_study} presents the case study;

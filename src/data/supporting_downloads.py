@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
 """
-Download external supporting datasets identified by the UKCI 2026 literature
-review:
+Download external supporting datasets for the UKCI 2026 critical-care
+surge pipeline:
 
-- Google Community Mobility Reports (GB, 2020-2022) -- regressor inputs
-  to the GRU temporal head (Valente et al. 2022; Cartené et al. 2020).
-- ONS Mid-Year Population Estimates 2021 -- denominators for
-  population-proportional allocation baselines and regional normalisation.
-- English Indices of Deprivation 2019, File 7 (LSOA scores/ranks/deciles)
-  and File 10 (Local Authority district summaries) -- inputs for
-  IMD-weighted fairness constraints in the MILP (per the Bertsimas et al.
-  2022 and Luo & Stellato 2024 fairness patterns).
+- ONS Mid-Year Population Estimates 2021 -- regional population denominators
+  used (a) by the per-region PINN to normalise the H and C compartments to
+  per-capita scale and (b) by the population-proportional allocation
+  baseline in :mod:`optimization.regional_allocation`.
 
 Target directory: data/raw/supporting/
 
@@ -18,9 +14,8 @@ Each downloaded file is verified by SHA-256 and recorded in
 data/raw/supporting/MANIFEST.txt alongside its source URL.
 
 Usage:
-    python scripts/download_external_data.py
-    python scripts/download_external_data.py --check     # dry-run, URL probe
-    python scripts/download_external_data.py --skip imd  # skip an archive
+    ukci-download-supporting-data
+    ukci-download-supporting-data --check     # dry-run, URL probe
 
 Run from the repository root.
 """
@@ -28,12 +23,13 @@ Run from the repository root.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import sys
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+
+from utils import repo_root, sha256_file
 
 try:
     import requests
@@ -54,35 +50,6 @@ class Archive:
 
 ARCHIVES: tuple[Archive, ...] = (
     Archive(
-        label="google_mobility_gb_2020",
-        description=(
-            "Google COVID-19 Community Mobility Report -- Great Britain 2020. "
-            "Daily percent change vs baseline in retail/recreation, grocery/"
-            "pharmacy, parks, transit, workplaces, residential, at sub-region "
-            "(Upper-Tier Local Authority) level."
-        ),
-        url="https://www.gstatic.com/covid19/mobility/2020_GB_Region_Mobility_Report.csv",
-        filename="2020_GB_Region_Mobility_Report.csv",
-    ),
-    Archive(
-        label="google_mobility_gb_2021",
-        description=(
-            "Google COVID-19 Community Mobility Report -- Great Britain 2021. "
-            "Same schema as 2020 file."
-        ),
-        url="https://www.gstatic.com/covid19/mobility/2021_GB_Region_Mobility_Report.csv",
-        filename="2021_GB_Region_Mobility_Report.csv",
-    ),
-    Archive(
-        label="google_mobility_gb_2022",
-        description=(
-            "Google COVID-19 Community Mobility Report -- Great Britain 2022. "
-            "Series ends 15 October 2022 when Google discontinued publication."
-        ),
-        url="https://www.gstatic.com/covid19/mobility/2022_GB_Region_Mobility_Report.csv",
-        filename="2022_GB_Region_Mobility_Report.csv",
-    ),
-    Archive(
         label="ons_mye_2021_uk",
         description=(
             "ONS Mid-Year Population Estimates 2021 -- UK England Wales "
@@ -97,46 +64,11 @@ ARCHIVES: tuple[Archive, ...] = (
         ),
         filename="ukpopestimatesmid2021on2021geographyfinal.xls",
     ),
-    Archive(
-        label="imd_2019_file_07_scores",
-        description=(
-            "English Indices of Deprivation 2019, File 7 -- All IoD2019 "
-            "Scores, Ranks, Deciles and Population Denominators. LSOA-level. "
-            "Master input for IMD-weighted fairness constraints."
-        ),
-        url=(
-            "https://assets.publishing.service.gov.uk/media/"
-            "5dc407b440f0b6379a7acc8d/"
-            "File_7_-_All_IoD2019_Scores__Ranks__Deciles_and_Population_"
-            "Denominators_3.csv"
-        ),
-        filename="IoD2019_File_7_Scores_Ranks_Deciles.csv",
-    ),
-    Archive(
-        label="imd_2019_file_10_la_lower_tier",
-        description=(
-            "English Indices of Deprivation 2019, File 10 -- Local Authority "
-            "District Summaries (lower-tier). LA-aggregated IMD score, "
-            "average rank, proportion of LSOAs in most-deprived deciles. "
-            "Convenience aggregation for LA-level fairness reporting."
-        ),
-        url=(
-            "https://assets.publishing.service.gov.uk/media/"
-            "5d8b3cfbe5274a08be69aa91/"
-            "File_10_-_IoD2019_Local_Authority_District_Summaries__"
-            "lower-tier__.xlsx"
-        ),
-        filename="IoD2019_File_10_LA_lower_tier_summaries.xlsx",
-    ),
 )
 
 
 def sha256(path: Path) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as f:
-        for chunk in iter(lambda: f.read(1024 * 1024), b""):
-            h.update(chunk)
-    return h.hexdigest()
+    return sha256_file(path)
 
 
 def download_one(archive: Archive, dest_dir: Path, *, dry_run: bool) -> dict:
@@ -183,7 +115,7 @@ def write_manifest(dest_dir: Path, records: list[dict]) -> None:
     lines = [
         "# External supporting datasets for UKCI 2026 critical-care surge pipeline.",
         f"# Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}",
-        "# Source: scripts/download_external_data.py",
+        "# Source: data.supporting_downloads",
         "",
     ]
     for archive, result in zip(ARCHIVES, records):
@@ -209,40 +141,25 @@ def main() -> int:
         action="store_true",
         help="Dry-run: HEAD each URL without writing files.",
     )
-    parser.add_argument(
-        "--skip",
-        nargs="*",
-        default=[],
-        metavar="LABEL_PREFIX",
-        help="Skip archives whose label starts with any of these prefixes.",
-    )
     args = parser.parse_args()
 
-    repo_root = Path(__file__).resolve().parent.parent
-    dest = repo_root / "data" / "raw" / "supporting"
+    root = repo_root()
+    dest = root / "data" / "raw" / "supporting"
     dest.mkdir(parents=True, exist_ok=True)
-
-    skip_prefixes = tuple(args.skip)
-    selected: list[Archive] = [
-        a for a in ARCHIVES if not any(a.label.startswith(p) for p in skip_prefixes)
-    ]
 
     print("External data downloader")
     print(f"Destination: {dest}")
-    print(f"Archives to fetch: {len(selected)} (skipped: {len(ARCHIVES) - len(selected)})")
+    print(f"Archives to fetch: {len(ARCHIVES)}")
     print()
 
     records: list[dict] = []
     failures = 0
-    for archive in selected:
+    for archive in ARCHIVES:
         rec = download_one(archive, dest, dry_run=args.check)
         records.append(rec)
         if rec.get("status") not in {"ok", "head_ok"}:
             failures += 1
         time.sleep(0.5)
-    # Pad records with skipped placeholders so manifest order matches ARCHIVES.
-    while len(records) < len(ARCHIVES):
-        records.append({"status": "skipped"})
 
     if not args.check:
         write_manifest(dest, records)
@@ -250,7 +167,7 @@ def main() -> int:
         print(f"Manifest written: {dest / 'MANIFEST.txt'}")
     print()
     succ = len([r for r in records if r.get("status") in {"ok", "head_ok"}])
-    print(f"Summary: {succ} OK, {failures} failed (of {len(selected)} attempted)")
+    print(f"Summary: {succ} OK, {failures} failed (of {len(ARCHIVES)} attempted)")
     return 0 if failures == 0 else 1
 
 

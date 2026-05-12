@@ -27,6 +27,8 @@ from typing import Sequence
 import numpy as np
 import pandas as pd
 
+from utils import repo_root
+
 # torch is imported lazily in `RegionalDataset.__getitem__` and `make_dataloaders`
 # so that the pure-numpy utilities (loading, splitting, scaling) work in
 # environments without torch installed.
@@ -36,7 +38,7 @@ import pandas as pd
 # Paths and defaults
 # ---------------------------------------------------------------------------
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = repo_root()
 DEFAULT_CSV = REPO_ROOT / "data" / "processed" / "regional_daily.csv"
 
 DEFAULT_TARGET = "mv_beds"

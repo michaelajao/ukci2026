@@ -359,6 +359,114 @@ class GRUPerRegion(BaselineModel):
 
 
 # ---------------------------------------------------------------------------
+# XGBoost with lag features — non-DL non-linear baseline expected by reviewers
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class XGBoostConfig:
+    """Hyperparameters for the per-region XGBoost lag-feature baseline."""
+
+    lookback: int = 28
+    horizons: tuple[int, ...] = HORIZONS_DEFAULT
+    n_estimators: int = 300
+    max_depth: int = 4
+    learning_rate: float = 0.05
+    subsample: float = 0.85
+    colsample_bytree: float = 0.85
+    reg_lambda: float = 1.0
+    random_state: int = 0
+
+
+class XGBoostPerRegion(BaselineModel):
+    """Direct multi-step XGBoost per region.
+
+    For each ``(region, horizon)`` pair we train a separate gradient-boosted
+    regressor on sliding-window lag features
+    :math:`(y_{t-L},\\,\\dots,\\,y_{t-1}) \\to y_{t+h-1}` where ``L`` is the
+    ``lookback`` (default 28 days). Refit per origin in
+    ``fit_predict_baseline_per_origin``, the same protocol as ARIMA so the
+    comparison is apples-to-apples on the rolling-origin Omicron evaluation.
+
+    Why direct multi-step (one model per horizon) instead of iterative
+    one-step recursion: iterative recursion compounds bias for non-stationary
+    series like Omicron declines. Direct multi-step is the standard pattern
+    for tree-based forecasters in epidemic-forecasting hubs (Bracher et al.
+    2021, Cramer et al. 2022).
+    """
+
+    name = "xgboost_per_region"
+
+    def __init__(self, config: XGBoostConfig | None = None) -> None:
+        self.config = config or XGBoostConfig()
+        self._models: dict[tuple[str, int], object] = {}
+        self._last_window: dict[str, np.ndarray] = {}
+
+    @staticmethod
+    def _make_xy(values: np.ndarray, lookback: int, horizon: int) -> tuple[np.ndarray, np.ndarray]:
+        """Build sliding-window lag features and targets.
+
+        ``values[t0-L:t0]`` is the feature row; ``values[t0+h-1]`` is the target.
+        Valid range: ``t0 in [L, len(values) - h + 1)``.
+        """
+        n = len(values)
+        if n < lookback + horizon:
+            raise ValueError(
+                f"XGBoostPerRegion: series of length {n} is too short for "
+                f"lookback {lookback} + horizon {horizon}."
+            )
+        starts = np.arange(lookback, n - horizon + 1)
+        x = np.stack([values[s - lookback : s] for s in starts])
+        y = np.asarray([values[s + horizon - 1] for s in starts], dtype=float)
+        return x, y
+
+    def fit(self, history: pd.DataFrame, target_col: str = "y") -> "XGBoostPerRegion":
+        from xgboost import XGBRegressor
+
+        cfg = self.config
+        self._models.clear()
+        self._last_window.clear()
+        for region, group in history.groupby("region", sort=False):
+            values = group.sort_values("date")[target_col].to_numpy(dtype=float)
+            if values.size == 0:
+                raise ValueError(f"XGBoostPerRegion: empty series for region {region!r}.")
+            for h in cfg.horizons:
+                x, y = self._make_xy(values, cfg.lookback, h)
+                reg = XGBRegressor(
+                    n_estimators=cfg.n_estimators,
+                    max_depth=cfg.max_depth,
+                    learning_rate=cfg.learning_rate,
+                    subsample=cfg.subsample,
+                    colsample_bytree=cfg.colsample_bytree,
+                    reg_lambda=cfg.reg_lambda,
+                    random_state=cfg.random_state,
+                    tree_method="hist",
+                    verbosity=0,
+                    n_jobs=1,
+                )
+                reg.fit(x, y)
+                self._models[(region, h)] = reg
+            self._last_window[region] = values[-cfg.lookback:]
+        return self
+
+    def predict(self, horizons: Iterable[int] = HORIZONS_DEFAULT) -> ForecastFrame:
+        records: list[dict] = []
+        for region, last in self._last_window.items():
+            x = last.reshape(1, -1)
+            for h in horizons:
+                model = self._models.get((region, int(h)))
+                if model is None:
+                    raise KeyError(
+                        f"XGBoostPerRegion: no model for ({region!r}, h={h}). "
+                        f"Fitted horizons: {self.config.horizons}."
+                    )
+                y_hat = float(model.predict(x)[0])
+                records.append({"region": region, "horizon": int(h), "y_hat": y_hat})
+        df = pd.DataFrame.from_records(records).set_index(["region", "horizon"])
+        return ForecastFrame(point=df)
+
+
+# ---------------------------------------------------------------------------
 # Registry & convenience
 # ---------------------------------------------------------------------------
 #
@@ -371,6 +479,7 @@ REGISTRY: dict[str, type[BaselineModel]] = {
     "seasonal_naive": SeasonalNaive,
     "arima_per_region": ARIMAPerRegion,
     "gru_per_region": GRUPerRegion,
+    "xgboost_per_region": XGBoostPerRegion,
 }
 
 

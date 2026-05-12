@@ -6,7 +6,9 @@
 The forecasting module produces multi-horizon point and quantile estimates of
 critical-care demand for each NHS region. It comprises three parts: a
 per-region physics-informed neural epidemic estimator, a temporal forecasting
-head, and a Monte Carlo Dropout uncertainty layer.
+head with a level-and-trend anchor that emits quantiles directly, and a
+pinball-loss training objective that operationalises decision-aware
+prediction without separate asymmetric penalty terms.
 
 \subsection{Refined SEIRD Compartmental Model}\label{ssec:seird}
 
@@ -47,66 +49,114 @@ hospitalisation alone. \Cref{eq:seird} reflects this refinement.
 
 \subsection{Per-Region PINN-SEIRD}\label{ssec:pinn}
 
-For each region $r$, the PINN consists of two fully connected feedforward
+For each region $r$, the PINN consists of two fully-connected feedforward
 networks following~\cite{ajao2025hybrid}: a state network $U^r_{NN}: t
 \mapsto U^r(t)$ with five hidden layers of $20$ units, and a parameter
 network $X^r_{NN}: t \mapsto (\beta_r, \gamma_{c,r}, \delta_{c,r}, \eta_r)$
-with three hidden layers of $20$ units. Both use tanh activations, sigmoid
-outputs, and Xavier initialisation. The PINN loss for region $r$ combines a
-data-fit term on observable compartments $\{I_s, H, C, D\}$ with a residual
+with three hidden layers of $20$ units. Both use tanh hidden activations,
+sigmoid outputs (so all eight compartments and four parameters lie in
+$[0,1]$), and Xavier initialisation. The PINN loss combines a data-fit term
+on observable compartments $\{H, C\}$ --- the only ones for which NHS
+England publishes daily counts at regional resolution --- with a residual
 loss against \Cref{eq:seird}:
 \begin{equation}\label{eq:pinn_loss}
-\mathcal{L}^{PINN}_r = \sum_{t \in \T_{\text{train}}}
-  \sum_{k \in \{I_s, H, C, D\}} \big(U^r_{NN,k}(t) - y_{r,t,k}\big)^2
-+ \lambda_{ode} \sum_{t \in \T_{\text{coll}}}
-  \left\| \tfrac{dU^r_{NN}(t)}{dt} -
-  \mathcal{N}\big(U^r_{NN}(t); X^r_{NN}(t)\big)\right\|^2,
+\mathcal{L}^{PINN}_r = \!\!\sum_{t \in \T_{\text{train}}}
+  \sum_{k \in \{H, C\}} \big(U^r_{NN,k}(t) - y_{r,t,k}/N_r\big)^2
++ \lambda_{ode} \!\!\sum_{t \in \T_{\text{coll}}}
+  \Big\| \tfrac{dU^r_{NN}(t)}{dt} -
+  \mathcal{N}\big(U^r_{NN}(t); X^r_{NN}(t)\big)\Big\|^2,
 \end{equation}
-where $\mathcal{N}$ denotes the right-hand side of \Cref{eq:seird} and
-derivatives are evaluated via PyTorch automatic differentiation at random
-collocation points sampled in $\T_{\text{coll}}$ at every iteration.
+where $\mathcal{N}$ denotes the right-hand side of \Cref{eq:seird}, target
+observations are normalised by population, and derivatives are evaluated via
+PyTorch automatic differentiation at $256$ collocation points sampled
+uniformly in $\T_{\text{coll}}$ at every iteration. We pre-train each
+region's PINN for $1500$ Adam steps with $\lambda_{ode}=0.1$ and learning
+rate $5\!\times\!10^{-3}$; final losses converge to
+$\mathcal{O}(10^{-6})$ on both terms, indicating tight fit to the
+observations \emph{and} consistency with the ODE dynamics. The learned
+time-varying parameters are region-specific and non-constant (supplementary
+material); their predictive value is quantified by the
+\emph{w/o PINN parameter features} ablation in \Cref{tab:forecast_accuracy}.
 
-\subsection{Temporal Forecasting Head and Decision-Aware Loss}\label{ssec:temporal}
+\subsection{Temporal Forecasting Head with Level-and-Trend Anchor}
+\label{ssec:temporal}
 
-Once the PINN is trained, its outputs --- region-specific compartmental
-state estimates $\tilde{U}^r(t)$ and time-varying parameters
-$\tilde{X}^r(t)$ --- are concatenated with observed covariates
-$\mathbf{x}_{r,t}$ to form the feature sequence
-$\mathbf{f}_{r,t} = [\tilde{U}^r(t) \,\|\, \tilde{X}^r(t) \,\|\,
-\mathbf{x}_{r,t}]$. A two-layer GRU with hidden dimension $64$ encodes a
-$L = 28$ day lookback window into a representation $\mathbf{h}_{r,t}$, from
-which a multi-horizon decoder produces $\hat{y}_{r,t+h} = \mathbf{w}_h^\top
-\mathbf{h}_{r,t} + b_h$ for $h \in \Hset = \{7, 14, 21, 28\}$.
-
-The forecaster is trained with a composite \emph{decision-aware} loss:
-\begin{equation}\label{eq:composite_loss}
-\mathcal{L} = \mathcal{L}_{\text{forecast}}
-+ \lambda_{\text{phys}} \sum_r \mathcal{L}^{PINN}_r
-+ \lambda_{\text{under}} \mathcal{L}_{\text{under}}
-+ \lambda_{\text{smooth}} \mathcal{L}_{\text{smooth}},
+Once pre-trained, the PINN is \emph{frozen}: its outputs are reused as a
+physics-informed temporal embedding for the forecaster. For each lookback
+window of length $L=28$ days ending at the forecast origin $t$, the
+augmented feature sequence is
+\begin{equation}
+\mathbf{f}_{r,\tau} = \big[\,U^r_{NN}(\tau) \,\big\|\, X^r_{NN}(\tau)
+                          \,\big\|\, \tilde y_{r,\tau}\,\big] \in \mathbb{R}^{13},
+\quad \tau \in \{t-L+1,\dots,t\},
 \end{equation}
-where $\mathcal{L}_{\text{forecast}}$ is the Huber loss on standardised
-forecasts (robust to data spikes), and the remaining terms are
-\begin{align}
-\mathcal{L}_{\text{under}}  &= \textstyle\sum_{r,h} \max\!\big(0,\; y_{r,t+h} - \hat{y}_{r,t+h}\big), \label{eq:under_loss} \\
-\mathcal{L}_{\text{smooth}} &= \textstyle\sum_{r,h}
-   \big(\hat{y}_{r,t+h+1} - \hat{y}_{r,t+h}\big)^2.
-\end{align}
-The asymmetric underestimation term $\mathcal{L}_{\text{under}}$ is the
-methodological hook that ties forecasting to optimisation: it penalises
-forecast errors only in the direction that creates downstream operational
-shortages~\cite{elmachtoub2022smart}. Initial loss weights are
-$\lambda_{\text{phys}}=0.1$, $\lambda_{\text{under}}=0.5$,
-$\lambda_{\text{smooth}}=0.01$, tuned on the validation split.
+where $\tilde y_{r,\tau} = (y_{r,\tau} - \bar y_r) / s_{y,r}$ is the
+z-scored observed target on the train+val period of region $r$. The
+sequence is processed by a two-layer GRU with hidden dimension $128$ and
+dropout $0.15$; the last hidden state $\mathbf{h}_{r,t}$ is decoded by a
+per-horizon two-layer MLP (width $64$, GELU) into a triple of standardised
+quantile predictions
+$\Delta_{r,t}^{h,q} \in \mathbb{R}$ for $h \in \Hset = \{7,14,21,28\}$
+and $q \in \Qset = \{0.1, 0.5, 0.9\}$.
 
-\subsection{Uncertainty and Scenario Generation}\label{ssec:uncertainty}
+To make the GRU's job a residual one --- predicting the \emph{deviation}
+from a sensible baseline rather than the absolute level --- we add a
+\emph{level-and-trend anchor} skip connection:
+\begin{equation}\label{eq:anchor}
+\hat z_{r,t}^{h,q} \;=\; \Delta_{r,t}^{h,q}
+  \;+\; \alpha^{h,q}\, \tilde y_{r,t}
+  \;+\; \gamma^{h,q}\, s_{r,t}^{(7)}\,
+        \!\left(\tfrac{h}{7}\right)^{\!\!\varphi^q},
+\end{equation}
+where $\tilde y_{r,t}$ is the most recent z-scored observation,
+$s_{r,t}^{(7)} = \tilde y_{r,t} - \tilde y_{r,t-7}$ is the recent
+one-week slope, and $\alpha^{h,q}, \gamma^{h,q}, \varphi^{q} \in (0,1)$
+are learnable scalars (parameterised by sigmoids on free logits). The
+exponent $\varphi^q$ \emph{dampens} the linear trend extrapolation per
+quantile, a Holt-Winters-style mechanism that prevents the slope-based
+projection from over-shooting at long horizons. We initialise
+$\varphi^{q=0.5}=\sigma(2)\approx0.88$ (near-linear, accurate point
+forecasting) and $\varphi^{q=0.1}=\varphi^{q=0.9}=\sigma(0)=0.5$
+(square-root damping, tighter probabilistic bounds). All anchor weights
+are learnt jointly with the rest of the network during forecaster training.
+Point and interval forecasts in the original scale follow by inverting
+standardisation: $\hat y_{r,t+h-1}^{q} = \hat z_{r,t}^{h,q}\, s_{y,r}
++ \bar y_r$.
 
-Predictive uncertainty is obtained via Monte Carlo Dropout: at inference,
-dropout layers remain active and $K=100$ stochastic forward passes
-generate samples from which empirical quantiles $q_{r,h}^p$ for $p \in
-\{0.1, 0.5, 0.9\}$ are extracted. Each region--horizon predictive
-distribution is discretised into three canonical scenarios:
-$\Sset = \{ (q_{r,h}^{0.1},\, 0.2),\, (q_{r,h}^{0.5},\, 0.6),\,
-            (q_{r,h}^{0.9},\, 0.2) \}$. Calibration is reported using the
-Weighted Interval Score~\cite{bracher2021evaluating} at the $50\%$ and
-$90\%$ prediction intervals.
+\subsection{Decision-Aware Training via Pinball Loss}\label{ssec:loss}
+
+The forecaster is trained by minimising the multi-quantile pinball loss
+of Koenker and Bassett~\cite{koenker1978regression}, in the form
+adopted by the COVID-19 Forecast Hub Weighted Interval Score
+framework~\cite{bracher2021evaluating}:
+\begin{equation}\label{eq:pinball}
+\mathcal{L}_{\text{pinball}} \;=\; \frac{1}{|\Qset|}\sum_{q\in\Qset}
+  \mathbb{E}_{(t,h)}\!\!\left[\;\max\!\big(
+    q (\tilde y_{r,t+h-1}\!-\hat z_{r,t}^{h,q}),\,
+    (q-1)(\tilde y_{r,t+h-1}\!-\hat z_{r,t}^{h,q})\big)\right],
+\end{equation}
+evaluated at all $(h,q)\in\Hset\!\times\!\Qset$ pairs. Two operational
+properties are notable. First, the $q=0.5$ pinball collapses to the
+absolute-error (L1) loss for the median, so it directly targets point
+accuracy without an added Huber term. Second, the $q=0.9$ pinball is
+\emph{asymmetric}: a forecast that falls below the realised value (an
+under-prediction, $y - \hat y > 0$) incurs loss $0.9\,(y-\hat y)$, while a
+forecast that exceeds it incurs only $0.1\,(\hat y - y)$ --- a nine-to-one
+penalty ratio favouring conservative upper-quantile estimates. This is the
+\emph{decision-aware} component, taking the role that an explicit
+asymmetric hinge played in earlier compositions of the
+loss~\cite{elmachtoub2022smart} but with the asymmetry built into a single
+strictly proper scoring rule rather than an ad-hoc additive
+term~\cite{gneiting2007strictly}. Reporting $\hat y^{0.5}$ as the point
+forecast and $[\hat y^{0.1}, \hat y^{0.9}]$ as the $80\%$ predictive
+interval, the same model serves point and probabilistic users with no
+post-hoc Monte-Carlo sampling.
+
+We train each region's forecaster for up to $800$ AdamW epochs
+($\text{lr}=10^{-3}$, weight decay $10^{-4}$, cosine annealing), with the
+training set restricted to lookback windows whose forecast targets fall
+within the Alpha-wave training split. Early stopping monitors validation
+pinball loss over windows whose targets fall in the Delta-wave validation
+period (patience $80$). Once selected, the model is frozen and applied to
+the Omicron test period via rolling-origin evaluation at $\Delta t = 7$
+days, yielding $32$ origin dates over the $9$-month evaluation horizon.

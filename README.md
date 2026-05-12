@@ -1,9 +1,9 @@
-# UKCI 2026 — Critical-Care Surge Capacity Planning
+﻿# UKCI 2026 â€” Critical-Care Surge Capacity Planning
 
 **Working title:** Decision-Aware Physics-Informed Forecasting and Metaheuristic Allocation for NHS Critical-Care Surge Capacity Under Demand Uncertainty
 
 **Authors (planned):** Michael Ajao-Olarinoye, Abiola Babatunde, Vasile Palade
-**Conference:** UKCI 2026, Coventry, 9–11 September 2026
+**Conference:** UKCI 2026, Coventry, 9â€“11 September 2026
 **Submission deadline:** 31 May 2026 via Microsoft CMT
 
 This repository implements the full forecast-to-decision pipeline described in
@@ -17,24 +17,42 @@ for NHS England critical-care surge capacity planning.
 # 1. Clone and set up environment
 git clone <repo-url> ukci2026
 cd ukci2026
-python -m venv .venv
-source .venv/bin/activate            # Windows: .venv\Scripts\activate
-pip install -e ".[dev]"
+conda activate pyt_env
+python -m pip install -e ".[dev]"
 
 # 2. Download NHS data (one-off, ~50 MB total)
-python scripts/download_nhs_data.py
+ukci-download-nhs-data
 
 # 3. Build the regional tidy dataset
-python scripts/build_regional_dataset.py
+ukci-build-regional-dataset
 
-# 4. Run a baseline forecasting experiment
-python -m forecasting.baselines --config configs/baseline_gru.yaml
+# 4. Train forecasters
+ukci-train-forecasters
 
-# 5. Run the proposed PINN-GRU model
-python -m forecasting.composite_loss --config configs/proposed.yaml
+# 5. Rebuild paper-facing forecast outputs
+ukci-forecast-evaluation all
 
 # 6. Generate scenarios and run the optimisation
-python -m optimization.allocate --config configs/milp_regional.yaml
+ukci-run-allocation-e2
+```
+
+Forecast evaluation artifacts are generated from saved outputs. Use the CSVs as
+the internal source of truth for manuscript values, then enter those values into
+the LaTeX table directly:
+
+```bash
+ukci-forecast-evaluation sources   # list CSVs used as paper source tables
+ukci-forecast-evaluation all       # rebuild metrics, Table 1, and forecast figure
+```
+
+For the main paper, use `results/forecasting/table1_paper.csv` for the
+forecasting table and `results/allocation/table2_allocation.csv` for the
+allocation table. Detailed regional metrics can stay in the appendix.
+
+When running checks without activating the environment first, use:
+
+```bash
+conda run -n pyt_env python -m compileall -q src
 ```
 
 ## Documentation
@@ -50,38 +68,40 @@ python -m optimization.allocate --config configs/milp_regional.yaml
 
 ## Repository layout
 
+Reusable research logic and command entry points live under `src`. Editable
+installs expose the `ukci-*` console commands declared in `pyproject.toml`.
+
 ```
 ukci2026/
-├── docs/                          # Planning and methodology documents
-├── data/
-│   ├── raw/                       # NHS XLSX archives (gitignored, downloaded)
-│   ├── processed/                 # Tidy regional CSV
-│   └── graphs/                    # NHS region adjacency, distance, correlation
-├── scripts/                       # CLI utilities (download, build, etc.)
-├── src/                           # Python packages (flat layout, no wrapper)
-│   ├── data/                      # NHS ingestion, splits, scenarios
-│   ├── forecasting/               # PINN-SEIRD, decision-aware loss, baselines
-│   ├── optimization/              # MILP, robust MILP, heuristics, metaheuristics, ε-constraint
-│   ├── evaluation/                # Forecast and allocation metrics
-│   └── utils/                     # Shared helpers, logging, seeds
-├── configs/                       # YAML experiment configs
-├── notebooks/                     # EDA and analysis notebooks
-├── tests/                         # pytest unit tests
-├── results/                       # Output tables and metrics (gitignored)
-├── figures/                       # Output figures (gitignored)
-├── pyproject.toml
-└── README.md
+â”œâ”€â”€ docs/                          # Planning and methodology documents
+â”œâ”€â”€ data/
+â”‚   â”œâ”€â”€ raw/                       # NHS XLSX archives (gitignored, downloaded)
+â”‚   â”œâ”€â”€ processed/                 # Tidy regional CSV
+â”‚   â””â”€â”€ graphs/                    # NHS region adjacency, distance, correlation
+â”œâ”€â”€ src/                           # Python packages and command entry points
+â”‚   â”œâ”€â”€ data/                      # NHS ingestion, splits, scenarios
+â”‚   â”œâ”€â”€ forecasting/               # PINN-SEIRD, decision-aware loss, baselines
+â”‚   â”œâ”€â”€ optimization/              # MILP, robust MILP, heuristics, metaheuristics, Îµ-constraint
+â”‚   â”œâ”€â”€ evaluation/                # Forecast and allocation metrics
+â”‚   â””â”€â”€ utils.py                   # Shared infrastructure helpers
+â”œâ”€â”€ configs/                       # YAML experiment configs
+â”œâ”€â”€ notebooks/                     # EDA and analysis notebooks
+â”œâ”€â”€ tests/                         # pytest unit tests
+â”œâ”€â”€ results/                       # Output tables and metrics (gitignored)
+â”œâ”€â”€ figures/                       # Output figures (gitignored)
+â”œâ”€â”€ pyproject.toml
+â””â”€â”€ README.md
 ```
 
 ## Development workflow
 
 ### Branching
 
-- `main` — protected, only via PR
-- `paper/draft` — paper writing, LaTeX
-- `forecast/<feature>` — forecasting experiments
-- `opt/<feature>` — optimisation experiments
-- `data/<task>` — data ingestion and processing
+- `main` â€” protected, only via PR
+- `paper/draft` â€” paper writing, LaTeX
+- `forecast/<feature>` â€” forecasting experiments
+- `opt/<feature>` â€” optimisation experiments
+- `data/<task>` â€” data ingestion and processing
 
 ### Commits
 

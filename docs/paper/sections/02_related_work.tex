@@ -18,13 +18,16 @@ methodological parallel to ours; the differences are domain
 (vaccination-site siting versus critical-care surge), coupling
 (iterative joint optimisation versus our decoupled forecast-then-optimise),
 and forecasting objective (mean-squared error on DELPHI states versus our
-decision-aware composite loss). Our framework also draws on the formal
-Smart Predict-then-Optimize framework of Elmachtoub and
+decision-aware multi-quantile pinball loss). Our framework also draws on
+the formal Smart Predict-then-Optimize framework of Elmachtoub and
 Grigas~\cite{elmachtoub2022smart} and on the neural-ODE-based equitable
 opioid facility-location work of Luo and Stellato~\cite{luo2024equitable},
 who fit per-state SIR-like models via a neural-ODE-inspired procedure and
-embed the discretised dynamics into a McCormick-relaxed MIP. We review the
-three relevant subliteratures below.
+embed the discretised dynamics into a McCormick-relaxed MIP. We adopt
+multi-quantile training in the spirit of the COVID-19 Forecast Hub's
+Weighted Interval Score evaluation~\cite{bracher2021evaluating}, which
+treats the upper quantile (q$^{0.9}$) as the operationally relevant safety
+bound. We review the three relevant subliteratures below.
 
 \subsection{Epidemic and Hospital-Demand Forecasting}
 

@@ -75,8 +75,22 @@ prophet = ["prophet>=1.1"]
 Repository = "https://github.com/olarinoyem/ukci2026"  # placeholder, update on push
 Documentation = "https://github.com/olarinoyem/ukci2026/tree/main/docs"
 
+[project.scripts]
+ukci-forecast-evaluation = "evaluation.forecast_evaluation:main"
+ukci-build-regional-dataset = "data.regional_dataset:main"
+ukci-build-regional-features = "data.regional_features:main"
+ukci-download-nhs-data = "data.nhs_download:main"
+ukci-download-supporting-data = "data.supporting_downloads:main"
+ukci-run-allocation-e2 = "optimization.allocation_experiments:main"
+ukci-build-allocation-figures = "optimization.allocation_experiments:build_allocation_figures_main"
+ukci-run-allocation-sweeps = "optimization.allocation_experiments:run_allocation_sweeps_main"
+ukci-run-eda = "evaluation.eda:main"
+ukci-run-pinn-ablations = "forecasting.train_forecasters:run_pinn_ablations_main"
+ukci-train-forecasters = "forecasting.train_forecasters:main"
+
 [tool.setuptools]
 package-dir = { "" = "src" }
+py-modules = ["utils"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

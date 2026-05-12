@@ -2,9 +2,9 @@
 
 This file documents the contents of `data/` and the rationale for each file. The repository combines:
 
-1. Raw NHS England XLSX archives in `data/raw/` (downloaded by `scripts/download_nhs_data.py`).
-2. Tidy NHS regional CSV in `data/processed/` (produced by `scripts/build_regional_dataset.py`).
-3. UK supporting datasets in `data/raw/supporting/` (Google Mobility, ONS population, English IMD), added 2026-05-12 to support the UKCI 2026 literature recommendations (downloaded by `scripts/download_external_data.py`).
+1. Raw NHS England XLSX archives in `data/raw/` (downloaded by `ukci-download-nhs-data`).
+2. Tidy NHS regional CSV in `data/processed/` (produced by `ukci-build-regional-dataset`).
+3. UK supporting datasets in `data/raw/supporting/` (ONS Mid-Year Population Estimates only), downloaded by `ukci-download-supporting-data`.
 4. Legacy material in `data/legacy/` that was used by prior MSAGAT-Net work but is **not** consumed by the UKCI 2026 pipeline. Retained for reproducibility / stretch experiments only.
 
 Last updated: 2026-05-12.
@@ -13,7 +13,7 @@ Last updated: 2026-05-12.
 
 ## `data/raw/nhs/` — NHS England XLSX archives (canonical inputs)
 
-Fetched by `scripts/download_nhs_data.py` on 2026-05-10. SHA-256 hashes recorded in [data/raw/nhs/MANIFEST.txt](raw/nhs/MANIFEST.txt).
+Fetched by `ukci-download-nhs-data` on 2026-05-10. SHA-256 hashes recorded in [data/raw/nhs/MANIFEST.txt](raw/nhs/MANIFEST.txt).
 
 | File | Period | Size |
 |---|---|---|
@@ -28,24 +28,15 @@ These cover the full daily-publication period (1 Aug 2020 – 31 Aug 2022) at NH
 
 ---
 
-## `data/raw/supporting/` — UK supporting datasets (downloaded 2026-05-12)
+## `data/raw/supporting/` — UK supporting datasets
 
-Fetched by `scripts/download_external_data.py`. SHA-256 hashes recorded in [data/raw/supporting/MANIFEST.txt](raw/supporting/MANIFEST.txt). Identified during the UKCI 2026 literature review as inputs needed for (a) decision-aware forecasting covariates (Google Mobility per Valente et al. 2022, lagged 21 days per Cartení et al. 2020), (b) population-proportional allocation baselines (ONS), and (c) IMD-weighted fairness constraints in the MILP (per Bertsimas et al. 2022 and Luo & Stellato 2024 fairness patterns).
+Fetched by `ukci-download-supporting-data`. SHA-256 hashes recorded in [data/raw/supporting/MANIFEST.txt](raw/supporting/MANIFEST.txt).
 
 | File | Period / Scope | Size | Purpose |
 |---|---|---|---|
-| `2020_GB_Region_Mobility_Report.csv` | GB, 15 Feb 2020 – 31 Dec 2020 | 14.7 MB | Google Mobility, UTLA-level (151 unique sub-regions); 6 categories. Forecasting covariate. |
-| `2021_GB_Region_Mobility_Report.csv` | GB, 2021 calendar year | 16.7 MB | Same schema. |
-| `2022_GB_Region_Mobility_Report.csv` | GB, 2022 (publication ends 15 Oct 2022) | 13.1 MB | Same schema. |
-| `ukpopestimatesmid2021on2021geographyfinal.xls` | UK Mid-Year 2021 estimates | 1.9 MB | ONS regional population denominators for NHS region aggregation. |
-| `IoD2019_File_7_Scores_Ranks_Deciles.csv` | English IMD 2019, LSOA-level | 9.7 MB | 57 columns: IMD score/rank/decile + 7 domains × 3 metrics. Master input for IMD-weighted fairness. |
-| `IoD2019_File_10_LA_lower_tier_summaries.xlsx` | English IMD 2019, LA District | 255 KB | LA-aggregated IMD summaries. Convenience aggregation. |
+| `ukpopestimatesmid2021on2021geographyfinal.xls` | UK Mid-Year 2021 estimates | 1.9 MB | ONS regional population denominators. Used by the per-region PINN to normalise the H/C compartments to per-capita scale and by the population-proportional allocation baseline. |
 
-**Aggregation pipeline** (to be implemented in `scripts/build_regional_features.py`):
-
-1. **Google Mobility → NHS region.** Filter to England UTLAs, map UTLA → NHS England region, population-weighted mean per (NHS region, date), apply 21-day forward shift. Output: 7 NHS regions × time × 6 mobility categories.
-2. **IMD 2019 → NHS region.** Aggregate LSOA-level IMD score to NHS region via LSOA → LA → NHS region cross-walk, population-weighted by LSOA total population. Scalar mean IMD per region; used as fairness weight in the MILP.
-3. **ONS MYE → NHS region.** Map LA-level population to NHS region. Output: total population per NHS region.
+**Aggregation pipeline** (implemented in `src/data/regional_features.py`, run via `ukci-build-regional-features`): walk the ONS MYE2-Persons sheet, derive an LA-District → NHS-region cross-walk from the surrounding NUTS-1 rows, and sum population to each of the 7 NHS regions. Output: `data/processed/regional_static.csv` with columns `region_code, region_name, population`.
 
 ---
 
@@ -53,7 +44,7 @@ Fetched by `scripts/download_external_data.py`. SHA-256 hashes recorded in [data
 
 | File | Description |
 |---|---|
-| `regional_daily.csv` | 5,327 rows = 761 days × 7 NHS regions. Columns: `date, region_code, region_name, admissions, hospital_cases, occupied_beds, mv_beds`. Output of `scripts/build_regional_dataset.py`. |
+| `regional_daily.csv` | 5,327 rows = 761 days × 7 NHS regions. Columns: `date, region_code, region_name, admissions, hospital_cases, occupied_beds, mv_beds`. Output of `ukci-build-regional-dataset`. |
 | `data_quality_report.md` | Coverage and completeness summary auto-generated by the build script. |
 
 `mv_beds` is the headline forecasting target (the C compartment in the PINN-SEIRD system). The other three columns are observed covariates entering the GRU head and the compartmental consistency loss.
@@ -102,13 +93,16 @@ Carried over from MSAGAT-Net's multi-country benchmarks. **Not used** in the UKC
 
 ```powershell
 # 1. Re-fetch raw NHS England archives
-python scripts/download_nhs_data.py
+ukci-download-nhs-data
 
-# 2. Re-fetch UK supporting datasets (Google Mobility, ONS, IMD)
-python scripts/download_external_data.py
+# 2. Re-fetch ONS Mid-Year Population Estimates
+ukci-download-supporting-data
 
 # 3. Harmonise into a tidy daily regional CSV
-python scripts/build_regional_dataset.py
+ukci-build-regional-dataset
+
+# 4. Build per-region population totals
+ukci-build-regional-features
 ```
 
-`scripts/download_nhs_data.py` writes `data/raw/MANIFEST.txt` recording each archive's URL, size, and SHA-256 hash. If a hash differs from the one recorded in the manifest, NHS England has revised the historical data — re-derive `regional_daily.csv` and document the revision here.
+`ukci-download-nhs-data` writes `data/raw/MANIFEST.txt` recording each archive's URL, size, and SHA-256 hash. If a hash differs from the one recorded in the manifest, NHS England has revised the historical data — re-derive `regional_daily.csv` and document the revision here.

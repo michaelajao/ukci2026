@@ -125,3 +125,4 @@ secrets/
 
 # Solver licences
 gurobi.lic
+.claude/scheduled_tasks.lock

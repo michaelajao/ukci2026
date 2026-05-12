@@ -1,0 +1,19 @@
+\begin{tabular}{l c c c c c}
+\toprule
+Model & \multicolumn{4}{c}{RMSE by horizon (days)} & Under.
+\\
+ & 7 & 14 & 21 & 28 & rate (\%)\\
+\midrule
+Seasonal-naive(7) & 13.53 & 18.16 & 22.31 & 25.98 & 37.50 \\
+ARIMA & 11.33 & 17.80 & 23.41 & 28.02 & 44.20 \\
+XGBoost (lag features) & 12.45 & 22.90 & 36.42 & 58.88 & 27.68 \\
+GRU per region & 14.13 & 22.92 & 33.35 & 43.97 & 7.59 \\
+PinnGRU (proposed) & 11.02 & 14.46 & 24.19 & 34.63 & 10.27 \\
+\midrule
+  w/o decision-aware loss (MSE) & 14.79 & 18.70 & 27.09 & 41.47 & 6.70 \\
+  w/o PINN pre-training & 12.26 & 17.27 & 22.56 & 34.73 & 22.77 \\
+  w/o PINN parameter features & 23.97 & 27.25 & 32.94 & 44.59 & 8.48 \\
+  w/o level anchor & 10.23 & 16.60 & 26.24 & 40.51 & 19.64 \\
+  w/o trend anchor & 11.04 & 16.75 & 25.38 & 35.71 & 23.66 \\
+\bottomrule
+\end{tabular}

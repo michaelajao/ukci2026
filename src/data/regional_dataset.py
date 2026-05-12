@@ -31,7 +31,7 @@ Overlapping dates across archives are resolved by trusting the later archive
 is written to ``data/processed/data_quality_report.md``.
 
 Usage:
-    python scripts/build_regional_dataset.py
+    ukci-build-regional-dataset
 
 Run from the repository root.
 """
@@ -45,7 +45,9 @@ from typing import Iterable
 
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+from utils import repo_root
+
+REPO_ROOT = repo_root()
 RAW_DIR = REPO_ROOT / "data" / "raw" / "nhs"
 PROCESSED_DIR = REPO_ROOT / "data" / "processed"
 
@@ -323,7 +325,7 @@ def main() -> int:
     if not xlsx_files:
         sys.exit(
             f"No XLSX files in {RAW_DIR}. "
-            f"Run scripts/download_nhs_data.py first."
+            f"Run ukci-download-nhs-data first."
         )
 
     print(f"Parsing {len(xlsx_files)} archive(s)...")

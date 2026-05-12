@@ -118,53 +118,39 @@ $$
 
 We deliberately use a **per-region GRU** rather than a shared/graph-coupled architecture for two reasons: (i) it provides clear separation from the MSAGAT-Net AIIM submission, (ii) regional heterogeneity in transmission and hospital-flow dynamics may genuinely outweigh inter-regional coupling at multi-horizon scales, where the temporal autocorrelation structure dominates. We test this assumption in Experiment E1 by comparing against a regional-pooled GRU baseline.
 
-### 1.5 Decision-aware composite loss
+### 1.5 Decision-aware training via multi-quantile pinball loss
 
-The **load-bearing methodological choice** at training time. The composite loss is:
+> **Note (12 May 2026 revision).** §1.5 originally specified a four-term additive composite loss (Huber + PINN-residual + asymmetric hinge + smoothness) trained with `λ_under=0.5`. During implementation we discovered that the asymmetric hinge interacted poorly with standardised targets (it produced systematic upward bias of ~0.5 σ in z-score space), and that pinball-q50 is L1 by construction, making an additional Huber term redundant. We replaced the composite loss with the multi-quantile pinball formulation below. The paper §3 reflects this v5 architecture; Table 1 of the paper quantifies the contribution of each surviving component via ablation.
 
-$$
-\mathcal{L}_{total} = \mathcal{L}_{forecast} + \lambda_{phys} \sum_r \mathcal{L}^{PINN}_r + \lambda_{under} \mathcal{L}_{under} + \lambda_{smooth} \mathcal{L}_{smooth}
-$$
-
-Each term:
-
-- **Forecast loss (Huber, robust to spike outliers):**
-  $$
-  \mathcal{L}_{forecast} = \sum_{r, h} \rho_\delta \big( y_{r,t+h} - \hat{y}_{r,t+h} \big)
-  $$
-  with $\rho_\delta(x) = \frac{1}{2}x^2$ for $|x| \leq \delta$, $\delta(|x| - \frac{1}{2}\delta)$ otherwise; $\delta = 1$ on standardised values.
-
-- **Asymmetric underestimation penalty (decision-aware core):**
-  $$
-  \mathcal{L}_{under} = \sum_{r, h} \max\big(0,\; y_{r,t+h} - \hat{y}_{r,t+h}\big)
-  $$
-  This is a one-sided hinge that penalises underforecasting only. Operationally, underestimating critical-care demand by 10 beds is much worse than overestimating by 10: the former produces unmet demand, the latter wastes prepared capacity.
-
-- **Temporal smoothness:**
-  $$
-  \mathcal{L}_{smooth} = \sum_{r, h} \big( \hat{y}_{r,t+h+1} - \hat{y}_{r,t+h} \big)^2
-  $$
-  prevents the multi-horizon decoder from producing implausibly oscillating multi-horizon forecasts.
-
-**Initial weights:** $\lambda_{phys} = 0.1$, $\lambda_{under} = 0.5$, $\lambda_{smooth} = 0.01$. Tuned on validation by grid over $\{0.05, 0.1, 0.5, 1.0\}$ for $\lambda_{phys}, \lambda_{under}$.
-
-### 1.6 Uncertainty quantification via MC Dropout
-
-At inference, we enable dropout during the forward pass and run $K = 100$ stochastic forward passes:
+The forecaster is trained by minimising the multi-quantile pinball loss (Koenker & Bassett 1978):
 
 $$
-\{\hat{y}_{r,t+h}^{(k)}\}_{k=1}^{K}
+\mathcal{L}_{pinball} = \frac{1}{|\mathcal{Q}|} \sum_{q \in \mathcal{Q}} \mathbb{E}_{(t,h)} \left[ \max\big( q\,(y_{r,t+h} - \hat{y}_{r,t+h}^q),\; (q-1)\,(y_{r,t+h} - \hat{y}_{r,t+h}^q) \big) \right]
 $$
 
-Then compute empirical quantiles:
+evaluated at all $(h, q) \in \mathcal{H} \times \mathcal{Q}$ pairs with $\mathcal{Q} = \{0.1, 0.5, 0.9\}$. Three operational properties:
+
+- **$q=0.5$** collapses to L1 (median) loss — handles point accuracy without an added Huber term.
+- **$q=0.9$** is asymmetric 9:1 — under-prediction ($y > \hat y$) costs $0.9\cdot e$, over-prediction costs $0.1\cdot e$. This is the **decision-aware core**, encoding the same operational asymmetry as the original `λ_under` hinge term but built directly into a strictly proper scoring rule (Gneiting & Raftery 2007).
+- **$q=0.1$** is asymmetric 1:9 the other way — anchors the lower predictive bound for interval calibration.
+
+**Hyperparameters.** AdamW (lr $10^{-3}$, weight decay $10^{-4}$), cosine-annealing schedule. 800 epochs maximum, early stopping on validation pinball over the Delta-wave validation period with patience 80. Per-region training; PINN frozen after pre-training.
+
+### 1.6 Level-and-trend anchor skip connection
+
+The GRU's per-horizon decoder outputs the *deviation* from a learnable autoregressive anchor, not the absolute forecast level. Each horizon-quantile prediction is:
 
 $$
-q_{r,h}^p = \text{Quantile}_p\big(\{\hat{y}_{r,t+h}^{(k)}\}_{k=1}^{K}\big), \quad p \in \{0.1, 0.5, 0.9\}
+\hat{z}_{r,t}^{h,q} = \Delta_{r,t}^{h,q}(\text{hidden}) + \alpha^{h,q}\, \tilde{y}_{r,t} + \gamma^{h,q}\, s_{r,t}^{(7)} \left(\frac{h}{7}\right)^{\varphi^q}
 $$
 
-We use $p = 0.5$ as the point forecast for E1, and the triple $(q^{0.1}, q^{0.5}, q^{0.9})$ as the basis for scenario generation in Phase B.
+where $\tilde y_{r,t}$ is the last observed z-scored target, $s_{r,t}^{(7)} = \tilde y_{r,t} - \tilde y_{r,t-7}$ is the recent weekly slope, and $\alpha^{h,q}, \gamma^{h,q}, \varphi^q \in (0,1)$ are learnable scalars (sigmoid-parameterised). The exponent $\varphi^q$ **damps** the linear-trend extrapolation per quantile (Holt-Winters-style), preventing slope projection from overshooting at long horizons.
 
-**Calibration check.** We report Weighted Interval Score (WIS) on the test set at 50% and 90% prediction intervals, following the COVID-19 Forecast Hub convention.
+**Initialisation:** $\varphi^{0.5} = \sigma(2) \approx 0.88$ (near-linear, accurate point forecast); $\varphi^{0.1} = \varphi^{0.9} = \sigma(0) = 0.5$ (sqrt damping, tighter probabilistic bounds). $\alpha, \gamma$ initialised at $\sigma(-1.4) \approx 0.2$ (weak prior).
+
+### 1.7 Uncertainty quantification — direct quantile output
+
+Unlike the v1 design that used Monte-Carlo Dropout with $K=100$ forward passes, the v5 architecture emits all three quantiles **directly** in a single deterministic forward pass. The pinball loss in §1.5 trains them as consistent estimators of the conditional quantiles. We report $\hat y^{0.5}$ as the point forecast and $[\hat y^{0.1}, \hat y^{0.9}]$ as the 80% predictive interval. Calibration is measured via Weighted Interval Score at the 80% interval (Bracher et al. 2021).
 
 ---
 
@@ -194,9 +180,11 @@ Scenarios are generated independently per (region, horizon). For the full optimi
 
 ### 3.1 Mathematical formulation
 
+> **Note (12 May 2026 scope revision).** The original §3 specification assumed a separate facility-location index $\mathcal{J}$ (up to 15 candidate surge sites) with fixed activation costs $F_j$, marginal capacity costs $g_j$, and a trust-level scale-up ($|\mathcal{J}| \approx 150$). We were unable to source NHS trust-level cost data or candidate-site coordinates within the timeline, so we adopt a **hybrid regional scope**: the sites $\mathcal{J}$ collapse to the seven NHS regions ($\mathcal{J} \equiv \mathcal{R}$, $|\mathcal{J}| = 7$), every region is "open" by construction ($x_j \equiv 1$), and per-bed cost is uniform across regions. The MILP notation below remains unchanged in form, but $\sum_j F_j x_j$ becomes a constant we drop, and $g_j$ becomes a scalar $g$. Travel time $T_{rr'}$ is computed as great-circle distance × 1.3 (paper §6 data table fallback). Trust-level scaling and per-site cost calibration are flagged in §7 Discussion as immediate future work.
+
 #### 3.1.1 Sets, parameters, decision variables
 
-See §0 Notation.
+See §0 Notation (with the hybrid-scope simplifications above).
 
 #### 3.1.2 Objective function
 

@@ -20,9 +20,9 @@ historically, the script supports two modes:
        downloads them in order.
 
 Usage:
-    python scripts/download_nhs_data.py
-    python scripts/download_nhs_data.py --manual scripts/manual_urls.txt
-    python scripts/download_nhs_data.py --check  # dry run
+    ukci-download-nhs-data
+    ukci-download-nhs-data --manual manual_urls.txt
+    ukci-download-nhs-data --check  # dry run
 
 Run from the repository root.
 """
@@ -30,12 +30,13 @@ Run from the repository root.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
+
+from utils import raw_data_dir, repo_root, sha256_file
 
 try:
     import requests
@@ -50,9 +51,8 @@ except ImportError:
 # Configuration
 # ---------------------------------------------------------------------------
 
-# Repository root (script lives in repo_root/scripts/)
-REPO_ROOT = Path(__file__).resolve().parents[1]
-RAW_DIR = REPO_ROOT / "data" / "raw" / "nhs"
+REPO_ROOT = repo_root()
+RAW_DIR = raw_data_dir("nhs")
 PORTAL_URL = (
     "https://www.england.nhs.uk/statistics/statistical-work-areas/"
     "covid-19-hospital-activity/"
@@ -136,11 +136,7 @@ KNOWN_ARCHIVES: list[Archive] = [
 
 def sha256sum(path: Path, chunk_size: int = 1 << 20) -> str:
     """Return SHA-256 hex digest of file at path."""
-    h = hashlib.sha256()
-    with path.open("rb") as f:
-        for chunk in iter(lambda: f.read(chunk_size), b""):
-            h.update(chunk)
-    return h.hexdigest()
+    return sha256_file(path, chunk_size=chunk_size)
 
 
 def download_one(archive: Archive, dest_dir: Path, timeout: int = 60) -> Path | None:
@@ -292,7 +288,7 @@ def main() -> int:
         )
         return 1
 
-    print("\nNext step: run scripts/build_regional_dataset.py to harmonise into a "
+    print("\nNext step: run ukci-build-regional-dataset to harmonise into a "
           "tidy CSV.")
     return 0
 
