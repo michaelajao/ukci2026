@@ -33,8 +33,9 @@ $B = 0.20 \sum_r C_r$; great-circle inter-centroid distance
 $D_{r r'}$ in km (scaled by a 1.3 detour factor on the road network);
 inter-regional travel time $T_{r r'} = 60 D_{r r'} / 80\text{ km/h}$ in
 minutes; and the mutual-aid travel-time cap $\tau = 240$~min (four
-hours). Decision variables are: surge-bed allocation
-$b_{r,h} \in [0, K_r]$; inter-regional transfer flow
+hours). Decision variables are: horizon-specific surge-bed allocation
+$b_{r,h} \in [0, K_r]$; peak-budget auxiliary $\bar b_r \geq 0$;
+inter-regional transfer flow
 $z_{r r', h}^s \geq 0$, defined only for $(r, r')$ pairs with
 $T_{r r'} \leq \tau$; and unmet demand $u_{r,h}^s \geq 0$. Auxiliary
 $W \geq 0$ tracks the upper-quantile tail in the robust extension.
@@ -68,21 +69,24 @@ constraints:
 b_{r,h} &\leq K_r
   && \forall r \in \R,\, h \in \Hset,
   \label{eq:expansion}\\
-\textstyle\sum_r \max_h\, b_{r,h} &\leq B,
+b_{r,h} &\leq \bar b_r
+  && \forall r \in \R,\, h \in \Hset,
+  \label{eq:peak}\\
+\textstyle\sum_r \bar b_r &\leq B,
   && \label{eq:budget}\\
 z_{r r', h}^{m} &= 0
   && \text{if } T_{r r'} > \tau,
   \label{eq:travel}\\
-b_{r,h},\; z_{r r', h}^{m},\; u_{r,h}^{m} &\geq 0.
+b_{r,h},\; \bar b_r,\; z_{r r', h}^{m},\; u_{r,h}^{m} &\geq 0.
 \end{align}
 \Cref{eq:demand} ensures that the demand $d_{r,h}^{m}$ in region $r$ at
 horizon $h$ under the median scenario is either treated locally, received
 from elsewhere, or recorded as unmet. \Cref{eq:capacity} caps each region's
 inbound flow at its augmented capacity (baseline plus surge).
 \Cref{eq:expansion} enforces the per-region expansion cap.
-\Cref{eq:budget} bounds the total surge investment in the peak-horizon
-demand profile (we use the peak because the same physical beds must
-serve every horizon up to and including peak load).
+\Cref{eq:peak,eq:budget} bound total surge investment by charging each
+region for its peak allocation across horizons, because the same physical
+beds must serve every horizon up to and including peak load.
 \Cref{eq:travel} suppresses transfers exceeding the four-hour mutual-aid
 window.
 
@@ -113,11 +117,12 @@ high-scenario tail shortage.
 
 \subsection{Exact and Metaheuristic Solvers}\label{ssec:solvers}
 
-For the regional formulation the model has 28 surge-bed variables, up
-to $7 \times 7 \times 4 \times 3 = 588$ transfer-flow variables, and
+For the regional formulation the robust model has 28 horizon-specific
+surge-bed variables, 7 peak-budget auxiliaries, up to
+$7 \times 7 \times 4 \times 3 = 588$ transfer-flow variables, and
 $7 \times 4 \times 3 = 84$ unmet-demand variables, plus the tail
-auxiliary in the robust extension. We compare an exact MILP, three
-metaheuristics, and four naive baselines on the same problem instance.
+auxiliary. We compare an exact MILP, three metaheuristics, and four
+naive baselines on the same problem instance.
 
 \paragraph{Exact MILP via PuLP+CBC.}
 The deterministic and robust models are formulated in PuLP and solved

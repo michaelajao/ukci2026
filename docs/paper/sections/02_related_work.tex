@@ -3,8 +3,7 @@
 % Target length: ~1.25 pages (~620 words)
 % Three subsections: forecasting, optimisation, forecast-to-decision pipelines.
 % Anchors the positioning against Bertsimas et al. (2022) and Luo & Stellato (2024)
-% and adds Valente et al. (2022) as the closest ICU-forecasting precedent and
-% Kargar et al. (2024) as the augmented epsilon-constraint precedent.
+% and adds Valente et al. (2022) as the closest ICU-forecasting precedent.
 % =============================================================================
 
 The closest precedent for our pipeline is Bertsimas
@@ -67,20 +66,18 @@ Hajj~\cite{shamseddin2025optimization} integrate SEIRD-driven demand with
 standard beds, buffer beds, field hospitals, and inter-hospital transfers,
 validated on Northern Virginia data. In the vaccine supply-chain space,
 Kargar et al.~\cite{kargar2024data} couple a Covasim agent-based
-simulator~\cite{kerr2021covasim} to a multi-echelon bi-objective MILP solved
-by the augmented $\varepsilon$-constraint method, exposing the
-cost-versus-emissions Pareto front; we adopt the augmented
-$\varepsilon$-constraint paradigm in our allocation comparison,
-complementing exact MILP and NSGA-II with an exact non-dominated-solution
-generator. Tang et al.~\cite{tang2025mobile} apply adaptive large
-neighbourhood search to mobile-vaccination scheduling, exemplifying the
-broader operational-research-meets-public-health literature beyond static
+simulator~\cite{kerr2021covasim} to a multi-echelon bi-objective MILP,
+exposing a cost-versus-emissions Pareto front. Tang
+et al.~\cite{tang2025mobile} apply adaptive large neighbourhood search
+to mobile-vaccination scheduling, exemplifying the broader
+operational-research-meets-public-health literature beyond static
 facility location. Metaheuristic methods---GA, NSGA-II~\cite{deb2002fast},
 simulated annealing, and ALNS---are routinely employed when problem scale
-defeats exact MILP. The bulk of this literature is single-region or
-US-focused; trust-level allocation across NHS England regions and
-Integrated Care Boards has, to our knowledge, not been studied with the
-methodological breadth proposed here.
+defeats exact MILP, or when a Pareto front (rather than a scalarised
+optimum) is required. The bulk of this literature is single-region or
+US-focused; comparative MILP-and-metaheuristic allocation across the seven
+NHS England commissioning regions has, to our knowledge, not been studied
+with the methodological breadth proposed here.
 
 \subsection{Forecast-to-Decision Pipelines}
 
@@ -99,8 +96,9 @@ non-pharmaceutical-intervention allocation. Our framework adopts the
 predict-then-optimise structure, contributes a domain-specific
 decision-aware training objective that asymmetrically penalises
 operationally costly under-prediction, and broadens the optimisation
-comparison to include exact MILP, augmented $\varepsilon$-constraint,
-NSGA-II, GA, and simulated annealing. By treating the forecasting module
-as a substitutable component, the framework is forecasting-backend
-agnostic: alternative graph-based or transformer-based forecasters can be
-swapped in without changes to the allocation layer.
+comparison to include exact MILP, a tail-risk robust MILP,
+NSGA-II, GA, and simulated annealing on a shared LP-slave fitness
+oracle. By treating the forecasting module as a substitutable
+component, the framework is forecasting-backend agnostic: alternative
+graph-based or transformer-based forecasters can be swapped in without
+changes to the allocation layer.

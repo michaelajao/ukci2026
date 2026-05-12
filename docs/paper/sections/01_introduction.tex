@@ -102,78 +102,83 @@ limitations, and conclude.
 \begin{figure}[t]
 \centering
 \begin{tikzpicture}[
-  font=\footnotesize,
+  font=\scriptsize,
   >={Stealth[length=1.6mm,width=1.2mm]},
   phase/.style={
     draw, rounded corners=2pt, line width=0.4pt,
     align=left, anchor=north west,
-    inner xsep=4pt, inner ysep=4pt,
-    minimum height=27mm, text width=27mm,
+    inner xsep=3pt, inner ysep=4pt,
+    text width=27mm, minimum height=36mm,
   },
-  hdr/.style={
-    font=\scriptsize\bfseries, anchor=base west,
-  },
-  arr/.style={->, line width=0.5pt, shorten >=1pt, shorten <=1pt},
-  xsep/.style={node distance=3mm},
+  hdr/.style={font=\footnotesize\bfseries},
+  arr/.style={->, line width=0.55pt, shorten >=1pt, shorten <=1pt},
 ]
-% --- four phase boxes, evenly tiled ---
-\node[phase, fill=NavyBlue!6]   (A) at (0,0)
-  {\textbf{A.~Forecasting}\\[1pt]
-   \scriptsize NHS regional series\\
-   {\scriptsize $\downarrow$ pre-train}\\
-   \scriptsize PINN--SEIRD\\
-   \scriptsize 8 state + 4 param\\
-   \scriptsize features (frozen)\\
-   {\scriptsize $\downarrow$}\\
-   \scriptsize Quantile GRU head\\
-   \scriptsize pinball loss\\
-   \scriptsize + level/trend anchor};
+% --- Phase A : forecasting ---
+\node[phase, fill=NavyBlue!6] (A) at (0,0) {%
+  \hdr A.~Forecasting\par\vspace{2pt}
+  NHS regional MV-bed\\
+  daily series\\[2pt]
+  $\downarrow$ \emph{pre-train}\\[1pt]
+  PINN--SEIRD\\
+  $(8$ state $+\,4$ param$)$\\[2pt]
+  $\downarrow$ \emph{freeze}\\[1pt]
+  Quantile GRU head:\\
+  pinball loss\\
+  $+$ level/trend anchor\\[2pt]
+  $\hat q^{(0.1)},\hat q^{(0.5)},\hat q^{(0.9)}$};
 
+% --- Phase B : scenarios ---
 \node[phase, fill=ForestGreen!6,
-      right=3mm of A.north east, anchor=north west] (B)
-  {\textbf{B.~Scenarios}\\[1pt]
-   \scriptsize $q^{(0.1)}\!\to\!$ low\\
-   \scriptsize $q^{(0.5)}\!\to\!$ median\\
-   \scriptsize $q^{(0.9)}\!\to\!$ high\\[1pt]
-   \scriptsize weights\\
-   \scriptsize $\pi{=}(0.2,0.6,0.2)$\\[1pt]
-   \scriptsize $d_{r,h}^{s}$ tensor\\
-   \scriptsize shape $(R,H,S)$};
+      right=2mm of A.north east, anchor=north west] (B) {%
+  \hdr B.~Scenarios\par\vspace{2pt}
+  $q^{(0.1)}\!\!\to\!$ \emph{low}\\
+  $q^{(0.5)}\!\!\to\!$ \emph{median}\\
+  $q^{(0.9)}\!\!\to\!$ \emph{high}\\[3pt]
+  Weights:\\
+  $\pi=(0.2,0.6,0.2)$\\[3pt]
+  Demand tensor:\\
+  $d_{r,h}^{s}\!\in\!\mathbb{R}^{R\times H\times 3}$\\
+  $R{=}7$, $H{=}4$};
 
+% --- Phase C : allocation ---
 \node[phase, fill=BrickRed!6,
-      right=3mm of B.north east, anchor=north west] (C)
-  {\textbf{C.~Allocation}\\[1pt]
-   \scriptsize Deterministic MILP\\
-   \scriptsize Tail-risk robust MILP\\
-   \scriptsize GA + LP slave\\
-   \scriptsize NSGA-II (3-obj.)\\
-   \scriptsize Simulated annealing\\[1pt]
-   \scriptsize Status quo / pop /\\
-   \scriptsize demand / greedy\\
-   \scriptsize baselines};
+      right=2mm of B.north east, anchor=north west] (C) {%
+  \hdr C.~Allocation\par\vspace{2pt}
+  \emph{Exact:}\\
+  Deterministic MILP\\
+  Tail-risk robust MILP\\[3pt]
+  \emph{Metaheuristics:}\\
+  GA (single-obj.)\\
+  NSGA-II (3-obj.)\\
+  Simulated annealing\\[3pt]
+  \emph{Heuristics:}\\
+  status quo, pop-prop,\\
+  demand-prop, greedy};
 
+% --- Phase D : evaluation ---
 \node[phase, fill=Orange!8,
-      right=3mm of C.north east, anchor=north west] (D)
-  {\textbf{D.~Evaluation}\\[1pt]
-   \scriptsize $E[u]$, $u^{\text{worst}}$\\
-   \scriptsize transfer (bed\,km)\\
-   \scriptsize runtime\\
-   \scriptsize Pareto front\\[1pt]
-   \scriptsize Sensitivity: $B,\ \tau,\ \lambda_3$\\
-   \scriptsize Forecaster sweep};
+      right=2mm of C.north east, anchor=north west] (D) {%
+  \hdr D.~Evaluation\par\vspace{2pt}
+  Expected unmet $E[u]$\\
+  Worst-case $u^{\text{worst}}$\\
+  Transfer (bed\,km)\\
+  Runtime\\[3pt]
+  Pareto front (NSGA-II)\\[3pt]
+  \emph{Sensitivity:}\\
+  $B,\ \tau,\ \lambda_3$,\\
+  forecaster swap};
 
-% --- arrows between phases ---
-\draw[arr] (A.east) -- ($(B.west)$);
-\draw[arr] (B.east) -- ($(C.west)$);
-\draw[arr] (C.east) -- ($(D.west)$);
+% --- forward arrows between phases ---
+\draw[arr] (A.east) -- (B.west);
+\draw[arr] (B.east) -- (C.west);
+\draw[arr] (C.east) -- (D.west);
 
-% --- arrows from D back to A and C (feedback) ---
-\path (A.south west) -- (D.south east) coordinate[pos=0.5] (mid);
-\draw[arr, dashed, line width=0.4pt]
-  (D.south) .. controls +(0,-7mm) and +(0,-7mm) ..
-  node[below, font=\scriptsize, pos=0.5] {sensitivity feedback}
+% --- dashed feedback under the row ---
+\draw[arr, dashed, line width=0.5pt]
+  (D.south) .. controls +(0,-6mm) and +(0,-6mm) ..
+  node[midway, below=0pt, font=\scriptsize\itshape]
+    {sensitivity feedback}
   (A.south);
-
 \end{tikzpicture}
 \caption{Four-phase forecast-to-decision pipeline. Phase~A pre-trains a
 per-region PINN-SEIRD on the refined $SEI_aI_sHCRD$ system and feeds its
