@@ -1,0 +1,73 @@
+% =============================================================================
+\section{Introduction}\label{sec:introduction}
+% =============================================================================
+
+The COVID-19 pandemic exposed the vulnerability of national health systems
+to rapid, spatially uneven surges in critical-care demand. In England,
+sustained demand for adult critical-care beds and mechanical ventilation
+during successive waves required emergency capacity expansion, inter-trust
+patient transfers, and Nightingale-style temporary hospitals. Decisions of
+this scale are made under deep uncertainty: planners must balance the cost
+of opening or expanding surge capacity against the risk of unmet demand,
+while remaining sensitive to patient-transfer burden and regional equity.
+The computational intelligence community has produced strong tools for
+both halves of this problem --- epidemic and hospital-demand
+forecasting~\cite{gao2021stan,gao2023hoist,qian2025physics} and robust
+facility-location and resource allocation under
+uncertainty~\cite{eriskin2022robust,wan2023two,shamseddin2025optimization}
+--- but few works connect the two into a single decision-focused pipeline
+tailored to a national health system. The present work occupies the
+\emph{temporal, per-region} corner of the forecasting design space and
+the \emph{multi-method comparative} corner of the allocation design
+space; the spatiotemporal-graph alternatives surveyed in
+Section~\ref{sec:related_work} are explicitly deferred to future work.
+
+Existing forecasting models, including physics-informed neural networks
+(PINNs)~\cite{ajao2025hybrid,qian2025physics} and graph-based
+architectures such as STAN~\cite{gao2021stan} and HOIST~\cite{gao2023hoist},
+are typically optimised for statistical accuracy alone. Yet for
+critical-care planning the operational cost of forecast errors is
+asymmetric: underestimating demand by ten beds risks patients without
+ventilators, while overestimating wastes prepared capacity. Standard
+squared-error or absolute-error objectives treat these symmetrically.
+Conversely, most optimisation formulations for pandemic capacity planning
+assume demand is deterministic or drawn from off-the-shelf statistical
+forecasts~\cite{shamseddin2025optimization,eriskin2022robust}, leaving
+unexploited the dynamics-aware information that physics-informed
+forecasters can provide. Recent work begins to close this gap:
+Liu and Cao~\cite{liu2026dynamic} couple spatiotemporal graph attention
+with multi-objective optimisation for vaccine and
+non-pharmaceutical-intervention allocation, and Shams Eddin and El
+Hajj~\cite{shamseddin2025optimization} integrate SEIRD-driven demand into
+robust hospital-bed scheduling for a single US region. To our knowledge no
+published work combines (a) physics-informed regional epidemic forecasting,
+(b) decision-aware training that explicitly penalises operationally costly
+forecast errors, and (c) metaheuristic robust optimisation for NHS England
+critical-care surge capacity.
+
+We close that gap with a four-phase forecast-to-decision pipeline. A
+per-region PINN-SEIRD module produces multi-horizon point and quantile
+forecasts of admissions and critical-care occupancy, trained with a
+composite loss combining a Huber data fit, an ODE-residual physics
+regulariser, an asymmetric underestimation penalty, and a temporal
+smoothness term. Forecast quantiles are discretised into demand scenarios
+that drive a robust multi-objective location-allocation model, solved
+exactly via mixed-integer linear programming (MILP) at NHS regional scale,
+and via metaheuristics --- a Genetic Algorithm (GA), the Non-dominated
+Sorting Genetic Algorithm II (NSGA-II)~\cite{deb2002fast}, and Simulated
+Annealing --- at trust-level scale. Our contributions are: (1) a four-phase
+forecast-to-decision pipeline reproducible on open NHS data;
+(2) a \emph{decision-aware} training objective penalising operationally
+costly forecast errors; (3) a robust multi-objective allocation model
+balancing infrastructure cost, unmet demand, transfer burden, and equity,
+with explicit MILP/GA/NSGA-II/SA comparison; (4) a refined $SEI_aI_sHCRD$
+compartmental model that separates the hospitalisation ratio $\omega$
+($I_s\to H$) from the critical-care escalation proportion $\phi$
+($H\to C$), correcting an over-loading of $\omega$ in earlier
+work~\cite{ajao2025hybrid}; and (5) an NHS England case study evaluating
+allocation policies against operational, equity, and robustness metrics.
+\Cref{sec:related_work} reviews related work;
+\Cref{sec:forecasting,sec:optimisation} describe the forecasting and
+optimisation modules; \Cref{sec:case_study} presents the case study;
+\Cref{sec:results,sec:discussion,sec:conclusion} report results, discuss
+limitations, and conclude.

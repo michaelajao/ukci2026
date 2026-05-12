@@ -1,0 +1,44 @@
+% =============================================================================
+\section{Discussion and Limitations}\label{sec:discussion}
+% Target length: ~0.75 pages (~350-400 words)
+% =============================================================================
+
+\paragraph{Equity versus efficiency.}
+The Pareto-front analysis highlights a recurring tension in
+allocation policy: the lowest-cost configuration concentrates surge
+capacity in the largest-demand regions, but achieves higher
+maximum-regional-shortage ratios than the equity-aware variant. The
+equity-linearised constraint (\Cref{eq:equity_per_region,eq:equity_max})
+shifts the front toward more uniform per-capita coverage at a modest cost
+premium. This trade-off is operationally relevant: equity-blind allocation
+can leave outlying regions exposed, while strict equity weighting can
+under-utilise concentrated capacity. The framework gives planners a
+principled way to elicit and explore that trade-off rather than burying it
+in a single objective.
+
+\paragraph{Forecast quality, decision quality, and asymmetry.}
+The forecast-value experiment shows a roughly \todo{Z}\% gap in unmet
+demand between the proposed forecaster and a historical-median baseline,
+and a \todo{W}\% gap to oracle forecasts. The asymmetric underestimation
+penalty (\Cref{eq:under_loss}) is doing meaningful work: ablating it
+raises the underestimation rate by \todo{X} percentage points
+(\Cref{tab:forecast_accuracy}) without proportionally improving root mean
+squared error. Better accuracy on the wrong side of the forecast
+distribution still produces shortages: this is the operational point of
+decision-aware training. At regional scale, deterministic and robust MILP
+solve exactly in seconds; at trust scale the LP-slave metaheuristics
+match within \todo{X}\% of MILP at \todo{Y}$\times$ lower runtime,
+extending applicability to operational instance sizes.
+
+\paragraph{Limitations.}
+Costs $F_j, g_j, c_{ij}$ are reported in scaled units; operational use
+would require commissioning-context calibration. The SEIRD model assumes
+well-mixed regional populations. Travel times are approximated by
+detour-scaled great-circle distances; an OSRM-derived matrix may shift
+particular assignments without changing qualitative conclusions. The
+framework is configured for NHS England structures; transfer to other
+health systems would require re-specifying demand units, capacity
+categories, and equity proxies, though the optimisation core is general.
+Natural extensions include graph-based forecasting backbones, a
+rolling-horizon online formulation, and a coupled budget-allocation upper
+level.

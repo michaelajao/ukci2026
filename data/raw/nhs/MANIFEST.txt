@@ -1,5 +1,5 @@
 # NHS England COVID-19 Hospital Activity download manifest
-# Generated: 2026-05-10 13:26:32 GMT Daylight Time
+# Generated: 2026-05-12 13:54:25 GMT Daylight Time
 # Source portal: https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 
 label:       daily_admissions_beds_2020-08_to_2021-04

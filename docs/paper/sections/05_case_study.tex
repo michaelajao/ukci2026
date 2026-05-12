@@ -1,0 +1,49 @@
+% =============================================================================
+\section{NHS England Case Study}\label{sec:case_study}
+% Target length: ~1.0 page (~450-500 words)
+% =============================================================================
+
+\subsection{Data and Spatial Resolution}
+
+The case study uses three publicly available data sources covering
+$1$~August~$2020$ to $31$~August~$2022$, the window during which NHS
+England published daily regional admissions and bed-occupancy data:
+NHS~England COVID-19~Hospital~Activity (daily admissions and
+mechanical-ventilation bed occupancy), NHS~England Urgent~and~Emergency~Care
+Bed~Availability (adult critical-care capacity at acute-trust level,
+providing $C_{j,h}$), and ONS open geography and mid-year population
+estimates (region boundaries, centroids for travel-time computation, and
+population denominators $p_i$). The main forecasting and regional
+optimisation experiments use NHS England's seven regions: North East and
+Yorkshire, North West, Midlands, East of England, London, South East, and
+South West. Trust-level experiments use a subset of acute trusts with
+reported critical-care capacity. Travel times $T_{ij}$ are approximated by
+great-circle distances scaled by a $1.3$ detour factor, calibrated against
+OSRM driving estimates on a sample of routes.
+
+\subsection{Train, Validation, and Test Splits}
+
+The data are split chronologically by epidemic wave, deliberately holding
+the most clinically distinct wave in the test set: training on
+$1$~Aug~$2020$ -- $31$~May~$2021$ (Alpha and early vaccination),
+validation on $1$~Jun -- $30$~Nov~$2021$ (Delta) for hyperparameter
+tuning and early stopping, and testing on $1$~Dec~$2021$ -- $31$~Aug~$2022$
+(Omicron and post-Omicron). Omicron is held out because its
+case-to-hospitalisation and hospitalisation-to-critical-care ratios differ
+markedly from earlier waves, providing a stress test of the framework's
+generalisation.
+
+\subsection{Optimisation Parameters}
+
+The fixed activation cost $F_j$ and marginal capacity cost $g_j$ are
+reported in scaled units, allowing sensitivity analysis without committing
+to monetary figures that depend on commissioning context. The budget $B$
+is varied across three levels (low, medium, high) to expose the
+cost--shortage trade-off, the travel-time threshold $\tau$ over
+$\{60, 120, 240\}$ minutes, and equity and CVaR weights $\lambda_2,
+\lambda_3$ via sensitivity sweeps. Default loss weights are $\lambda_1 =
+10^3$, $\lambda_2 = 10^2$, $\lambda_3 = 10^1$, calibrated to bring the
+four objective components to comparable magnitudes. All experiments use
+fixed random seeds; results are reported as means over five seeds where
+applicable. Code, configurations, and the cleaned regional dataset are
+available at the repository linked in the acknowledgements.

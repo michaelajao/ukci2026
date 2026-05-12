@@ -71,14 +71,19 @@ htmlcov/
 # ---------------------------------------------------------------------------
 
 # Raw data — too large, downloaded from public sources
-data/raw/*.xlsx
-data/raw/*.zip
-data/raw/*.csv
+data/raw/nhs/*.xlsx
+data/raw/nhs/*.zip
+data/raw/nhs/*.csv
+data/raw/supporting/*.xlsx
+data/raw/supporting/*.xls
+data/raw/supporting/*.csv
+data/raw/supporting/*.zip
 
-# Keep manifest and README under version control
-!data/raw/MANIFEST.txt
-!data/raw/README.md
-!data/raw/.gitkeep
+# Keep manifests and gitkeeps under version control
+!data/raw/nhs/MANIFEST.txt
+!data/raw/nhs/.gitkeep
+!data/raw/supporting/MANIFEST.txt
+!data/raw/supporting/.gitkeep
 
 # Processed data — regeneratable from raw
 data/processed/*.csv
@@ -100,7 +105,8 @@ figures/*.svg
 !figures/.gitkeep
 
 # LaTeX build artefacts (when paper drafting begins)
-paper/build/
+docs/paper/build/
+docs/paper/out/
 *.aux
 *.bbl
 *.blg

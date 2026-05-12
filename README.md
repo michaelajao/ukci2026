@@ -1,6 +1,6 @@
 # UKCI 2026 — Critical-Care Surge Capacity Planning
 
-**Working title:** From Forecasts to Capacity Decisions: A Physics-Informed and Metaheuristic Pipeline for NHS Critical-Care Surge Planning
+**Working title:** Decision-Aware Physics-Informed Forecasting and Metaheuristic Allocation for NHS Critical-Care Surge Capacity Under Demand Uncertainty
 
 **Authors (planned):** Michael Ajao-Olarinoye, Abiola Babatunde, Vasile Palade
 **Conference:** UKCI 2026, Coventry, 9–11 September 2026
@@ -28,13 +28,13 @@ python scripts/download_nhs_data.py
 python scripts/build_regional_dataset.py
 
 # 4. Run a baseline forecasting experiment
-python -m critical_care_surge.forecasting.train --config configs/baseline_lstm.yaml
+python -m forecasting.baselines --config configs/baseline_gru.yaml
 
 # 5. Run the proposed PINN-GRU model
-python -m critical_care_surge.forecasting.train --config configs/proposed.yaml
+python -m forecasting.composite_loss --config configs/proposed.yaml
 
 # 6. Generate scenarios and run the optimisation
-python -m critical_care_surge.optimization.solve --config configs/milp_regional.yaml
+python -m optimization.allocate --config configs/milp_regional.yaml
 ```
 
 ## Documentation
@@ -44,6 +44,8 @@ python -m critical_care_surge.optimization.solve --config configs/milp_regional.
 | [`docs/01_RESEARCH_PROGRAMME.md`](docs/01_RESEARCH_PROGRAMME.md) | Strategic plan, paper structure, contributions, risks |
 | [`docs/02_METHODOLOGY.md`](docs/02_METHODOLOGY.md) | Mathematical formulation, architecture, hyperparameters |
 | [`docs/03_TIMELINE.md`](docs/03_TIMELINE.md) | Day-by-day work plan, gates, experiment matrix |
+| [`docs/paper/`](docs/paper/) | Actual UKCI manuscript source and `docs/paper/out/` build artifacts |
+| [`docs/ukci_springer_template/`](docs/ukci_springer_template/) | Original UKCI/Springer SVProc template bundle downloaded from the conference website |
 | `docs/status/` | Dated status notes recording gate decisions |
 
 ## Repository layout
@@ -56,10 +58,10 @@ ukci2026/
 │   ├── processed/                 # Tidy regional CSV
 │   └── graphs/                    # NHS region adjacency, distance, correlation
 ├── scripts/                       # CLI utilities (download, build, etc.)
-├── src/critical_care_surge/       # Python package
+├── src/                           # Python packages (flat layout, no wrapper)
 │   ├── data/                      # NHS ingestion, splits, scenarios
-│   ├── forecasting/               # PINN-SEIRD, GRU, baselines, training
-│   ├── optimization/              # MILP, robust MILP, GA, NSGA-II, SA
+│   ├── forecasting/               # PINN-SEIRD, decision-aware loss, baselines
+│   ├── optimization/              # MILP, robust MILP, heuristics, metaheuristics, ε-constraint
 │   ├── evaluation/                # Forecast and allocation metrics
 │   └── utils/                     # Shared helpers, logging, seeds
 ├── configs/                       # YAML experiment configs
@@ -108,10 +110,10 @@ reproducibility statement.
 If this work is useful, please cite (placeholder until acceptance):
 
 ```bibtex
-@inproceedings{ajao-olarinoye2026forecasts,
-  title  = {From Forecasts to Capacity Decisions:
-            A Physics-Informed and Metaheuristic Pipeline
-            for NHS Critical-Care Surge Planning},
+@inproceedings{ajao-olarinoye2026decision,
+  title  = {Decision-Aware Physics-Informed Forecasting and
+            Metaheuristic Allocation for {NHS} Critical-Care
+            Surge Capacity Under Demand Uncertainty},
   author = {Ajao-Olarinoye, Michael and Babatunde, Abiola and Palade, Vasile},
   booktitle = {Proceedings of the 25th UK Workshop on
                Computational Intelligence (UKCI 2026)},

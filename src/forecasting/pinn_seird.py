@@ -26,7 +26,7 @@ are clinical periods (e.g. 1/alpha = 5 days incubation period).
 
 Usage (see scripts/train_pinn.py for full training loop):
 
-    from critical_care_surge.forecasting.pinn_seird import (
+    from forecasting.pinn_seird import (
         SEIRDFixedParams, RegionalPINN, pinn_loss
     )
     fixed = SEIRDFixedParams()

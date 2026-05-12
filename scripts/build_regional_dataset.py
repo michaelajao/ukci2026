@@ -46,7 +46,7 @@ from typing import Iterable
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-RAW_DIR = REPO_ROOT / "data" / "raw"
+RAW_DIR = REPO_ROOT / "data" / "raw" / "nhs"
 PROCESSED_DIR = REPO_ROOT / "data" / "processed"
 
 DAILY_SHEET = "Daily publication"
@@ -260,7 +260,7 @@ def write_quality_report(
     lines.append("# Regional daily dataset — data quality report")
     lines.append("")
     lines.append(f"Generated: {pd.Timestamp.utcnow():%Y-%m-%d %H:%M UTC}")
-    lines.append(f"Source files: {len(per_archive)} XLSX archive(s) in `data/raw/`")
+    lines.append(f"Source files: {len(per_archive)} XLSX archive(s) in `data/raw/nhs/`")
     lines.append("")
     lines.append("## Archive coverage")
     lines.append("")

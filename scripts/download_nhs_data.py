@@ -7,7 +7,7 @@ The data lives at:
 
 NHS England published daily admissions and beds data at regional and national level
 from 1 August 2020 to 31 August 2022. The data is split across three archive files
-plus weekly continuation files. This script downloads them to data/raw/.
+plus weekly continuation files. This script downloads them to data/raw/nhs/.
 
 Because URL paths on england.nhs.uk include the upload year/month and have changed
 historically, the script supports two modes:
@@ -52,7 +52,7 @@ except ImportError:
 
 # Repository root (script lives in repo_root/scripts/)
 REPO_ROOT = Path(__file__).resolve().parents[1]
-RAW_DIR = REPO_ROOT / "data" / "raw"
+RAW_DIR = REPO_ROOT / "data" / "raw" / "nhs"
 PORTAL_URL = (
     "https://www.england.nhs.uk/statistics/statistical-work-areas/"
     "covid-19-hospital-activity/"

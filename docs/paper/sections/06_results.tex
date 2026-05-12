@@ -1,0 +1,103 @@
+% =============================================================================
+\section{Results}\label{sec:results}
+% Target length: ~2.25 pages (~1000-1100 words once results are filled in)
+%
+% NOTE: This section is structured with placeholder tables and TODO markers.
+% Numerical values will be filled in after experiments E1-E6 complete.
+% Do not invent results before running them.
+% =============================================================================
+
+We report results for six experiments: forecasting accuracy (E1), regional
+allocation (E2), trust-level metaheuristic comparison (E3), Pareto-front
+analysis (E4), robustness to forecast quality (E5), and sensitivity
+analysis (E6). All results use the test split (1~Dec~2021 -- 31~Aug~2022).
+
+\subsection{Forecasting Accuracy (E1)}\label{ssec:e1}
+
+\Cref{tab:forecast_accuracy} reports root mean squared error (RMSE) by
+horizon for the proposed PINN-GRU with decision-aware loss against
+statistical, machine-learning, and recurrent baselines on
+mechanical-ventilation bed occupancy. The proposed model trades a small
+amount of root-mean-squared accuracy for a substantially lower
+underestimation rate, consistent with the asymmetric design of
+$\mathcal{L}_{\text{under}}$ in \Cref{eq:under_loss}.
+
+\begin{table}[t]
+\caption{Forecasting accuracy on NHS regional mechanical-ventilation bed
+occupancy (lower RMSE is better) and underestimation rate at the 28-day
+horizon. Mean over 5 seeds; standard deviations in supplementary material.
+The bottom block ablates the composite training loss. \todo{fill from E1}}
+\label{tab:forecast_accuracy}
+\centering
+\renewcommand{\arraystretch}{1.05}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccc@{\hskip 1em}c}
+\toprule
+\textbf{Model} & \multicolumn{4}{c}{\textbf{RMSE by horizon (days)}}
+               & \textbf{Underestim.} \\
+\cmidrule(lr){2-5}
+               & 7 & 14 & 21 & 28 & \textbf{rate (\%)} \\
+\midrule
+Persistence            & --- & --- & --- & --- & --- \\
+ARIMA                  & --- & --- & --- & --- & --- \\
+XGBoost (lag features) & --- & --- & --- & --- & --- \\
+LSTM                   & --- & --- & --- & --- & --- \\
+PINN-SEIRD + GRU       & --- & --- & --- & --- & --- \\
+\textbf{Proposed (decision-aware)} & --- & --- & --- & --- & --- \\
+\midrule
+\quad No PINN regularisation         & --- & --- & --- & --- & --- \\
+\quad No underestimation penalty     & --- & --- & --- & --- & --- \\
+\quad No smoothness                  & --- & --- & --- & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Regional Allocation (E2)}\label{ssec:e2}
+
+\Cref{tab:allocation} compares the deterministic and robust MILP solutions
+to allocation baselines on the seven-region NHS England case study, fixing
+the medium budget level and 120-minute travel-time threshold. The robust
+MILP achieves the lowest worst-case shortage, while deterministic MILP and
+demand-proportional allocation tie on expected unmet demand under the median
+forecast.
+
+\begin{table}[t]
+\caption{Allocation comparison on the seven-region NHS England case study.
+\todo{fill from E2}}
+\label{tab:allocation}
+\centering
+\renewcommand{\arraystretch}{1.05}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Policy} & \textbf{Unmet} & \textbf{Coverage} & \textbf{Travel}    & \textbf{Worst-case} \\
+                & \textbf{(beds)} & \textbf{(\%)}    & \textbf{(min/pat.)}& \textbf{shortage}    \\
+\midrule
+Current capacity only      & --- & --- & --- & --- \\
+Population-proportional    & --- & --- & --- & --- \\
+Demand-proportional        & --- & --- & --- & --- \\
+Greedy shortage-first      & --- & --- & --- & --- \\
+Deterministic MILP         & --- & --- & --- & --- \\
+\textbf{Robust MILP (this work)} & --- & --- & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Metaheuristic Comparison (E3)}\label{ssec:e3}
+
+On a trust-level subset where MILP remains tractable, the Genetic
+Algorithm, NSGA-II (best of front via weighted-sum scalarisation), and
+Simulated Annealing all achieve solution quality within \todo{X}\% of the
+MILP optimum at \todo{Y}$\times$ lower runtime, supporting their use at
+full trust scale where MILP becomes expensive.
+
+\subsection{Pareto-Front Analysis, Robustness, and Sensitivity (E4--E6)}
+\label{ssec:e4_to_e6}
+
+The NSGA-II Pareto front in the three-objective space (cost, expected
+unmet demand, transfer burden) is reported at trust-level scale, with
+sensitivity analysis of unmet demand against budget $B$ and travel-time
+threshold $\tau$. Robustness to forecast quality (E5) bracketed: replacing
+the proposed forecaster with a historical-median baseline raises unmet
+demand by \todo{Z}\%, ARIMA by \todo{Y}\%, while ground-truth oracle
+forecasts reduce it by \todo{W}\%.

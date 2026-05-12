@@ -1,0 +1,103 @@
+% =============================================================================
+\section{Related Work}\label{sec:related_work}
+% Target length: ~1.25 pages (~620 words)
+% Three subsections: forecasting, optimisation, forecast-to-decision pipelines.
+% Anchors the positioning against Bertsimas et al. (2022) and Luo & Stellato (2024)
+% and adds Valente et al. (2022) as the closest ICU-forecasting precedent and
+% Kargar et al. (2024) as the augmented epsilon-constraint precedent.
+% =============================================================================
+
+The closest precedent for our pipeline is Bertsimas
+et al.~\cite{bertsimas2022where}, who couple an extended DELPHI
+compartmental model of COVID-19 to a bilinear mixed-integer program for the
+location of one hundred mass-vaccination sites across US states, solving the
+resulting non-convex problem by a coordinate-descent scheme that alternates
+forward simulation of the discretised dynamics with a linear-programming
+approximation of the bilinear constraints. Their pipeline is the
+methodological parallel to ours; the differences are domain
+(vaccination-site siting versus critical-care surge), coupling
+(iterative joint optimisation versus our decoupled forecast-then-optimise),
+and forecasting objective (mean-squared error on DELPHI states versus our
+decision-aware composite loss). Our framework also draws on the formal
+Smart Predict-then-Optimize framework of Elmachtoub and
+Grigas~\cite{elmachtoub2022smart} and on the neural-ODE-based equitable
+opioid facility-location work of Luo and Stellato~\cite{luo2024equitable},
+who fit per-state SIR-like models via a neural-ODE-inspired procedure and
+embed the discretised dynamics into a McCormick-relaxed MIP. We review the
+three relevant subliteratures below.
+
+\subsection{Epidemic and Hospital-Demand Forecasting}
+
+Statistical and recurrent baselines---ARIMA, Prophet, and LSTM/GRU
+architectures---remain competitive when applied per region~\cite{ajao2024deep}.
+Closest in target to our work, Valente et al.~\cite{valente2022forecasting}
+forecast COVID-19 intensive-care occupancy in the Lazio region of Italy using
+a bidirectional LSTM with Google Community Mobility features lagged by
+twenty-one days following Cartení et al.~\cite{carteni2020mobility}, and
+exploit stochastic-ensemble Monte-Carlo dropout for prediction intervals;
+they report mean absolute error of approximately seven beds on
+weekly horizons. Graph neural networks add explicit spatial coupling:
+STAN~\cite{gao2021stan} combines graph-attention pooling with an
+SIR-consistency loss for COVID-19 case prediction at US county and state
+level, and HOIST~\cite{gao2023hoist} introduces an Ising-dynamics-inspired
+regulariser over an adaptively-learned location graph for hospitalisation
+prediction across 2{,}299 US counties. Physics-informed neural networks
+embed compartmental ordinary differential equations directly into the
+training loss~\cite{ajao2025hybrid,qian2025physics}, supporting
+dynamics-consistent forecasts under regime shifts. NHS-specific work is
+sparse: Hunter et al.~\cite{hunter2026machine} target elective-surgery ICU
+demand at a single trust, and prior work by the present
+authors~\cite{ajao2024deep,ajao2025hybrid} forecasts national-scale
+mechanical-ventilation demand. None of these targets the multi-region
+NHS England critical-care planning problem, and all optimise statistical
+rather than operationally-aligned error metrics.
+
+\subsection{Robust Optimisation for Healthcare Resource Allocation}
+
+Pandemic capacity planning has produced a rich optimisation literature.
+Eriskin et al.~\cite{eriskin2022robust} develop a robust multi-objective
+MILP for emergency-facility location and patient assignment under demand
+uncertainty. Wan et al.~\cite{wan2023two} propose a two-stage
+multi-objective ICU bed allocation model solved by an improved NSGA-II on
+Lyon hospital data. Shams Eddin and El
+Hajj~\cite{shamseddin2025optimization} integrate SEIRD-driven demand with
+standard beds, buffer beds, field hospitals, and inter-hospital transfers,
+validated on Northern Virginia data. In the vaccine supply-chain space,
+Kargar et al.~\cite{kargar2024data} couple a Covasim agent-based
+simulator~\cite{kerr2021covasim} to a multi-echelon bi-objective MILP solved
+by the augmented $\varepsilon$-constraint method, exposing the
+cost-versus-emissions Pareto front; we adopt the augmented
+$\varepsilon$-constraint paradigm in our allocation comparison,
+complementing exact MILP and NSGA-II with an exact non-dominated-solution
+generator. Tang et al.~\cite{tang2025mobile} apply adaptive large
+neighbourhood search to mobile-vaccination scheduling, exemplifying the
+broader operational-research-meets-public-health literature beyond static
+facility location. Metaheuristic methods---GA, NSGA-II~\cite{deb2002fast},
+simulated annealing, and ALNS---are routinely employed when problem scale
+defeats exact MILP. The bulk of this literature is single-region or
+US-focused; trust-level allocation across NHS England regions and
+Integrated Care Boards has, to our knowledge, not been studied with the
+methodological breadth proposed here.
+
+\subsection{Forecast-to-Decision Pipelines}
+
+The integration of predictive forecasts into prescriptive optimisation is
+a maturing research area. Elmachtoub and Grigas~\cite{elmachtoub2022smart}
+formalise the Smart Predict-then-Optimize framework with a loss aware of
+the downstream decision problem. In healthcare,
+Bertsimas et al.~\cite{bertsimas2022where} provide the closest end-to-end
+precedent via coordinate-descent coupling of DELPHI simulation with
+bilinear MIP allocation; Luo and Stellato~\cite{luo2024equitable} provide
+an analogous predict-then-optimise architecture for opioid
+treatment-facility location with neural-ODE parameter estimation and
+McCormick-envelope relaxation; and Liu and Cao~\cite{liu2026dynamic} couple
+spatiotemporal graph-attention forecasting to multi-objective vaccine and
+non-pharmaceutical-intervention allocation. Our framework adopts the
+predict-then-optimise structure, contributes a domain-specific
+decision-aware training objective that asymmetrically penalises
+operationally costly under-prediction, and broadens the optimisation
+comparison to include exact MILP, augmented $\varepsilon$-constraint,
+NSGA-II, GA, and simulated annealing. By treating the forecasting module
+as a substitutable component, the framework is forecasting-backend
+agnostic: alternative graph-based or transformer-based forecasters can be
+swapped in without changes to the allocation layer.

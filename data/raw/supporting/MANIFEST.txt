@@ -1,0 +1,45 @@
+# External supporting datasets for UKCI 2026 critical-care surge pipeline.
+# Generated: 2026-05-12 12:57:06 UTC
+# Source: scripts/download_external_data.py
+
+label:       google_mobility_gb_2020
+description: Google COVID-19 Community Mobility Report -- Great Britain 2020. Daily percent change vs baseline in retail/recreation, grocery/pharmacy, parks, transit, workplaces, residential, at sub-region (Upper-Tier Local Authority) level.
+url:         https://www.gstatic.com/covid19/mobility/2020_GB_Region_Mobility_Report.csv
+file:        2020_GB_Region_Mobility_Report.csv
+size:        14711953
+sha256:      bcd79f690bcfd3fa06db80236f3d6214a5c737547a0524e4d9bd505328ed03df
+
+label:       google_mobility_gb_2021
+description: Google COVID-19 Community Mobility Report -- Great Britain 2021. Same schema as 2020 file.
+url:         https://www.gstatic.com/covid19/mobility/2021_GB_Region_Mobility_Report.csv
+file:        2021_GB_Region_Mobility_Report.csv
+size:        16748603
+sha256:      4b0a559bad8422eef0d7cc1a824f1cb2ee33c267416f9b6e53d0745b49fe2346
+
+label:       google_mobility_gb_2022
+description: Google COVID-19 Community Mobility Report -- Great Britain 2022. Series ends 15 October 2022 when Google discontinued publication.
+url:         https://www.gstatic.com/covid19/mobility/2022_GB_Region_Mobility_Report.csv
+file:        2022_GB_Region_Mobility_Report.csv
+size:        13117145
+sha256:      7a91e234fe17bab51d14f5e1ef2c78840aa62631908494452661228524db8e44
+
+label:       ons_mye_2021_uk
+description: ONS Mid-Year Population Estimates 2021 -- UK England Wales Scotland Northern Ireland, on 2021 geography (final). Required for NHS region population denominators.
+url:         https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/populationestimatesforukenglandandwalesscotlandandnorthernireland/mid2021/ukpopestimatesmid2021on2021geographyfinal.xls
+file:        ukpopestimatesmid2021on2021geographyfinal.xls
+size:        1934848
+sha256:      cbba1652c605c38595281e877cf9f0763b39c7b27f2639d7879f808922eb6a8e
+
+label:       imd_2019_file_07_scores
+description: English Indices of Deprivation 2019, File 7 -- All IoD2019 Scores, Ranks, Deciles and Population Denominators. LSOA-level. Master input for IMD-weighted fairness constraints.
+url:         https://assets.publishing.service.gov.uk/media/5dc407b440f0b6379a7acc8d/File_7_-_All_IoD2019_Scores__Ranks__Deciles_and_Population_Denominators_3.csv
+file:        IoD2019_File_7_Scores_Ranks_Deciles.csv
+size:        9727566
+sha256:      af86bf505d9174a65cc87eb9ad97b85b2b53bf481d0e75c7cf41aa5645622aa2
+
+label:       imd_2019_file_10_la_lower_tier
+description: English Indices of Deprivation 2019, File 10 -- Local Authority District Summaries (lower-tier). LA-aggregated IMD score, average rank, proportion of LSOAs in most-deprived deciles. Convenience aggregation for LA-level fairness reporting.
+url:         https://assets.publishing.service.gov.uk/media/5d8b3cfbe5274a08be69aa91/File_10_-_IoD2019_Local_Authority_District_Summaries__lower-tier__.xlsx
+file:        IoD2019_File_10_LA_lower_tier_summaries.xlsx
+size:        255264
+sha256:      e4ade0ca7fa5e00e1f89b6c1ae754cd6561dd777543e04ff8a38cadea10b5366

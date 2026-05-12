@@ -1,0 +1,112 @@
+% =============================================================================
+\section{Forecasting Module}\label{sec:forecasting}
+% Target length: ~2.0 pages (~900-1000 words)
+% =============================================================================
+
+The forecasting module produces multi-horizon point and quantile estimates of
+critical-care demand for each NHS region. It comprises three parts: a
+per-region physics-informed neural epidemic estimator, a temporal forecasting
+head, and a Monte Carlo Dropout uncertainty layer.
+
+\subsection{Refined SEIRD Compartmental Model}\label{ssec:seird}
+
+For each region $r \in \R$ with population $N_r$, we model the local epidemic
+using a refined eight-compartment $SEI_aI_sHCRD$ system. Let
+$U^r(t) = (S_r, E_r, I_{a,r}, I_{s,r}, H_r, C_r, R_r, D_r)$ denote
+susceptible, exposed, asymptomatic infectious, symptomatic infectious,
+hospitalised, critical-care, recovered, and deceased compartments
+respectively. The system evolves according to
+\begin{equation}\label{eq:seird}
+\begin{aligned}
+\dot{S}_r     &= -\beta_r S_r (I_{s,r}+I_{a,r})/N_r + \eta_r R_r \\
+\dot{E}_r     &= \beta_r S_r (I_{s,r}+I_{a,r})/N_r - \alpha E_r \\
+\dot{I}_{s,r} &= \alpha\rho E_r - d_s I_{s,r} \\
+\dot{I}_{a,r} &= \alpha(1-\rho)E_r - d_a I_{a,r} \\
+\dot{H}_r     &= d_s\omega I_{s,r} - d_H H_r - \mu H_r \\
+\dot{C}_r     &= \phi\, d_H H_r - \gamma_{c,r} C_r - \delta_{c,r} C_r \\
+\dot{R}_r     &= d_s(1-\omega)I_{s,r} + d_a I_{a,r}
+                + (1-\phi)d_H H_r + \gamma_{c,r}C_r - \eta_r R_r \\
+\dot{D}_r     &= \mu H_r + \delta_{c,r} C_r,
+\end{aligned}
+\end{equation}
+subject to conservation $\sum_{\bullet}\bullet_r(t)=N_r$. Here $\alpha, d_s,
+d_a, d_H$ are \emph{rates} with units of inverse-days (their reciprocals are
+the corresponding clinical periods), $\rho$ is the symptomatic proportion,
+$\omega$ is the hospitalisation ratio of symptomatic cases, $\mu$ is the
+in-hospital mortality rate, and $\beta_r, \gamma_{c,r}, \delta_{c,r}, \eta_r$
+are time-varying region-specific parameters learned from data.
+
+\paragraph{Refinement of the prior compartmental model.}
+The earlier formulation in~\cite{ajao2025hybrid} overloaded the parameter
+$\omega$ to represent both the $I_s \to H$ hospitalisation ratio and, via
+$(1-\omega)$, the $H \to C$ critical-care escalation. These quantities are
+biologically distinct: the first is determined by clinical severity at
+admission, the second by in-hospital deterioration. We separate them by
+introducing $\phi$ for the $H \to C$ escalation, leaving $\omega$ for
+hospitalisation alone. \Cref{eq:seird} reflects this refinement.
+
+\subsection{Per-Region PINN-SEIRD}\label{ssec:pinn}
+
+For each region $r$, the PINN consists of two fully connected feedforward
+networks following~\cite{ajao2025hybrid}: a state network $U^r_{NN}: t
+\mapsto U^r(t)$ with five hidden layers of $20$ units, and a parameter
+network $X^r_{NN}: t \mapsto (\beta_r, \gamma_{c,r}, \delta_{c,r}, \eta_r)$
+with three hidden layers of $20$ units. Both use tanh activations, sigmoid
+outputs, and Xavier initialisation. The PINN loss for region $r$ combines a
+data-fit term on observable compartments $\{I_s, H, C, D\}$ with a residual
+loss against \Cref{eq:seird}:
+\begin{equation}\label{eq:pinn_loss}
+\mathcal{L}^{PINN}_r = \sum_{t \in \T_{\text{train}}}
+  \sum_{k \in \{I_s, H, C, D\}} \big(U^r_{NN,k}(t) - y_{r,t,k}\big)^2
++ \lambda_{ode} \sum_{t \in \T_{\text{coll}}}
+  \left\| \tfrac{dU^r_{NN}(t)}{dt} -
+  \mathcal{N}\big(U^r_{NN}(t); X^r_{NN}(t)\big)\right\|^2,
+\end{equation}
+where $\mathcal{N}$ denotes the right-hand side of \Cref{eq:seird} and
+derivatives are evaluated via PyTorch automatic differentiation at random
+collocation points sampled in $\T_{\text{coll}}$ at every iteration.
+
+\subsection{Temporal Forecasting Head and Decision-Aware Loss}\label{ssec:temporal}
+
+Once the PINN is trained, its outputs --- region-specific compartmental
+state estimates $\tilde{U}^r(t)$ and time-varying parameters
+$\tilde{X}^r(t)$ --- are concatenated with observed covariates
+$\mathbf{x}_{r,t}$ to form the feature sequence
+$\mathbf{f}_{r,t} = [\tilde{U}^r(t) \,\|\, \tilde{X}^r(t) \,\|\,
+\mathbf{x}_{r,t}]$. A two-layer GRU with hidden dimension $64$ encodes a
+$L = 28$ day lookback window into a representation $\mathbf{h}_{r,t}$, from
+which a multi-horizon decoder produces $\hat{y}_{r,t+h} = \mathbf{w}_h^\top
+\mathbf{h}_{r,t} + b_h$ for $h \in \Hset = \{7, 14, 21, 28\}$.
+
+The forecaster is trained with a composite \emph{decision-aware} loss:
+\begin{equation}\label{eq:composite_loss}
+\mathcal{L} = \mathcal{L}_{\text{forecast}}
++ \lambda_{\text{phys}} \sum_r \mathcal{L}^{PINN}_r
++ \lambda_{\text{under}} \mathcal{L}_{\text{under}}
++ \lambda_{\text{smooth}} \mathcal{L}_{\text{smooth}},
+\end{equation}
+where $\mathcal{L}_{\text{forecast}}$ is the Huber loss on standardised
+forecasts (robust to data spikes), and the remaining terms are
+\begin{align}
+\mathcal{L}_{\text{under}}  &= \textstyle\sum_{r,h} \max\!\big(0,\; y_{r,t+h} - \hat{y}_{r,t+h}\big), \label{eq:under_loss} \\
+\mathcal{L}_{\text{smooth}} &= \textstyle\sum_{r,h}
+   \big(\hat{y}_{r,t+h+1} - \hat{y}_{r,t+h}\big)^2.
+\end{align}
+The asymmetric underestimation term $\mathcal{L}_{\text{under}}$ is the
+methodological hook that ties forecasting to optimisation: it penalises
+forecast errors only in the direction that creates downstream operational
+shortages~\cite{elmachtoub2022smart}. Initial loss weights are
+$\lambda_{\text{phys}}=0.1$, $\lambda_{\text{under}}=0.5$,
+$\lambda_{\text{smooth}}=0.01$, tuned on the validation split.
+
+\subsection{Uncertainty and Scenario Generation}\label{ssec:uncertainty}
+
+Predictive uncertainty is obtained via Monte Carlo Dropout: at inference,
+dropout layers remain active and $K=100$ stochastic forward passes
+generate samples from which empirical quantiles $q_{r,h}^p$ for $p \in
+\{0.1, 0.5, 0.9\}$ are extracted. Each region--horizon predictive
+distribution is discretised into three canonical scenarios:
+$\Sset = \{ (q_{r,h}^{0.1},\, 0.2),\, (q_{r,h}^{0.5},\, 0.6),\,
+            (q_{r,h}^{0.9},\, 0.2) \}$. Calibration is reported using the
+Weighted Interval Score~\cite{bracher2021evaluating} at the $50\%$ and
+$90\%$ prediction intervals.

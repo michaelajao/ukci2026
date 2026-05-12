@@ -1,7 +1,7 @@
 # Regional daily dataset — data quality report
 
-Generated: 2026-05-10 16:48 UTC
-Source files: 4 XLSX archive(s) in `data/raw/`
+Generated: 2026-05-12 15:52 UTC
+Source files: 4 XLSX archive(s) in `data/raw/nhs/`
 
 ## Archive coverage
 

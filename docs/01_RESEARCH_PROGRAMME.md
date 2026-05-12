@@ -23,17 +23,20 @@
 
 ## 2. Title candidates
 
-The title must signal three things to UKCI reviewers: physics-informed forecasting, metaheuristic optimisation, and operational health-system relevance. Four candidates ranked by my preference:
+The title must signal three things to UKCI reviewers: physics-informed forecasting, metaheuristic optimisation, and operational health-system relevance.
 
-1. **"Decision-Aware Computational Intelligence for NHS Critical-Care Surge Planning: Physics-Informed Forecasting with Metaheuristic Allocation Under Demand Uncertainty"** — long but explicit; signals every CI ingredient.
+**Approved title (12 May 2026, after literature-review pass):**
 
-2. **"From Forecasts to Capacity Decisions: A Physics-Informed and Metaheuristic Pipeline for NHS Critical-Care Surge Planning"** — clearer narrative, slightly shorter.
+> **"Decision-Aware Physics-Informed Forecasting and Metaheuristic Allocation for NHS Critical-Care Surge Capacity Under Demand Uncertainty"**
 
-3. **"Predict-then-Optimise for Pandemic Surge Capacity: Physics-Informed Forecasting and Multi-Objective Metaheuristic Allocation for the NHS"** — explicitly invokes the predict-then-optimise framework from the operations research literature.
+Sixteen words; single clause; front-loaded keyword *Decision-Aware* names the headline loss-function novelty; *Physics-Informed Forecasting and Metaheuristic Allocation* gives both halves equal billing; *NHS Critical-Care Surge Capacity* anchors the domain; *Under Demand Uncertainty* signals the robust / scenario framing without committing to a specific terminology in the title.
 
-4. **"A Computational Intelligence Pipeline for Robust NHS Critical-Care Surge Planning Under Demand Uncertainty"** — shortest, generic, and probably too vague.
+This title was chosen over the four earlier candidates (now superseded) below, after the 12 May literature review identified the *decision-aware composite loss* as the single methodologically novel contribution that must be front-loaded in the title:
 
-**Recommended:** Title 2. It tells the story (forecast → decision), names the two CI techniques (physics-informed + metaheuristic), and locates the application (NHS, surge planning) in nine words after the colon. We can revise after results.
+1. *"Decision-Aware Computational Intelligence for NHS Critical-Care Surge Planning: Physics-Informed Forecasting with Metaheuristic Allocation Under Demand Uncertainty"* — long but explicit.
+2. *"From Forecasts to Capacity Decisions: A Physics-Informed and Metaheuristic Pipeline for NHS Critical-Care Surge Planning"* — clearer narrative but does not front-load the decision-aware keyword.
+3. *"Predict-then-Optimise for Pandemic Surge Capacity: Physics-Informed Forecasting and Multi-Objective Metaheuristic Allocation for the NHS"* — invokes the operations-research framework but Bertsimas et al. (2022) already occupy the predict-then-optimise framing for COVID-19 resource allocation.
+4. *"A Computational Intelligence Pipeline for Robust NHS Critical-Care Surge Planning Under Demand Uncertainty"* — shortest and too vague.
 
 ---
 

@@ -36,7 +36,7 @@ import pandas as pd
 # Paths and defaults
 # ---------------------------------------------------------------------------
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CSV = REPO_ROOT / "data" / "processed" / "regional_daily.csv"
 
 DEFAULT_TARGET = "mv_beds"

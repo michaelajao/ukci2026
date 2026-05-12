@@ -1,0 +1,133 @@
+% =============================================================================
+\section{Robust Allocation Model}\label{sec:optimisation}
+% Target length: ~3.0 pages (~1400-1500 words)
+% This is the load-bearing methodological core of the paper.
+% =============================================================================
+
+The allocation module decides which surge facilities to open or activate, how
+much additional critical-care capacity to provide at each, and how patient
+demand should be assigned across NHS regions, given forecast scenarios from
+\Cref{sec:forecasting}. We present a deterministic mixed-integer linear
+programme, a scenario-based robust extension, and three metaheuristic
+solution methods.
+
+\subsection{Sets, Parameters and Decision Variables}\label{ssec:notation}
+
+Let $\Iset$ index demand nodes (NHS regions for the regional formulation;
+NHS trusts for the trust-level formulation), $\Jset$ candidate surge-capacity
+sites, $\Hset$ planning horizons, and $\Sset$ demand scenarios with
+probabilities $\pi_s$. Parameters are: forecast demand $d_{i,h}^s$, baseline
+capacity $C_{j,h}$, fixed activation cost $F_j$, marginal capacity cost
+$g_j$, per-patient transfer cost $c_{ij}$, travel time $T_{ij}$, travel-time
+threshold $\tau$, total budget $B$, maximum surge expansion $K_j$, and
+population $p_i$. Decision variables are: the binary opening/activation
+$x_j$, additional capacity $b_{j,h} \geq 0$, demand assignment
+$z_{ij,h}^s \geq 0$, and unmet demand $u_{i,h}^s \geq 0$. Auxiliary variables
+$\theta_i,\theta$ linearise the equity penalty and $W$ tracks worst-case
+shortage in the robust extension.
+
+\subsection{Deterministic MILP Formulation}\label{ssec:milp}
+
+The deterministic model minimises a weighted sum of infrastructure cost,
+patient-transfer cost, expected unmet demand, and a regional equity penalty:
+\begin{equation}\label{eq:obj}
+\min\;
+\underbrace{\sum_{j} F_j x_j + \sum_{j,h} g_j b_{j,h}}_{\text{infrastructure}}
++ \underbrace{\sum_{i,j,h,s} \pi_s c_{ij} z_{ij,h}^s}_{\text{transfer}}
++ \lambda_1 \underbrace{\sum_{i,h,s} \pi_s u_{i,h}^s}_{\text{shortage}}
++ \lambda_2 \theta,
+\end{equation}
+subject to demand satisfaction, capacity, expansion, budget, travel-time and
+equity constraints:
+\begin{align}
+\sum_j z_{ij,h}^s + u_{i,h}^s &\geq d_{i,h}^s
+  && \forall i \in \Iset,\, h \in \Hset,\, s \in \Sset, \label{eq:demand}\\
+\sum_i z_{ij,h}^s &\leq C_{j,h} + b_{j,h}
+  && \forall j \in \Jset,\, h \in \Hset,\, s \in \Sset, \label{eq:capacity}\\
+b_{j,h} &\leq K_j x_j
+  && \forall j \in \Jset,\, h \in \Hset, \label{eq:expansion}\\
+\sum_j F_j x_j + \sum_{j,h} g_j b_{j,h} &\leq B,
+  && \label{eq:budget}\\
+z_{ij,h}^s &= 0
+  && \text{whenever } T_{ij} > \tau, \label{eq:travel}\\
+\theta_i \cdot \!\Big(\!\!\sum_{h,s} \pi_s d_{i,h}^s/p_i + \varepsilon\!\Big)
+  &\geq \sum_{h,s} \pi_s u_{i,h}^s / p_i
+  && \forall i \in \Iset, \label{eq:equity_per_region}\\
+\theta &\geq \theta_i
+  && \forall i \in \Iset, \label{eq:equity_max}\\
+x_j \in \{0,1\},\; b_{j,h},\, z_{ij,h}^s,\, u_{i,h}^s,\, \theta_i,\, \theta &\geq 0.
+\end{align}
+
+\Cref{eq:demand} ensures that assigned demand plus unmet demand covers
+forecast demand. \Cref{eq:capacity} caps assignments at total available
+capacity. The expansion variable $b_{j,h}$ is gated by $x_j$
+via~\Cref{eq:expansion}, so capacity additions can only occur at activated
+facilities. \Cref{eq:travel} enforces a maximum travel time $\tau$ for any
+patient transfer. \Cref{eq:equity_per_region,eq:equity_max} linearise the
+\emph{maximum regional shortage ratio per capita} via auxiliaries
+$\theta_i$ and $\theta$, with $\varepsilon=1$ avoiding division by zero on
+regions with negligible forecast demand.
+
+\subsection{Robust Extension}\label{ssec:robust}
+
+To penalise tail outcomes we add a worst-case shortage term in
+CVaR-flavoured form. Define an upper-quantile scenario subset $\Sset_w
+\subseteq \Sset$ (e.g., the High and tail scenarios) and an auxiliary
+$W \geq \sum_{i,h} u_{i,h}^s$ for all $s \in \Sset_w$, adding $\lambda_3 W$
+to~\Cref{eq:obj}. Here $\lambda_3 = 0$ recovers the expected-value
+formulation and $\lambda_3 \to \infty$ approaches a worst-case (minimax)
+policy.
+
+\subsection{Solution Methods}\label{ssec:solvers}
+
+\paragraph{Exact MILP (regional scale).}
+For the regional formulation with $|\Iset|=7$, $|\Jset|\leq 15$,
+$|\Hset|=4$, $|\Sset|=3$, the model has $O(10^4)$ variables. We solve it
+exactly using Gurobi via \texttt{pyomo}, falling back to CBC when no
+commercial licence is available. Expected wall-clock runtime is below
+60~seconds.
+
+\paragraph{Genetic Algorithm with LP slave.}
+For the trust-level formulation with $|\Iset|, |\Jset| \approx 150$, the
+exact MILP becomes expensive. We exploit the structural property that, for
+fixed binary $\mathbf{x}$, the residual problem in $(b, z, u)$ is a linear
+programme. A master--slave decomposition uses a Genetic Algorithm over the
+$|\Jset|$-dimensional binary vector $\mathbf{x}$, with one LP solve per
+fitness evaluation. The configuration is: tournament selection ($k=3$),
+uniform crossover ($p_c = 0.9$), bit-flip mutation ($p_m = 1/|\Jset|$),
+elitism (top 5), population $100$, maximum $200$ generations with
+early-stopping on stagnation, and a budget-repair operator that deactivates
+facilities with the lowest cost-effectiveness ratio when constraint
+\eqref{eq:budget} is violated. This decomposition is standard in
+capacitated facility-location heuristics.
+
+\paragraph{NSGA-II for the multi-objective formulation.}
+The Non-dominated Sorting Genetic Algorithm II~\cite{deb2002fast} produces a
+Pareto front over three competing objectives evaluated simultaneously
+without scalarisation:
+\begin{align}
+f_1(\mathbf{x}) &= \textstyle\sum_j F_j x_j + \sum_{j,h} g_j b_{j,h}^*(\mathbf{x})
+  &&\text{(infrastructure cost)} \label{eq:nsga2_f1}\\
+f_2(\mathbf{x}) &= \textstyle\sum_{i,h,s} \pi_s u_{i,h}^{s\,*}(\mathbf{x})
+  &&\text{(expected unmet demand)} \label{eq:nsga2_f2}\\
+f_3(\mathbf{x}) &= \textstyle\sum_{i,j,h,s} \pi_s c_{ij} z_{ij,h}^{s\,*}(\mathbf{x})
+  &&\text{(transfer burden)} \label{eq:nsga2_f3}
+\end{align}
+where the starred quantities are LP-slave optima for the given chromosome
+$\mathbf{x}$. We use the \texttt{pymoo} library with binary random
+sampling, two-point crossover, and bit-flip mutation; population size $100$,
+maximum $200$ generations, identical $p_c, p_m$ to the single-objective GA.
+Solution quality is reported via hypervolume relative to a fixed reference
+point, generational distance, and the cardinality of the non-dominated set.
+
+\paragraph{Simulated Annealing comparator.}
+A standard Simulated Annealing comparator uses geometric cooling
+($T_0 = 100$, $\gamma = 0.95$, stopping at $T_{\text{stop}}=0.01$) over
+single bit-flip neighbourhoods, with the same LP slave at every step.
+
+\paragraph{Heuristic baselines.}
+For completeness we include \emph{population-proportional},
+\emph{demand-proportional}, and \emph{greedy shortage-first} allocation
+heuristics. Each fixes $\mathbf{x}$ by a closed-form rule, then assigns
+$(b, z, u)$ via the same LP slave, providing a lower performance bound on
+optimisation-based methods.

@@ -1,0 +1,27 @@
+Device: cuda
+Loaded 5,327 rows, 7 regions, 2020-08-01 -> 2022-08-31
+Rolling-origin schedule: 16 origins, 2021-12-29 -> 2022-07-27 every 14d
+
+[1/4] SeasonalNaive(7) ...
+  448 forecasts in 0.3s
+
+[2/4] ARIMAPerRegion (AIC grid, refit per origin)...
+  448 forecasts in 191.2s
+
+[3/4] GRUPerRegion (fit on train+val)...
+  448 forecasts in 47.7s
+
+[4/4] PinnGRU (per-region, composite loss, MC Dropout K=100)...
+    East of England                N=6.35M  final_loss=0.0273  (10.2s)
+    London                         N=8.80M  final_loss=0.0179  (6.5s)
+    Midlands                       N=10.83M  final_loss=0.0231  (5.9s)
+    North East and Yorkshire       N=8.13M  final_loss=0.0224  (14.4s)
+    North West                     N=7.42M  final_loss=0.0243  (8.4s)
+    South East                     N=9.29M  final_loss=0.0212  (6.1s)
+    South West                     N=5.71M  final_loss=0.0269  (6.2s)
+  448 forecasts in 66.0s total
+
+Combined forecasts -> C:\Users\olarinoyem\Desktop\sms\ukci2026\results\forecasting\forecasts.parquet  (1792 rows)
+
+Forecasts written. Compute metric panel with:
+  python scripts/build_metric_table.py
