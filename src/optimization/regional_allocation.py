@@ -195,9 +195,11 @@ def build_scenarios_at_origin(
             y_hat = float(row["y_hat"].iloc[0])
             q_lo = float(row["q_lo"].iloc[0]) if pd.notna(row["q_lo"].iloc[0]) else y_hat
             q_hi = float(row["q_hi"].iloc[0]) if pd.notna(row["q_hi"].iloc[0]) else y_hat
-            demand[r_idx, h_idx, 0] = q_lo
-            demand[r_idx, h_idx, 1] = y_hat
-            demand[r_idx, h_idx, 2] = q_hi
+            # MV-bed demand is non-negative; clip quantile crossings into [0, .]
+            # so the LP demand RHS is never negative regardless of forecaster.
+            demand[r_idx, h_idx, 0] = max(0.0, q_lo)
+            demand[r_idx, h_idx, 1] = max(0.0, y_hat)
+            demand[r_idx, h_idx, 2] = max(0.0, q_hi)
     return demand, origin
 
 

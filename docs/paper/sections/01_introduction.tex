@@ -2,193 +2,139 @@
 \section{Introduction}\label{sec:introduction}
 % =============================================================================
 
-The COVID-19 pandemic exposed the vulnerability of national health systems
-to rapid, spatially uneven surges in critical-care demand. In England,
-sustained demand for adult critical-care beds and mechanical ventilation
-during successive waves required emergency capacity expansion and
-inter-region patient transfers. Decisions of this scale are made under
-deep uncertainty: planners must balance the cost of expanding surge
-capacity against the risk of unmet demand, while keeping patient-transfer
-burden manageable across the seven NHS England regions.
-The computational intelligence community has produced strong tools for
-both halves of this problem --- epidemic and hospital-demand
-forecasting~\cite{gao2021stan,gao2023hoist,qian2025physics} and robust
-facility-location and resource allocation under
-uncertainty~\cite{eriskin2022robust,wan2023two,shamseddin2025optimization}
---- but few works connect the two into a single decision-focused pipeline
-tailored to a national health system. The present work occupies the
-\emph{temporal, per-region} corner of the forecasting design space and
-the \emph{multi-method comparative} corner of the allocation design
-space; the spatiotemporal-graph alternatives surveyed in
-Section~\ref{sec:related_work} are explicitly deferred to future work.
+NHS critical-care surge planning during epidemic waves balances the
+cost of pre-positioning capacity against the risk of unmet demand,
+while keeping inter-regional transfer burden manageable across the
+seven NHS England regions. During COVID-19, sustained pressure on
+adult mechanical-ventilation capacity demanded surge expansion and
+inter-region transfers under uncertain demand forecasts. The computational-intelligence community has strong tools for
+each half of this problem: epidemic and hospital-demand
+forecasting~\cite{gao2021stan,gao2023hoist,qian2025physics} and
+robust resource allocation under
+uncertainty~\cite{eriskin2022robust,wan2023two,shamseddin2025optimization},
+but few studies connect the two for a national health system.
 
-Existing forecasting models, including physics-informed neural networks
-(PINNs)~\cite{ajao2025hybrid,qian2025physics} and graph-based
-architectures such as STAN~\cite{gao2021stan} and HOIST~\cite{gao2023hoist},
-are typically optimised for statistical accuracy alone. Yet for
-critical-care planning the operational cost of forecast errors is
-asymmetric: underestimating demand by ten beds risks patients without
-ventilators, while overestimating wastes prepared capacity. Standard
-squared-error or absolute-error objectives treat these symmetrically.
-Conversely, most optimisation formulations for pandemic capacity planning
-assume demand is deterministic or drawn from off-the-shelf statistical
+Existing forecasters, including deep recurrent
+networks~\cite{ajao2024deep}, physics-informed neural
+networks~\cite{ajao2025hybrid,qian2025physics}, and graph-based
+architectures~\cite{gao2021stan,gao2023hoist}, are typically
+optimised for statistical accuracy alone. Yet the operational cost of a
+forecast error is asymmetric: under-predicting demand risks patients
+without ventilators while over-predicting only wastes prepared
+capacity. Squared- and absolute-error objectives treat these
+symmetrically. Conversely, most pandemic-allocation formulations assume
+deterministic demand or use off-the-shelf statistical
 forecasts~\cite{shamseddin2025optimization,eriskin2022robust}, leaving
-unexploited the dynamics-aware information that physics-informed
-forecasters can provide. Recent work begins to close this gap:
-Liu and Cao~\cite{liu2026dynamic} couple spatiotemporal graph attention
-with multi-objective optimisation for vaccine and
-non-pharmaceutical-intervention allocation, and Shams Eddin and El
-Hajj~\cite{shamseddin2025optimization} integrate SEIRD-driven demand into
-robust hospital-bed scheduling for a single US region. To our knowledge no
-published work combines (a) physics-informed regional epidemic forecasting,
-(b) decision-aware training that explicitly penalises operationally costly
-forecast errors, and (c) metaheuristic robust optimisation for NHS England
-critical-care surge capacity.
+unexploited the dynamics-aware information physics-informed forecasters
+provide. Bertsimas et al.~\cite{bertsimas2022where} couple DELPHI
+simulation to a bilinear MIP for vaccination-site location, and
+Luo and Stellato~\cite{luo2024equitable} embed neural-ODE compartmental
+dynamics in a McCormick-relaxed MIP for opioid-facility allocation. A
+pipeline combining physics-informed regional forecasting, decision-aware
+training, and metaheuristic robust optimisation for NHS England
+critical-care surge remains missing.
 
-We close that gap with a forecast-to-decision pipeline organised in four
-phases. \emph{Phase A} is a per-region PINN-SEIRD module that produces
-multi-horizon quantile forecasts of mechanical-ventilation bed occupancy.
-The PINN is first pre-trained to satisfy the refined $SEI_aI_sHCRD$ ODE
-system, producing twelve time-varying physics-informed features (eight
-compartmental states and four transmission/clinical parameters) that are
-then fed --- frozen --- into a temporal GRU head. The head emits the
-$10$th, $50$th and $90$th predictive quantiles per horizon \emph{directly}
-via a multi-quantile \emph{pinball loss} (decision-aware by construction,
-since the $q^{(0.9)}$ component asymmetrically penalises under-prediction
-nine-to-one), with no post-hoc Monte-Carlo sampling. A learnable
-level-and-trend anchor skip-connects the most recent observation and
-recent weekly slope to every horizon-quantile prediction, trading
-short-horizon flexibility for long-horizon stability. \emph{Phase B}
-discretises the quantile forecasts into three demand scenarios
-(low/median/high) with probabilities $\pi = (0.20, 0.60, 0.20)$.
-\emph{Phase C} solves a regional bed-surge allocation problem using
-those scenarios, comparing a deterministic mixed-integer linear
-programme, a tail-risk robust MILP, a Genetic Algorithm with
-LP-slave decomposition, the Non-dominated Sorting Genetic Algorithm
-II~\cite{deb2002fast}, Simulated Annealing, and four closed-form
-heuristic baselines. \emph{Phase D} reports operational metrics
-(expected unmet, worst-case unmet, transfer burden, runtime) plus
-sensitivity to the surge budget, the CVaR weight, and the mutual-aid
-travel-time cap.
+This paper presents a forecast-to-decision pipeline
+(\Cref{fig:pipeline}) organised in four phases. \emph{Phase~A}
+pre-trains a per-region PINN on the $SEI_aI_sHCRD$ ODE system. Its
+twelve outputs, comprising eight compartmental states and four
+transmission and clinical parameters, are frozen and passed to a
+temporal GRU head that emits the horizon-wise quantiles
+$q^{(0.1)}$, $q^{(0.5)}$, $q^{(0.9)}$ trained directly with a
+multi-quantile pinball loss. The loss is decision-aware by
+construction, since the $q^{(0.9)}$ branch penalises
+under-prediction at a nine-to-one ratio. A level-and-trend anchor
+skip-connects the most recent observation and its weekly slope to
+every quantile prediction. \emph{Phase~B} discretises these
+quantiles into three scenarios (low, median, and high) with weights
+$\pi=(0.2, 0.6, 0.2)$. \emph{Phase~C} solves the resulting
+allocation problem with eight methods: an exact MILP, a
+tail-risk-augmented robust MILP, a Genetic Algorithm with LP-slave
+decomposition, NSGA-II~\cite{deb2002fast}, Simulated Annealing, and
+three heuristic baselines. \emph{Phase~D} reports operational
+metrics and a sensitivity analysis over the forecaster, the budget
+$B$, the transfer penalty $\lambda_3$, and the surge threshold
+$\tau$.
 
-Our contributions are: (1) a forecast-to-decision pipeline reproducible
-on open NHS data, with all four phases released as installable Python
-console commands; (2) a \emph{decision-aware} multi-quantile pinball
-training objective coupled with a level-and-trend anchor skip connection,
-jointly responsible for a $19\%$ RMSE reduction over per-origin
-re-fitted ARIMA at the operational $14$-day horizon and a four-fold
-reduction in underestimation rate at $h = 28$; (3) a hybrid-regional
-robust allocation model with explicit MILP/GA/NSGA-II/SA comparison,
-revealing that the robust MILP achieves the lowest transfer burden in
-the policy set ($4.6\times$ below population-proportional, at identical
-expected and worst-case unmet) and that the metaheuristics match it
-within a few percent at $20$--$115$~s runtime; (4) a refined
-$SEI_aI_sHCRD$ compartmental model that separates the hospitalisation
-ratio $\omega$ ($I_s\to H$) from the critical-care escalation proportion
-$\phi$ ($H\to C$), correcting an over-loading of $\omega$ in earlier
-work~\cite{ajao2025hybrid}; and (5) an NHS England case study spanning
-five forecasters --- PinnGRU, ARIMA, per-region GRU, XGBoost, and
-seasonal-naive(7) --- plus a three-axis sensitivity sweep over surge
-budget, CVaR weight, and travel-time cap, quantifying when forecast
-quality versus parameter choice dominates the operational outcome.
-\Cref{fig:pipeline} summarises the four-phase pipeline.
+\textbf{Contributions.}
+(1)~\textbf{Decision-aware forecaster.} The combination of a
+multi-quantile pinball loss and a level-and-trend anchor reduces
+$h{=}14$ RMSE by $19\%$ relative to refitted ARIMA and lowers the
+$h{=}28$ underestimation rate by a factor of four, with the
+contribution of each component isolated through an ablation study.
+(2)~\textbf{Robust MILP allocation.} A hybrid-regional formulation
+attains the lowest transfer burden in the policy set, $4.6\times$
+below the population-proportional baseline at matched coverage,
+while three metaheuristics come within $20\%$ of this performance
+at $10^3\times$ the runtime.
+(3)~\textbf{$SEI_aI_sHCRD$ clinical split.} The proposed model
+separates the hospitalisation ratio $\omega$ ($I_s\to H$) from the
+critical-care escalation rate $\phi$ ($H\to C$), correcting the
+overloaded $\omega$ used in~\cite{ajao2025hybrid}.
+
+The remainder of the paper is organised as follows.
 \Cref{sec:related_work} reviews related work;
-\Cref{sec:forecasting,sec:optimisation} describe the forecasting and
-optimisation modules; \Cref{sec:case_study} presents the case study;
-\Cref{sec:results,sec:discussion,sec:conclusion} report results, discuss
-limitations, and conclude.
+\Cref{sec:forecasting,sec:optimisation,sec:case_study} describe the
+forecasting and optimisation modules and the case study;
+\Cref{sec:results} reports results; and \Cref{sec:conclusion}
+discusses limitations and concludes.
 
-% --- Figure 1 : pipeline overview --------------------------------------------
+% Figure 1: pipeline overview
 \begin{figure}[t]
 \centering
+\resizebox{\columnwidth}{!}{%
 \begin{tikzpicture}[
-  font=\scriptsize,
-  >={Stealth[length=1.6mm,width=1.2mm]},
-  phase/.style={
-    draw, rounded corners=2pt, line width=0.4pt,
-    align=left, anchor=north west,
-    inner xsep=3pt, inner ysep=4pt,
-    text width=27mm, minimum height=36mm,
-  },
-  hdr/.style={font=\footnotesize\bfseries},
-  arr/.style={->, line width=0.55pt, shorten >=1pt, shorten <=1pt},
+  font=\footnotesize,
+  >={Stealth[length=1.7mm,width=1.2mm]},
+  stage/.style={draw, rounded corners=2pt, line width=0.45pt,
+                minimum width=30mm, minimum height=40mm, inner sep=0pt},
+  head/.style={font=\bfseries, anchor=north, align=center},
+  chip/.style={draw, rounded corners=1pt, line width=0.35pt,
+               align=center, inner xsep=2.2pt, inner ysep=1.7pt,
+               font=\scriptsize},
+  arr/.style={->, line width=0.65pt, shorten >=2pt, shorten <=2pt},
 ]
-% --- Phase A : forecasting ---
-\node[phase, fill=NavyBlue!6] (A) at (0,0) {%
-  \hdr A.~Forecasting\par\vspace{2pt}
-  NHS regional MV-bed\\
-  daily series\\[2pt]
-  $\downarrow$ \emph{pre-train}\\[1pt]
-  PINN--SEIRD\\
-  $(8$ state $+\,4$ param$)$\\[2pt]
-  $\downarrow$ \emph{freeze}\\[1pt]
-  Quantile GRU head:\\
-  pinball loss\\
-  $+$ level/trend anchor\\[2pt]
-  $\hat q^{(0.1)},\hat q^{(0.5)},\hat q^{(0.9)}$};
+\node[stage, draw=NavyBlue!65, fill=NavyBlue!5] (A) at (0,0) {};
+\node[head] at (A.north) [yshift=-2mm] {A. Forecasting};
+\node[chip, fill=NavyBlue!12] (Adata) at ($(A.center)+(0,10mm)$) {MV occupancy};
+\node[chip, fill=NavyBlue!18] (Apinn) at ($(A.center)+(0,3mm)$) {PINN states};
+\node[chip, fill=NavyBlue!24] (Agru) at ($(A.center)+(0,-4mm)$) {GRU + anchor};
+\node[chip, fill=NavyBlue!30] (Aq) at ($(A.center)+(0,-11.5mm)$)
+  {$\hat q_{r,h}^{(.1,.5,.9)}$};
+\node[font=\scriptsize\itshape] at ($(A.center)+(0,-16.5mm)$) {forecast quantiles};
+\draw[arr, line width=0.45pt, shorten >=3pt, shorten <=3pt] (Adata) -- (Apinn);
+\draw[arr, line width=0.45pt, shorten >=3pt, shorten <=3pt] (Apinn) -- (Agru);
+\draw[arr, line width=0.45pt, shorten >=3pt, shorten <=3pt] (Agru) -- (Aq);
 
-% --- Phase B : scenarios ---
-\node[phase, fill=ForestGreen!6,
-      right=2mm of A.north east, anchor=north west] (B) {%
-  \hdr B.~Scenarios\par\vspace{2pt}
-  $q^{(0.1)}\!\!\to\!$ \emph{low}\\
-  $q^{(0.5)}\!\!\to\!$ \emph{median}\\
-  $q^{(0.9)}\!\!\to\!$ \emph{high}\\[3pt]
-  Weights:\\
-  $\pi=(0.2,0.6,0.2)$\\[3pt]
-  Demand tensor:\\
-  $d_{r,h}^{s}\!\in\!\mathbb{R}^{R\times H\times 3}$\\
-  $R{=}7$, $H{=}4$};
+\node[stage, draw=ForestGreen!65, fill=ForestGreen!6, right=2mm of A] (B) {};
+\node[head] at (B.north) [yshift=-2mm] {B. Scenarios};
+\node[chip, fill=ForestGreen!13] at ($(B.center)+(0,8mm)$) {low $\pi=0.2$};
+\node[chip, fill=ForestGreen!23] at ($(B.center)+(0,1mm)$) {median $\pi=0.6$};
+\node[chip, fill=ForestGreen!13] at ($(B.center)+(0,-6mm)$) {high $\pi=0.2$};
+\node[font=\scriptsize\itshape] at ($(B.center)+(0,-15mm)$) {$d_{r,h}^{s}$ tensor};
 
-% --- Phase C : allocation ---
-\node[phase, fill=BrickRed!6,
-      right=2mm of B.north east, anchor=north west] (C) {%
-  \hdr C.~Allocation\par\vspace{2pt}
-  \emph{Exact:}\\
-  Deterministic MILP\\
-  Tail-risk robust MILP\\[3pt]
-  \emph{Metaheuristics:}\\
-  GA (single-obj.)\\
-  NSGA-II (3-obj.)\\
-  Simulated annealing\\[3pt]
-  \emph{Heuristics:}\\
-  status quo, pop-prop,\\
-  demand-prop, greedy};
+\node[stage, draw=BrickRed!65, fill=BrickRed!6, right=2mm of B] (C) {};
+\node[head] at (C.north) [yshift=-2mm] {C. Allocation};
+\node[chip, fill=BrickRed!14] at ($(C.center)+(0,10mm)$) {MILP};
+\node[chip, fill=BrickRed!18] at ($(C.center)+(0,5mm)$) {robust MILP};
+\node[chip, fill=BrickRed!22] at ($(C.center)+(0,0mm)$) {GA};
+\node[chip, fill=BrickRed!22] at ($(C.center)+(0,-5mm)$) {NSGA-II};
+\node[chip, fill=BrickRed!22] at ($(C.center)+(0,-10mm)$) {SA};
+\node[font=\scriptsize\itshape] at ($(C.center)+(0,-16mm)$) {$b^\star_r$, transfers};
 
-% --- Phase D : evaluation ---
-\node[phase, fill=Orange!8,
-      right=2mm of C.north east, anchor=north west] (D) {%
-  \hdr D.~Evaluation\par\vspace{2pt}
-  Expected unmet $E[u]$\\
-  Worst-case $u^{\text{worst}}$\\
-  Transfer (bed\,km)\\
-  Runtime\\[3pt]
-  Pareto front (NSGA-II)\\[3pt]
-  \emph{Sensitivity:}\\
-  $B,\ \tau,\ \lambda_3$,\\
-  forecaster swap};
+\node[stage, draw=Orange!75, fill=Orange!7, right=2mm of C] (D) {};
+\node[head] at (D.north) [yshift=-2mm] {D. Evaluation};
+\node[chip, fill=Orange!14] at ($(D.center)+(0,10mm)$) {$E[u]$, $u^{\mathrm{worst}}$};
+\node[chip, fill=Orange!17] at ($(D.center)+(0,3mm)$) {bed-km};
+\node[chip, fill=Orange!20] at ($(D.center)+(0,-4mm)$) {Pareto front};
+\node[chip, fill=Orange!23] at ($(D.center)+(0,-11mm)$) {sensitivity};
 
-% --- forward arrows between phases ---
 \draw[arr] (A.east) -- (B.west);
 \draw[arr] (B.east) -- (C.west);
 \draw[arr] (C.east) -- (D.west);
-
-% --- dashed feedback under the row ---
-\draw[arr, dashed, line width=0.5pt]
-  (D.south) .. controls +(0,-6mm) and +(0,-6mm) ..
-  node[midway, below=0pt, font=\scriptsize\itshape]
-    {sensitivity feedback}
-  (A.south);
 \end{tikzpicture}
-\caption{Four-phase forecast-to-decision pipeline. Phase~A pre-trains a
-per-region PINN-SEIRD on the refined $SEI_aI_sHCRD$ system and feeds its
-frozen state-and-parameter features into a quantile GRU head trained with
-a multi-quantile pinball loss. Phase~B discretises the
-$q^{(0.1)}/q^{(0.5)}/q^{(0.9)}$ forecasts into a three-scenario demand
-tensor. Phase~C compares an exact MILP, a tail-risk robust MILP,
-three metaheuristics, and four heuristic baselines on the same problem
-instance. Phase~D reports operational and Pareto-front metrics and
-sweeps the surge budget $B$, the CVaR weight $\lambda_3$, the
-travel-time cap $\tau$, and the upstream forecaster.}
+}
+\caption{Forecast-to-decision pipeline from regional MV-bed forecasts to
+allocation and evaluation.}
 \label{fig:pipeline}
 \end{figure}

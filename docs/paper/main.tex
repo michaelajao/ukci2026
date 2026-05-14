@@ -14,7 +14,7 @@
 
 \documentclass{svproc}
 
-% --- Encoding and language ---------------------------------------------------
+% Encoding and language
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{microtype}
@@ -22,24 +22,24 @@
 \usepackage{url}
 \def\UrlFont{\rmfamily}
 
-% --- Maths -------------------------------------------------------------------
+% Maths
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{mathtools}
 
-% --- Graphics, tables --------------------------------------------------------
+% Graphics, tables
 \usepackage{graphicx}
-% Figures live in repo-root figures/. Build runs from docs/paper/out/, so
-% reach back three levels: docs/paper/out/ -> docs/paper/ -> docs/ -> repo.
-\graphicspath{{../../../figures/}{../figures/}{figures/}}
+% Figures live in repo-root figures/. Support both direct builds from
+% docs/paper/ and builds that place output under docs/paper/out/.
+\graphicspath{{../../figures/}{../../../figures/}{../figures/}{figures/}}
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{array}
 \usepackage{tabularx}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, fit, calc, shapes.geometric}
+\usetikzlibrary{arrows.meta, positioning, fit, calc, shapes.geometric, backgrounds}
 
-% --- Colours and references --------------------------------------------------
+% Colours and references
 \usepackage[dvipsnames]{xcolor}
 \usepackage[hidelinks,
   colorlinks=true,
@@ -48,7 +48,20 @@
   urlcolor=BrickRed]{hyperref}
 \usepackage[capitalise,noabbrev]{cleveref}
 
-% --- Custom commands ---------------------------------------------------------
+% Tight float and display spacing (12-page hard cap)
+\setlength{\textfloatsep}{4pt plus 1pt minus 1pt}
+\setlength{\floatsep}{4pt plus 1pt minus 1pt}
+\setlength{\intextsep}{4pt plus 1pt minus 1pt}
+\setlength{\abovecaptionskip}{2pt}
+\setlength{\belowcaptionskip}{0pt}
+\setlength{\abovedisplayskip}{3pt}
+\setlength{\belowdisplayskip}{3pt}
+\setlength{\abovedisplayshortskip}{1pt}
+\setlength{\belowdisplayshortskip}{1pt}
+\medskipamount=2pt
+\bigskipamount=4pt
+
+% Custom commands
 \newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
 \newcommand{\R}{\mathcal{R}}
 \newcommand{\T}{\mathcal{T}}
@@ -62,54 +75,47 @@
 % =============================================================================
 \begin{document}
 
-% --- Title -------------------------------------------------------------------
+% Title
 \title{Decision-Aware Physics-Informed Forecasting and
        Metaheuristic Allocation for NHS Critical-Care Surge Capacity
        Under Demand Uncertainty}
 \titlerunning{Decision-Aware Forecasting and Allocation for NHS Critical-Care Surge}
 
-% --- Authors -----------------------------------------------------------------
-\author{Michael Ajao-Olarinoye\inst{1} \and
-        Abiola Babatunde\inst{1} \and
-        Vasile Palade\inst{1}}
-\authorrunning{M. Ajao-Olarinoye et al.}
-\tocauthor{Michael Ajao-Olarinoye, Abiola Babatunde, and Vasile Palade}
+% % Authors
+% \author{Michael Ajao-Olarinoye\inst{1} \and
+%         Abiola Babatunde\inst{1} \and
+%         Vasile Palade\inst{1}}
+% \authorrunning{M. Ajao-Olarinoye et al.}
+% \tocauthor{Michael Ajao-Olarinoye, Abiola Babatunde, and Vasile Palade}
 
-\institute{Centre for Computational Sciences and Mathematical Modelling,
-  Coventry University, Priory Street, Coventry CV1 5FB, United Kingdom \\
-  \email{olarinoyem@coventry.ac.uk}}
+% \institute{Centre for Computational Sciences and Mathematical Modelling,
+%   Coventry University, Priory Street, Coventry CV1 5FB, United Kingdom \\
+%   \email{olarinoyem@coventry.ac.uk}}
 
 \maketitle
 
-% --- Abstract ----------------------------------------------------------------
+% Abstract
 \begin{abstract}
-Epidemic waves create rapid, spatially uneven pressure on critical-care
-services, requiring health systems to decide how to pre-position surge
-capacity and route patients under forecast uncertainty. We propose a
-forecast-to-decision pipeline that couples a per-region physics-informed
-neural forecaster on the refined $SEI_aI_sHCRD$ compartmental system to
-a robust mixed-integer-linear allocation model. The forecaster is
-trained directly on a multi-quantile pinball loss, which is decision-
-aware by construction (the $q^{(0.9)}$ component penalises
-under-prediction nine-to-one), and uses a learnable level-and-trend
-anchor that residual-connects the most recent observation to every
-horizon-quantile prediction. Quantile forecasts are discretised into
-three demand scenarios that drive a regional bed-surge allocation
-problem solved exactly via PuLP+CBC and approximately via a Genetic
-Algorithm, the Non-dominated Sorting Genetic Algorithm II, and
-Simulated Annealing on a shared LP-slave fitness oracle. On a
-seven-region NHS England case study spanning $1$~August~$2020$ to
-$31$~August~$2022$, the proposed forecaster reduces $14$-day RMSE by
-$19\%$ over per-origin re-fitted ARIMA and the $28$-day under-
-estimation rate by four-fold; the tail-risk robust MILP achieves
-the lowest transfer burden in the policy set ($4.6\times$ below
-population-proportional) at no cost in expected or worst-case
-coverage. A four-axis sensitivity sweep (forecaster, surge budget,
-CVaR weight, mutual-aid travel cap) clarifies when each control binds.
+NHS critical-care planning during epidemic waves must pre-position
+surge capacity and route patients across regions under forecast
+uncertainty. We propose a forecast-to-decision pipeline coupling a
+per-region physics-informed forecaster on the $SEI_aI_sHCRD$ system
+to a tail-risk robust MILP for bed-surge allocation. The forecaster is
+trained on a multi-quantile pinball loss whose $q^{(0.9)}$ component
+penalises under-prediction nine-to-one and uses a learnable
+level-and-trend anchor. Quantile forecasts drive a hybrid-regional
+allocation solved exactly via PuLP+CBC and approximately via GA,
+NSGA-II, and Simulated Annealing on a shared LP-slave oracle. On a
+seven-region NHS England case study (Aug~$2020$ to Aug~$2022$), the
+forecaster cuts $14$-day RMSE over per-origin re-fitted ARIMA by
+$19\%$ and the $28$-day underestimation rate four-fold; the robust
+MILP achieves the lowest transfer burden ($4.6\times$ below
+population-proportional) at no cost in coverage. A four-axis
+sensitivity sweep clarifies when each control binds.
 
 \keywords{physics-informed neural networks, decision-aware forecasting,
           pinball loss, robust optimisation, metaheuristics, NSGA-II,
-          critical-care planning, NHS England}
+          NHS England}
 \end{abstract}
 
 % =============================================================================
@@ -119,12 +125,10 @@ CVaR weight, mutual-aid travel cap) clarifies when each control binds.
 \input{sections/04_optimisation}
 \input{sections/05_case_study}
 \input{sections/06_results}
-\input{sections/07_discussion}
 \input{sections/08_conclusion}
 
-% --- Bibliography ------------------------------------------------------------
+% Bibliography
 % Springer Math/Physics/Computer Science BibTeX style from the SVProc bundle.
-\AtBeginEnvironment{thebibliography}{\scriptsize\setlength{\itemsep}{0pt plus 0.2ex}\setlength{\parsep}{0pt}}
 \bibliographystyle{spmpsci}
 \bibliography{references}
 

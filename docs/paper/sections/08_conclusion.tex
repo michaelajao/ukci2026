@@ -2,21 +2,15 @@
 \section{Conclusion}\label{sec:conclusion}
 % =============================================================================
 
-We presented a forecast-to-decision optimisation framework for NHS
-critical-care surge-capacity planning. A per-region physics-informed
-forecaster on the refined $SEI_aI_sHCRD$ system, trained with a
-decision-aware multi-quantile pinball loss and a level-and-trend
-anchor, achieves a $19\%$ RMSE reduction over re-fitted ARIMA at the
-operational $14$-day horizon and a four-fold reduction in
-underestimation rate at $h = 28$. Its quantile outputs drive a
-hybrid-regional bed-surge allocation problem solved exactly via a
-PuLP+CBC MILP and approximately via GA, NSGA-II, and Simulated
-Annealing on the same LP-slave fitness oracle. On the seven-region
-NHS England case study the tail-risk robust MILP achieves the
-lowest transfer burden in the policy set at no cost in coverage, the
-deterministic--robust gap quantifies the operational cost of
-optimising the median scenario alone, and a four-axis sensitivity
-sweep (forecaster, surge budget, CVaR weight, mutual-aid travel cap)
-clarifies when each control binds. The pipeline is released as a set
-of installable Python console commands on open NHS data, supporting
-reproducibility and operational re-use.
+A per-region PINN-GRU on the $SEI_aI_sHCRD$ system with a
+decision-aware multi-quantile pinball loss cuts $14$-day RMSE over
+re-fitted ARIMA by $19\%$ and the $h{=}28$ underestimation rate
+four-fold; its quantile forecasts drive a hybrid-regional bed-surge
+allocation in which the tail-risk robust MILP attains the lowest
+transfer burden at no cost in coverage. The deterministic--robust gap
+quantifies the value of $\pi_s$-weighted expectation over median-only
+optimisation, and the sensitivity sweep clarifies when each control
+binds. Detour-scaled travel times, well-mixed regional populations,
+and beds--bed-km cost units are the principal caveats; age-stratified
+pathways and other health-system topologies remain natural
+extensions~\cite{shamseddin2025optimization}.
