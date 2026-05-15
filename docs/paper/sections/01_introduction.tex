@@ -76,62 +76,12 @@ forecasting and optimisation modules and the case study;
 \Cref{sec:results} reports results; and \Cref{sec:conclusion}
 discusses limitations and concludes.
 
-% Figure 1: pipeline overview
-\begin{figure}[t]
+% Figure 1: pipeline overview (rendered figure replaces TikZ schematic)
+\begin{figure*}[t]
 \centering
-\resizebox{\columnwidth}{!}{%
-\begin{tikzpicture}[
-  font=\footnotesize,
-  >={Stealth[length=1.7mm,width=1.2mm]},
-  stage/.style={draw, rounded corners=2pt, line width=0.45pt,
-                minimum width=30mm, minimum height=40mm, inner sep=0pt},
-  head/.style={font=\bfseries, anchor=north, align=center},
-  chip/.style={draw, rounded corners=1pt, line width=0.35pt,
-               align=center, inner xsep=2.2pt, inner ysep=1.7pt,
-               font=\scriptsize},
-  arr/.style={->, line width=0.65pt, shorten >=2pt, shorten <=2pt},
-]
-\node[stage, draw=NavyBlue!65, fill=NavyBlue!5] (A) at (0,0) {};
-\node[head] at (A.north) [yshift=-2mm] {A. Forecasting};
-\node[chip, fill=NavyBlue!12] (Adata) at ($(A.center)+(0,10mm)$) {MV occupancy};
-\node[chip, fill=NavyBlue!18] (Apinn) at ($(A.center)+(0,3mm)$) {PINN states};
-\node[chip, fill=NavyBlue!24] (Agru) at ($(A.center)+(0,-4mm)$) {GRU + anchor};
-\node[chip, fill=NavyBlue!30] (Aq) at ($(A.center)+(0,-11.5mm)$)
-  {$\hat q_{r,h}^{(.1,.5,.9)}$};
-\node[font=\scriptsize\itshape] at ($(A.center)+(0,-16.5mm)$) {forecast quantiles};
-\draw[arr, line width=0.45pt, shorten >=3pt, shorten <=3pt] (Adata) -- (Apinn);
-\draw[arr, line width=0.45pt, shorten >=3pt, shorten <=3pt] (Apinn) -- (Agru);
-\draw[arr, line width=0.45pt, shorten >=3pt, shorten <=3pt] (Agru) -- (Aq);
-
-\node[stage, draw=ForestGreen!65, fill=ForestGreen!6, right=2mm of A] (B) {};
-\node[head] at (B.north) [yshift=-2mm] {B. Scenarios};
-\node[chip, fill=ForestGreen!13] at ($(B.center)+(0,8mm)$) {low $\pi=0.2$};
-\node[chip, fill=ForestGreen!23] at ($(B.center)+(0,1mm)$) {median $\pi=0.6$};
-\node[chip, fill=ForestGreen!13] at ($(B.center)+(0,-6mm)$) {high $\pi=0.2$};
-\node[font=\scriptsize\itshape] at ($(B.center)+(0,-15mm)$) {$d_{r,h}^{s}$ tensor};
-
-\node[stage, draw=BrickRed!65, fill=BrickRed!6, right=2mm of B] (C) {};
-\node[head] at (C.north) [yshift=-2mm] {C. Allocation};
-\node[chip, fill=BrickRed!14] at ($(C.center)+(0,10mm)$) {MILP};
-\node[chip, fill=BrickRed!18] at ($(C.center)+(0,5mm)$) {robust MILP};
-\node[chip, fill=BrickRed!22] at ($(C.center)+(0,0mm)$) {GA};
-\node[chip, fill=BrickRed!22] at ($(C.center)+(0,-5mm)$) {NSGA-II};
-\node[chip, fill=BrickRed!22] at ($(C.center)+(0,-10mm)$) {SA};
-\node[font=\scriptsize\itshape] at ($(C.center)+(0,-16mm)$) {$b^\star_r$, transfers};
-
-\node[stage, draw=Orange!75, fill=Orange!7, right=2mm of C] (D) {};
-\node[head] at (D.north) [yshift=-2mm] {D. Evaluation};
-\node[chip, fill=Orange!14] at ($(D.center)+(0,10mm)$) {$E[u]$, $u^{\mathrm{worst}}$};
-\node[chip, fill=Orange!17] at ($(D.center)+(0,3mm)$) {bed-km};
-\node[chip, fill=Orange!20] at ($(D.center)+(0,-4mm)$) {Pareto front};
-\node[chip, fill=Orange!23] at ($(D.center)+(0,-11mm)$) {sensitivity};
-
-\draw[arr] (A.east) -- (B.west);
-\draw[arr] (B.east) -- (C.west);
-\draw[arr] (C.east) -- (D.west);
-\end{tikzpicture}
-}
-\caption{Forecast-to-decision pipeline from regional MV-bed forecasts to
+\includegraphics[width=\textwidth]{figure1.jpg}
+\caption{Forecast-to-decision pipeline for NHS ICU surge planning, from
+regional data and physics-informed forecasting to scenario-based robust
 allocation and evaluation.}
 \label{fig:pipeline}
-\end{figure}
+\end{figure*}
