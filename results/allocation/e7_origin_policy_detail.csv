@@ -1,0 +1,161 @@
+policy,method_key,Expected unmet,Worst-case unmet,Transfer burden,Total surge beds,Runtime (s),origin
+Status quo (no surge),status_quo,103.8216334,519.108167,10197.483305739805,0.0,0.0,2021-12-29
+Population-proportional,population_proportional,28.96224658,144.8112329,3119.8043249524853,212.73000000000002,0.0,2021-12-29
+Demand-proportional,demand_proportional,28.96224636,144.8112318,2615.273789660607,212.73000000000005,0.0,2021-12-29
+Deterministic MILP,deterministic_milp,83.2811618,416.40580900000003,1175.0726207595987,51.35117963,0.036733150482177734,2021-12-29
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,28.96224662,144.81123309999998,671.6830134678275,212.73000000000002,0.05091357231140137,2021-12-29
+Status quo (no surge),status_quo,162.2703504,811.351752,14741.242112615259,0.0,0.0,2022-01-05
+Population-proportional,population_proportional,63.891032540000005,319.4551627,3742.648224300595,212.73000000000002,0.0,2022-01-05
+Demand-proportional,demand_proportional,63.89103270000001,319.4551635,2599.797702203339,212.73000000000008,0.0,2022-01-05
+Deterministic MILP,deterministic_milp,114.93485740000001,574.674287,2212.096883954278,85.120437,0.04312777519226074,2022-01-05
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,63.8910328,319.45516399999997,820.2978295450629,212.73,0.07165145874023438,2022-01-05
+Status quo (no surge),status_quo,42.79153504,213.95767519999998,3639.1289295044417,0.0,0.0,2022-01-12
+Population-proportional,population_proportional,0.0,0.0,4075.0965268887985,212.73000000000002,0.0,2022-01-12
+Demand-proportional,demand_proportional,0.0,0.0,3854.5945179266773,212.73000000000002,0.0,2022-01-12
+Deterministic MILP,deterministic_milp,42.79153504,213.95767519999998,3639.1289295044417,0.0,0.04294633865356445,2022-01-12
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,935.6565866504013,212.73,0.043880462646484375,2022-01-12
+Status quo (no surge),status_quo,15.6109324,78.054662,3484.840825358281,0.0,0.0,2022-01-19
+Population-proportional,population_proportional,0.0,0.0,1533.5004226985557,212.73000000000002,0.0,2022-01-19
+Demand-proportional,demand_proportional,0.0,0.0,1399.7371619829635,212.73000000000002,0.0,2022-01-19
+Deterministic MILP,deterministic_milp,15.6109324,78.054662,3484.840825358281,0.0,0.042415618896484375,2022-01-19
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,151.8388591,0.03291177749633789,2022-01-19
+Status quo (no surge),status_quo,0.0,0.0,3987.332644064465,0.0,0.0,2022-01-26
+Population-proportional,population_proportional,0.0,0.0,457.1444335830581,212.73000000000002,0.0,2022-01-26
+Demand-proportional,demand_proportional,0.0,0.0,291.88684306510436,212.73000000000002,0.0,2022-01-26
+Deterministic MILP,deterministic_milp,0.0,0.0,3987.332644064465,0.0,0.033574819564819336,2022-01-26
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,103.23093970000001,0.03337836265563965,2022-01-26
+Status quo (no surge),status_quo,0.0,0.0,953.0626195481508,0.0,0.0,2022-02-02
+Population-proportional,population_proportional,0.0,0.0,38.619898860330416,212.73000000000002,0.0,2022-02-02
+Demand-proportional,demand_proportional,0.0,0.0,15.011004549982736,212.73000000000005,0.0,2022-02-02
+Deterministic MILP,deterministic_milp,0.0,0.0,953.0626195481508,0.0,0.0511627197265625,2022-02-02
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,34.4550173,0.04879498481750488,2022-02-02
+Status quo (no surge),status_quo,0.0,0.0,383.0793775135962,0.0,0.0,2022-02-09
+Population-proportional,population_proportional,0.0,0.0,24.578027672056976,212.73000000000002,0.0,2022-02-09
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0003216266632080078,2022-02-09
+Deterministic MILP,deterministic_milp,0.0,0.0,383.0793775135962,0.0,0.047408342361450195,2022-02-09
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,30.052152,0.050443410873413086,2022-02-09
+Status quo (no surge),status_quo,0.0,0.0,257.07612619286647,0.0,0.0,2022-02-16
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-02-16
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-02-16
+Deterministic MILP,deterministic_milp,0.0,0.0,257.07612619286647,0.0,0.03314352035522461,2022-02-16
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,22.21856,0.036477088928222656,2022-02-16
+Status quo (no surge),status_quo,0.0,0.0,202.76128307478425,0.0,0.0,2022-02-23
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-02-23
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73,0.0,2022-02-23
+Deterministic MILP,deterministic_milp,0.0,0.0,202.76128307478425,0.0,0.04742097854614258,2022-02-23
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,17.52424,0.04825568199157715,2022-02-23
+Status quo (no surge),status_quo,0.0,0.0,0.0,0.0,0.0,2022-03-02
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-03-02
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-03-02
+Deterministic MILP,deterministic_milp,0.0,0.0,0.0,0.0,0.0470583438873291,2022-03-02
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,0.0,0.049912214279174805,2022-03-02
+Status quo (no surge),status_quo,0.0,0.0,72.85807578940864,0.0,0.0,2022-03-09
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-03-09
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.72999999999996,0.0,2022-03-09
+Deterministic MILP,deterministic_milp,0.0,0.0,72.85807578940864,0.0,0.03200244903564453,2022-03-09
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,6.2969734,0.04731154441833496,2022-03-09
+Status quo (no surge),status_quo,0.0,0.0,24.870204021642525,0.0,0.0,2022-03-16
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-03-16
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-03-16
+Deterministic MILP,deterministic_milp,0.0,0.0,24.870204021642525,0.0,0.03746294975280762,2022-03-16
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,2.1494805,0.032865047454833984,2022-03-16
+Status quo (no surge),status_quo,0.0,0.0,57.97567895592382,0.0,0.0,2022-03-23
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-03-23
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-03-23
+Deterministic MILP,deterministic_milp,0.0,0.0,57.97567895592382,0.0,0.043585777282714844,2022-03-23
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,5.0107185,0.04940199851989746,2022-03-23
+Status quo (no surge),status_quo,0.0,0.0,131.26243672035957,0.0,0.0,2022-03-30
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-03-30
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-03-30
+Deterministic MILP,deterministic_milp,0.0,0.0,131.26243672035957,0.0,0.05008649826049805,2022-03-30
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,11.344742,0.03390669822692871,2022-03-30
+Status quo (no surge),status_quo,0.0,0.0,204.8367693131578,0.0,0.0,2022-04-06
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-04-06
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-04-06
+Deterministic MILP,deterministic_milp,0.0,0.0,204.8367693131578,0.0,0.032607078552246094,2022-04-06
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,17.70362,0.051059722900390625,2022-04-06
+Status quo (no surge),status_quo,0.0,0.0,132.9245728312613,0.0,0.0,2022-04-13
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-04-13
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73,0.0,2022-04-13
+Deterministic MILP,deterministic_milp,0.0,0.0,132.9245728312613,0.0,0.03293132781982422,2022-04-13
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,11.488397,0.04942440986633301,2022-04-13
+Status quo (no surge),status_quo,0.0,0.0,166.03989411847408,0.0,0.0,2022-04-20
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-04-20
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-04-20
+Deterministic MILP,deterministic_milp,0.0,0.0,166.03989411847408,0.0,0.04947829246520996,2022-04-20
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,14.350486,0.05011868476867676,2022-04-20
+Status quo (no surge),status_quo,0.0,0.0,50.429185307059605,0.0,0.0,2022-04-27
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-04-27
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-04-27
+Deterministic MILP,deterministic_milp,0.0,0.0,50.429185307059605,0.0,0.050383806228637695,2022-04-27
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,4.3584906,0.0520174503326416,2022-04-27
+Status quo (no surge),status_quo,0.0,0.0,36.47406731460901,0.0,0.0,2022-05-04
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-05-04
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-05-04
+Deterministic MILP,deterministic_milp,0.0,0.0,36.47406731460901,0.0,0.04394721984863281,2022-05-04
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,3.1523785,0.05113387107849121,2022-05-04
+Status quo (no surge),status_quo,0.0,0.0,0.0,0.0,0.0,2022-05-11
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-05-11
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-05-11
+Deterministic MILP,deterministic_milp,0.0,0.0,0.0,0.0,0.03714561462402344,2022-05-11
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,0.0,0.0512232780456543,2022-05-11
+Status quo (no surge),status_quo,0.0,0.0,0.0,0.0,0.0,2022-05-18
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-05-18
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000005,0.0,2022-05-18
+Deterministic MILP,deterministic_milp,0.0,0.0,0.0,0.0,0.04993033409118652,2022-05-18
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,0.0,0.04203343391418457,2022-05-18
+Status quo (no surge),status_quo,0.0,0.0,0.0,0.0,0.0,2022-05-25
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-05-25
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000005,0.0,2022-05-25
+Deterministic MILP,deterministic_milp,0.0,0.0,0.0,0.0,0.04314160346984863,2022-05-25
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,0.0,0.04882502555847168,2022-05-25
+Status quo (no surge),status_quo,0.0,0.0,0.0,0.0,0.0,2022-06-01
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-06-01
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-06-01
+Deterministic MILP,deterministic_milp,0.0,0.0,0.0,0.0,0.058815956115722656,2022-06-01
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,0.0,0.04904937744140625,2022-06-01
+Status quo (no surge),status_quo,0.0,0.0,0.0,0.0,0.0,2022-06-08
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-06-08
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-06-08
+Deterministic MILP,deterministic_milp,0.0,0.0,0.0,0.0,0.05225014686584473,2022-06-08
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,0.0,0.035157203674316406,2022-06-08
+Status quo (no surge),status_quo,0.0,0.0,0.0,0.0,0.0,2022-06-15
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-06-15
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-06-15
+Deterministic MILP,deterministic_milp,0.0,0.0,0.0,0.0,0.04903745651245117,2022-06-15
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,0.0,0.0485837459564209,2022-06-15
+Status quo (no surge),status_quo,0.0,0.0,0.0,0.0,0.0,2022-06-22
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-06-22
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-06-22
+Deterministic MILP,deterministic_milp,0.0,0.0,0.0,0.0,0.033341169357299805,2022-06-22
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,0.0,0.0480349063873291,2022-06-22
+Status quo (no surge),status_quo,0.0,0.0,28.050862962768385,0.0,0.0,2022-06-29
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-06-29
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000008,0.0,2022-06-29
+Deterministic MILP,deterministic_milp,0.0,0.0,28.050862962768385,0.0,0.06174182891845703,2022-06-29
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,2.4243783,0.06626009941101074,2022-06-29
+Status quo (no surge),status_quo,0.0,0.0,71.29229625027945,0.0,0.0,2022-07-06
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-07-06
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73,0.0,2022-07-06
+Deterministic MILP,deterministic_milp,0.0,0.0,71.29229625027945,0.0,0.03658175468444824,2022-07-06
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,6.1616463,0.046106576919555664,2022-07-06
+Status quo (no surge),status_quo,0.0,0.0,0.0,0.0,0.0,2022-07-13
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-07-13
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-07-13
+Deterministic MILP,deterministic_milp,0.0,0.0,0.0,0.0,0.03422212600708008,2022-07-13
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,0.0,0.03636336326599121,2022-07-13
+Status quo (no surge),status_quo,0.0,0.0,195.02777573820208,0.0,0.0,2022-07-20
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-07-20
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000005,0.0,2022-07-20
+Deterministic MILP,deterministic_milp,0.0,0.0,195.02777573820208,0.0,0.03129982948303223,2022-07-20
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,17.4823499,0.05022239685058594,2022-07-20
+Status quo (no surge),status_quo,0.0,0.0,269.1362424061016,0.0,0.0,2022-07-27
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-07-27
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-07-27
+Deterministic MILP,deterministic_milp,0.0,0.0,269.1362424061016,0.0,0.04969286918640137,2022-07-27
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,23.260891,0.05031299591064453,2022-07-27
+Status quo (no surge),status_quo,0.0,0.0,102.98111934656404,0.0,0.0,2022-08-03
+Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-08-03
+Demand-proportional,demand_proportional,0.0,0.0,0.0,212.72999999999996,0.0,2022-08-03
+Deterministic MILP,deterministic_milp,0.0,0.0,102.98111934656404,0.0,0.03844499588012695,2022-08-03
+"Robust MILP (CVaR, $\lambda_3{=}1$)",robust_milp_cvar1,0.0,0.0,0.0,8.900446,0.04817843437194824,2022-08-03

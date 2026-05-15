@@ -1,5 +1,6 @@
 % =============================================================================
-%  Decision-Aware Physics-Informed Forecasting and Metaheuristic Allocation
+%  Physics-Informed ICU Bed Forecasting with Cost-Asymmetric Quantile Loss
+%  and Robust Optimisation
 %  for NHS Critical-Care Surge Capacity Under Demand Uncertainty
 %
 %  Submission to UKCI 2026 (Coventry, 9-11 September 2026)
@@ -76,10 +77,8 @@
 \begin{document}
 
 % Title
-\title{Decision-Aware Physics-Informed Forecasting and
-       Metaheuristic Allocation for NHS Critical-Care Surge Capacity
-       Under Demand Uncertainty}
-\titlerunning{Decision-Aware Forecasting and Allocation for NHS Critical-Care Surge}
+\title{Physics-Informed ICU Bed Forecasting with Cost-Asymmetric Quantile Loss and Robust Optimisation for NHS Critical-Care Surge Capacity Under Demand Uncertainty}
+\titlerunning{Physics-Informed ICU Bed Forecasting for NHS Surge Planning}
 
 % % Authors
 % \author{Michael Ajao-Olarinoye\inst{1} \and
@@ -96,31 +95,15 @@
 
 % Abstract
 \begin{abstract}
-NHS critical-care planning during epidemic waves must pre-position
-surge capacity and route patients across regions under forecast
-uncertainty. We propose a forecast-to-decision pipeline coupling a
-per-region physics-informed forecaster on the $SEI_aI_sHCRD$ system
-to a tail-risk robust MILP for bed-surge allocation. The forecaster is
-trained on a multi-quantile pinball loss whose $q^{(0.9)}$ component
-penalises under-prediction nine-to-one and uses a learnable
-level-and-trend anchor. Quantile forecasts drive a hybrid-regional
-allocation solved exactly via PuLP+CBC and approximately via GA,
-NSGA-II, and Simulated Annealing on a shared LP-slave oracle. On a
-seven-region NHS England case study (Aug~$2020$ to Aug~$2022$), the
-forecaster cuts $14$-day RMSE over per-origin re-fitted ARIMA by
-$19\%$ and the $28$-day underestimation rate four-fold; the robust
-MILP achieves the lowest transfer burden ($4.6\times$ below
-population-proportional) at no cost in coverage. A four-axis
-sensitivity sweep clarifies when each control binds.
+NHS critical-care planning during epidemic waves must pre-position surge capacity and route patients across regions under forecast uncertainty. We propose a forecast-to-decision pipeline coupling a per-region physics-informed forecaster on the $SEI_aI_sHCRD$ system to a tail-risk robust MILP for bed-surge allocation. The forecaster is trained on a cost-asymmetric multi-quantile pinball loss whose $q^{(0.9)}$ component penalises under-prediction nine-to-one and uses a learnable level-and-trend anchor. Quantile forecasts drive a hybrid-regional allocation solved exactly via PuLP+CBC and approximately via GA, NSGA-II, and Simulated Annealing on a shared LP-slave oracle. On a seven-region NHS England case study (Aug~$2020$ to Aug~$2022$), the forecaster improves $14$-day RMSE over per-origin re-fitted ARIMA and a neural GRU baseline, while ARIMA remains stronger at the longest horizon. At the reported operating point, the robust MILP minimises transfer burden among tied budget-exhausting policies, so the allocation result is a binding-budget routing effect rather than an unmet-demand reduction. A four-axis sensitivity sweep clarifies when each control binds.
 
-\keywords{physics-informed neural networks, decision-aware forecasting,
+\keywords{physics-informed neural networks, cost-asymmetric forecasting,
           pinball loss, robust optimisation, metaheuristics, NSGA-II,
           NHS England}
 \end{abstract}
 
 % =============================================================================
 \input{sections/01_introduction}
-\input{sections/02_related_work}
 \input{sections/03_forecasting}
 \input{sections/04_optimisation}
 \input{sections/05_case_study}

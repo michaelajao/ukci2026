@@ -5,10 +5,9 @@
 \subsection{SEIRD Compartmental Model}\label{ssec:seird}
 
 For each region $r \in \R$ with population $N_r$ we model the local
-epidemic with an eight-compartment $SEI_aI_sHCRD$ system. Let
-$U^r(t)=(S_r,E_r,I_{a,r},I_{s,r},H_r,C_r,R_r,D_r)$ denote susceptible,
-exposed, asymptomatic infectious, symptomatic infectious, hospitalised,
-critical-care, recovered, and deceased compartments. \Cref{fig:seird}
+epidemic with an eight-compartment $SEI_aI_sHCRD$ system whose states
+are susceptible, exposed, asymptomatic/symptomatic infectious,
+hospitalised, critical-care, recovered, and deceased. \Cref{fig:seird}
 shows the flow topology, in which the distinct probabilities $\omega$
 ($I_s\!\to\!H$) and $\phi$ ($H\!\to\!C$) disambiguate the two clinical
 thresholds. The system evolves as
@@ -94,19 +93,21 @@ physics-informed forecaster.}
 \subsection{Per-Region PINN-SEIRD}\label{ssec:pinn}
 
 The PINN consists of two MLPs following~\cite{ajao2025hybrid}: a state
-network $U^r_{NN}\!:t\mapsto U^r(t)$ (five hidden layers of $20$ units)
-and a parameter network
-$X^r_{NN}\!:t\mapsto(\beta_r,\gamma_{c,r},\delta_{c,r},\eta_r)$ (three
-hidden layers of $20$ units), with tanh hidden activations and sigmoid
-outputs. The loss combines a data fit on observable compartments
+network $U^r_{NN}$ (five hidden layers of $20$ units) and a parameter
+network $X^r_{NN}$ for $(\beta_r,\gamma_{c,r},\delta_{c,r},\eta_r)$
+(three hidden layers of $20$ units), with tanh hidden activations and
+sigmoid outputs. The loss combines a data fit on observable compartments
 $\{H,C\}$, the only ones with daily regional NHS counts, with an
 ODE residual against \Cref{eq:seird}:
 \begin{equation}\label{eq:pinn_loss}
-\mathcal{L}^{PINN}_r \!=\!\!\! \sum_{t \in \T_{\text{train}}}
-  \sum_{k \in \{H,C\}}\!\!\big(U^r_{NN,k}(t) - y_{r,t,k}/N_r\big)^2
-+ \lambda_{ode}\!\!\! \sum_{t \in \T_{\text{coll}}}\!\!
+\begin{aligned}
+\mathcal{L}^{PINN}_r
+&= \sum_{t \in \T_{\text{train}}}\sum_{k \in \{H,C\}}
+  \big(U^r_{NN,k}(t) - y_{r,t,k}/N_r\big)^2 \\
+&\quad + \lambda_{ode}\sum_{t \in \T_{\text{coll}}}
   \Big\|\tfrac{dU^r_{NN}(t)}{dt} -
   \mathcal{N}(U^r_{NN}; X^r_{NN})\Big\|^2,
+\end{aligned}
 \end{equation}
 where $\mathcal{N}$ is the right-hand side of \Cref{eq:seird},
 derivatives use PyTorch autograd at $256$ collocation points sampled
@@ -144,7 +145,7 @@ $\varphi^{0.5}\!\approx\!0.88$ (near-linear) and
 $\varphi^{0.1}=\varphi^{0.9}=0.5$ (square-root damping). Forecasts in
 the original scale follow by inverting standardisation.
 
-\subsection{Pinball Loss and Decision-Aware Asymmetry}\label{ssec:loss}
+\subsection{Pinball Loss for Cost-Asymmetric Quantiles}\label{ssec:loss}
 
 The forecaster minimises the multi-quantile pinball
 loss~\cite{koenker1978regression}:
@@ -156,11 +157,10 @@ loss~\cite{koenker1978regression}:
 \end{equation}
 evaluated at all $(h,q)\in\Hset\!\times\!\Qset$. The $q=0.5$ pinball
 collapses to L1 (point accuracy); the $q=0.9$ pinball penalises
-under-prediction nine-to-one. We call the $q^{(0.9)}$ pinball
-\emph{decision-aware} because its asymmetry matches the downstream cost
-asymmetry (an under-bed risks a stranded patient; an over-bed only
-wastes pre-positioned capacity)~\cite{elmachtoub2022smart}, not because
-the forecaster is coupled to the allocation solver. We report $\hat y^{0.5}$
+under-prediction nine-to-one. We use this as a cost-asymmetric proxy for
+the downstream shortage asymmetry (an under-bed risks a stranded patient;
+an over-bed only wastes pre-positioned capacity)~\cite{elmachtoub2022smart};
+the forecaster is not trained through the allocation solver. We report $\hat y^{0.5}$
 as the point forecast and $[\hat y^{0.1},\hat y^{0.9}]$ as an $80\%$
 interval.
 

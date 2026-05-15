@@ -9,14 +9,16 @@ descent that alternates discretised dynamics with an LP approximation
 of bilinear constraints. Their pipeline is the methodological parallel
 to ours; we differ in domain (critical-care surge), coupling
 (decoupled forecast-then-optimise rather than iterative joint
-optimisation), and objective (decision-aware multi-quantile pinball
-rather than MSE on DELPHI states). Our framework also draws on
+optimisation), and objective (cost-asymmetric multi-quantile pinball
+rather than MSE on DELPHI states). Our framework is related to
 Elmachtoub and Grigas's Smart Predict-then-Optimize
-framework~\cite{elmachtoub2022smart} and on Luo and
+framework~\cite{elmachtoub2022smart}, but remains a decoupled
+forecast-then-optimise pipeline rather than training directly on
+decision regret. It also draws on Luo and
 Stellato's~\cite{luo2024equitable} neural-ODE-based opioid-facility
 location, which embeds discretised dynamics into a McCormick-relaxed
 MIP. Multi-quantile training follows the COVID-19 Forecast Hub's
-Weighted Interval Score evaluation.
+Weighted Interval Score evaluation~\cite{bracher2021evaluating}.
 
 On the forecasting side, statistical and recurrent baselines, including
 ARIMA and LSTM/GRU models, remain
@@ -30,7 +32,7 @@ Ising-dynamics-inspired regulariser over an adaptively learned location
 graph for hospitalisation forecasting across 2{,}299 US counties. PINNs
 embed compartmental ODEs into the training
 loss~\cite{ajao2025hybrid,qian2025physics}. NHS-specific work is
-sparse, with the authors' prior
+sparse, with prior
 work~\cite{ajao2024deep,ajao2025hybrid} forecasting national MV demand
 and existing trust-level ICU studies remaining single-site. None
 targets multi-region NHS critical-care planning, and all optimise
@@ -52,4 +54,4 @@ analogue of Luo and Stellato~\cite{luo2024equitable} for
 McCormick-relaxed facility-location optimisation are direct
 methodological cousins. None of this literature targets comparative
 MILP-and-metaheuristic allocation across the seven NHS England regions
-under a decision-aware forecasting objective.
+under a cost-asymmetric quantile forecasting objective.

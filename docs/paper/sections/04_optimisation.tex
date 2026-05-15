@@ -8,7 +8,7 @@ transfers, given the quantile forecasts of \Cref{sec:forecasting}. We
 present a deterministic MILP, a tail-risk robust extension, and three
 metaheuristic comparators.
 
-\subsection{Sets, Parameters, Decision Variables}\label{ssec:notation}
+\subsection{Sets, Parameters, and Decision Variables}\label{ssec:notation}
 
 The scope is \emph{hybrid regional}: candidate sites coincide with the
 seven NHS England commissioning regions, so demand nodes and capacity
@@ -19,9 +19,10 @@ route patients. Indices: regions $r,r'\!\in\!\R$; horizons
 $h\!\in\!\Hset=\{7,14,21,28\}$~days; scenarios
 $s\!\in\!\Sset=\{\text{low},\text{median},\text{high}\}$ from
 $q^{(0.1)},q^{(0.5)},q^{(0.9)}$ with weights
-$\pi=(0.2,0.6,0.2)$, an interval-representative discretisation that
-treats $q^{(0.1)}, q^{(0.5)}, q^{(0.9)}$ as centroids of the lower
-$20\%$, middle $60\%$, and upper $20\%$ probability mass respectively.
+$\pi=(0.2,0.6,0.2)$, a tractable representative-quantile discretisation
+of lower, central, and upper demand stress points. The tail quantiles are
+not conditional tail means; the weights define the optimisation scenario
+mixture rather than calibrated probability-bin averages.
 Parameters: forecast demand
 $d_{r,h}^s=\hat q_r^{(s)}(t_0+h)$; baseline capacity
 $C_r=1.05\times$Delta-peak; per-region surge cap $K_r=0.5\,C_r$; budget
@@ -86,8 +87,8 @@ scenario. We report $\lambda_3{=}1$ throughout. The three-scenario
 construction is co-monotone across regions and horizons (the high
 scenario imposes $q^{(0.9)}$ jointly), so the resulting tail is
 over-conservative relative to the true joint distribution; we treat
-this as an operationally desirable safety margin, vindicated by the
-realised-demand re-evaluation in \Cref{ssec:e5_e6}.
+this as an explicit stress-test design choice and examine its efficiency
+cost in \Cref{ssec:e5_e6}.
 
 \subsection{Exact and Metaheuristic Solvers}\label{ssec:solvers}
 

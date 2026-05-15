@@ -28,6 +28,7 @@ Figures (via ``ukci-build-allocation-figures``):
 from __future__ import annotations
 
 import sys
+from dataclasses import replace
 
 from utils import repo_root, results_dir, set_windows_openmp_env
 
@@ -69,6 +70,68 @@ POLICY_LABELS = {
     "nsga2_repr_point":         "NSGA-II (repr.\\ point)",
     "simulated_annealing":      "Simulated Annealing",
 }
+
+REVISION_FORECASTERS = (
+    "pinn_gru",
+    "arima_per_region",
+    "gru_per_region",
+    "xgboost_per_region",
+    "seasonal_naive",
+)
+
+REVISION_BUDGET_FRACTIONS = (0.10, 0.15, 0.20)
+
+
+def _solution_row(sol, *, origin=None, budget_fraction: float | None = None) -> dict:
+    row = {
+        "policy": POLICY_LABELS.get(sol.method, sol.method),
+        "method_key": sol.method,
+        "Expected unmet": sol.expected_unmet,
+        "Worst-case unmet": sol.worst_case_unmet,
+        "Transfer burden": sol.transfer_burden,
+        "Total surge beds": sol.total_surge_beds,
+        "Runtime (s)": sol.runtime_s,
+    }
+    if origin is not None:
+        row["origin"] = pd.Timestamp(origin).date().isoformat()
+    if budget_fraction is not None:
+        row["budget_fraction"] = budget_fraction
+    return row
+
+
+def _cheap_policy_solutions(p):
+    """Policies cheap enough to repeat over every rolling origin."""
+    return [
+        status_quo(p),
+        population_proportional(p),
+        demand_proportional(p),
+        solve_deterministic(p),
+        solve_robust(p),
+    ]
+
+
+def _table2_policy_solutions(p):
+    """Exact and heuristic policies for tighter-budget manuscript panels."""
+    return [
+        status_quo(p),
+        population_proportional(p),
+        demand_proportional(p),
+        greedy_shortage_first(p),
+        solve_deterministic(p),
+        solve_robust(p),
+    ]
+
+
+def _full_coverage_origins(forecast_model: str = "pinn_gru") -> list[pd.Timestamp]:
+    forecasts_pq = ROOT / "results" / "forecasting" / "forecasts.parquet"
+    fc = pd.read_parquet(forecasts_pq)
+    fc = fc[fc["model"] == forecast_model]
+    origins: list[pd.Timestamp] = []
+    for origin, sub in fc.groupby("origin"):
+        if sub["region"].nunique() == len(DEFAULT_REGION_NAMES) and \
+           set(sub["horizon"].unique()) >= set(DEFAULT_HORIZONS):
+            origins.append(pd.Timestamp(origin))
+    return sorted(origins)
 
 
 def main() -> int:
@@ -489,6 +552,123 @@ def run_allocation_sweeps_main() -> int:
     print(f"Wrote {OUT_DIR / 'e6_budget_sweep.csv'}")
     print(f"Wrote {OUT_DIR / 'e6_lambda_sweep.csv'}")
     print(f"Wrote {OUT_DIR / 'e6_travel_sweep.csv'}")
+    return 0
+
+
+def build_all_origin_policy_distribution() -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Evaluate cheap allocation policies at every full-coverage test origin."""
+    origins = _full_coverage_origins("pinn_gru")
+    if not origins:
+        raise RuntimeError("No full-coverage PinnGRU origins found.")
+
+    rows = []
+    for origin in origins:
+        p = load_allocation_problem(origin=origin)
+        for sol in _cheap_policy_solutions(p):
+            rows.append(_solution_row(sol, origin=origin))
+
+    detail = pd.DataFrame(rows)
+    summary = (
+        detail.groupby(["policy", "method_key"])
+        .agg(
+            n_origins=("origin", "nunique"),
+            expected_unmet_mean=("Expected unmet", "mean"),
+            expected_unmet_p10=("Expected unmet", lambda x: x.quantile(0.10)),
+            expected_unmet_p90=("Expected unmet", lambda x: x.quantile(0.90)),
+            worst_case_unmet_mean=("Worst-case unmet", "mean"),
+            worst_case_unmet_p90=("Worst-case unmet", lambda x: x.quantile(0.90)),
+            transfer_mean=("Transfer burden", "mean"),
+            transfer_p90=("Transfer burden", lambda x: x.quantile(0.90)),
+            total_surge_mean=("Total surge beds", "mean"),
+            runtime_mean_s=("Runtime (s)", "mean"),
+        )
+        .reset_index()
+    )
+    detail.to_csv(OUT_DIR / "e7_origin_policy_detail.csv", index=False)
+    summary.to_csv(OUT_DIR / "e7_origin_policy_summary.csv", index=False)
+    return detail, summary
+
+
+def build_tighter_budget_policy_tables() -> pd.DataFrame:
+    """Run Table-2-style exact and heuristic policies at tighter budgets."""
+    rows = []
+    for frac in REVISION_BUDGET_FRACTIONS:
+        p = load_allocation_problem(budget_fraction=frac)
+        for sol in _table2_policy_solutions(p):
+            rows.append(_solution_row(sol, origin=p.origin, budget_fraction=frac))
+    table = pd.DataFrame(rows)
+    table.to_csv(OUT_DIR / "e8_budget_policy_comparison.csv", index=False)
+    return table
+
+
+def build_stress_forecast_robustness() -> pd.DataFrame:
+    """Re-evaluate forecaster-driven robust allocations under scaled realised demand."""
+    p0 = load_allocation_problem()
+    forecasts_pq = ROOT / "results" / "forecasting" / "forecasts.parquet"
+    realised = realised_demand_at_origin(
+        forecasts_pq, DEFAULT_REGION_CODES, DEFAULT_REGION_NAMES,
+        origin=p0.origin, horizons=DEFAULT_HORIZONS,
+    )
+
+    rows = []
+    for scale in (1.0, 1.2, 1.3):
+        scaled_realised = realised * scale
+        scaled_peak_total = float(scaled_realised.max(axis=1).sum())
+        for forecaster in REVISION_FORECASTERS:
+            b_peak, p_fc, sol_fc = _solve_robust_get_b(forecaster, origin=p0.origin)
+            metrics = _evaluate_under_realised(p_fc, b_peak, scaled_realised)
+            forecast_peak_total = float(p_fc.demand[:, :, 2].max(axis=1).sum())
+            rows.append({
+                "origin": pd.Timestamp(p0.origin).date().isoformat(),
+                "forecaster": forecaster,
+                "realised_scale": scale,
+                "forecast_peak_total": forecast_peak_total,
+                "scaled_realised_peak_total": scaled_peak_total,
+                "expected_unmet_at_solve": sol_fc.expected_unmet,
+                **metrics,
+            })
+
+        realised_3s = np.repeat(scaled_realised, 3, axis=2)
+        p_oracle = replace(
+            p0,
+            demand=realised_3s,
+            scenarios=["low", "median", "high"],
+            scenario_weights=np.array([0.2, 0.6, 0.2], dtype=float),
+        )
+        b_oracle = solve_robust(p_oracle, cvar_lambda=0.0).b.max(axis=1)
+        metrics_oracle = _evaluate_under_realised(p0, b_oracle, scaled_realised)
+        rows.append({
+            "origin": pd.Timestamp(p0.origin).date().isoformat(),
+            "forecaster": "oracle (scaled realised)",
+            "realised_scale": scale,
+            "forecast_peak_total": scaled_peak_total,
+            "scaled_realised_peak_total": scaled_peak_total,
+            "expected_unmet_at_solve": metrics_oracle["realised_unmet"],
+            **metrics_oracle,
+        })
+
+    table = pd.DataFrame(rows)
+    table.to_csv(OUT_DIR / "e5_stress_forecast_robustness.csv", index=False)
+    return table
+
+
+def run_allocation_revision_main() -> int:
+    """Run compact revision analyses requested by the manuscript review."""
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    print("=== E7: all-origin exact/closed-form policy distribution ===")
+    detail, summary = build_all_origin_policy_distribution()
+    print(f"Wrote {OUT_DIR / 'e7_origin_policy_detail.csv'} ({len(detail):,} rows)")
+    print(f"Wrote {OUT_DIR / 'e7_origin_policy_summary.csv'} ({len(summary):,} rows)")
+    print(summary.round(2).to_string(index=False))
+
+    print("\n=== E8: tighter-budget policy comparisons ===")
+    budget_table = build_tighter_budget_policy_tables()
+    print(f"Wrote {OUT_DIR / 'e8_budget_policy_comparison.csv'} ({len(budget_table):,} rows)")
+
+    print("\n=== E5 stress: scaled realised demand ===")
+    stress = build_stress_forecast_robustness()
+    print(f"Wrote {OUT_DIR / 'e5_stress_forecast_robustness.csv'} ({len(stress):,} rows)")
+    print(stress.round(2).to_string(index=False))
     return 0
 
 

@@ -3,36 +3,34 @@
 % =============================================================================
 
 NHS critical-care surge planning during epidemic waves balances the
-cost of pre-positioning capacity against the risk of unmet demand,
-while keeping inter-regional transfer burden manageable across the
-seven NHS England regions. During COVID-19, sustained pressure on
-adult mechanical-ventilation capacity demanded surge expansion and
-inter-region transfers under uncertain demand forecasts. The computational-intelligence community has strong tools for
-each half of this problem: epidemic and hospital-demand
-forecasting~\cite{gao2021stan,gao2023hoist,qian2025physics} and
-robust resource allocation under
-uncertainty~\cite{eriskin2022robust,wan2023two,shamseddin2025optimization},
-but few studies connect the two for a national health system.
+cost of pre-positioning capacity against the risk of unmet demand while
+keeping inter-regional transfers manageable across the seven NHS England
+regions. COVID-19 placed sustained pressure on adult
+mechanical-ventilation capacity, making this a coupled forecasting and
+allocation problem under regime shift. Existing forecasting work spans
+statistical and recurrent baselines~\cite{ajao2024deep}, graph-based
+epidemic and hospital-demand models~\cite{gao2021stan,gao2023hoist},
+and physics-informed neural networks~\cite{raissi2019physics,ajao2025hybrid,qian2025physics};
+interval and quantile evaluation is also standard in epidemic forecast
+hubs~\cite{bracher2021evaluating}. These forecasters are usually
+optimised for symmetric statistical accuracy, although ICU planning has
+an asymmetric error cost: under-prediction risks stranded patients,
+whereas over-prediction wastes prepared capacity.
 
-Existing forecasters, including deep recurrent
-networks~\cite{ajao2024deep}, physics-informed neural
-networks~\cite{ajao2025hybrid,qian2025physics}, and graph-based
-architectures~\cite{gao2021stan,gao2023hoist}, are typically
-optimised for statistical accuracy alone. Yet the operational cost of a
-forecast error is asymmetric: under-predicting demand risks patients
-without ventilators while over-predicting only wastes prepared
-capacity. Squared- and absolute-error objectives treat these
-symmetrically. Conversely, most pandemic-allocation formulations assume
-deterministic demand or use off-the-shelf statistical
-forecasts~\cite{shamseddin2025optimization,eriskin2022robust}, leaving
-unexploited the dynamics-aware information physics-informed forecasters
-provide. Bertsimas et al.~\cite{bertsimas2022where} couple DELPHI
-simulation to a bilinear MIP for vaccination-site location, and
-Luo and Stellato~\cite{luo2024equitable} embed neural-ODE compartmental
-dynamics in a McCormick-relaxed MIP for opioid-facility allocation. A
-pipeline combining physics-informed regional forecasting, decision-aware
-training, and metaheuristic robust optimisation for NHS England
-critical-care surge remains missing.
+On the allocation side, robust facility-location and health-resource
+models handle demand uncertainty with MILP, two-stage optimisation, and
+metaheuristics~\cite{eriskin2022robust,wan2023two,shamseddin2025optimization,deb2002fast}.
+Bertsimas et al.~\cite{bertsimas2022where} couple DELPHI dynamics to a
+bilinear MIP for vaccination-site location, while Luo and
+Stellato~\cite{luo2024equitable} embed neural-ODE compartmental dynamics
+inside a McCormick-relaxed facility-location model. Our setting differs
+from Smart Predict-then-Optimize~\cite{elmachtoub2022smart}: the
+forecaster is not trained through allocation regret, but its
+multi-quantile pinball objective is cost-asymmetric and feeds a robust
+optimisation comparison. To our knowledge, no prior work combines
+physics-informed NHS regional ICU-bed forecasting with cost-asymmetric
+quantile training and exact/metaheuristic robust allocation across the
+seven NHS England regions.
 
 This paper presents a forecast-to-decision pipeline
 (\Cref{fig:pipeline}) organised in four phases. \emph{Phase~A}
@@ -41,9 +39,9 @@ twelve outputs, comprising eight compartmental states and four
 transmission and clinical parameters, are frozen and passed to a
 temporal GRU head that emits the horizon-wise quantiles
 $q^{(0.1)}$, $q^{(0.5)}$, $q^{(0.9)}$ trained directly with a
-multi-quantile pinball loss. The loss is decision-aware by
-construction, since the $q^{(0.9)}$ branch penalises
-under-prediction at a nine-to-one ratio. A level-and-trend anchor
+multi-quantile pinball loss. The loss is operationally aligned rather
+than solver-coupled: the $q^{(0.9)}$ branch penalises under-prediction
+at a nine-to-one ratio. A level-and-trend anchor
 skip-connects the most recent observation and its weekly slope to
 every quantile prediction. \emph{Phase~B} discretises these
 quantiles into three scenarios (low, median, and high) with weights
@@ -57,23 +55,22 @@ $B$, the transfer penalty $\lambda_3$, and the surge threshold
 $\tau$.
 
 \textbf{Contributions.}
-(1)~\textbf{Decision-aware forecaster.} The combination of a
+(1)~\textbf{Cost-asymmetric forecaster.} The combination of a
 multi-quantile pinball loss and a level-and-trend anchor reduces
-$h{=}14$ RMSE by $19\%$ relative to refitted ARIMA and lowers the
-$h{=}28$ underestimation rate by a factor of four, with the
-contribution of each component isolated through an ablation study.
+$h{=}14$ RMSE by $19\%$ relative to refitted ARIMA and $37\%$ relative
+to a per-region GRU; paired origin-level tests and ablations isolate
+where this gain holds and where ARIMA remains stronger.
 (2)~\textbf{Robust MILP allocation.} A hybrid-regional formulation
-attains the lowest transfer burden in the policy set, $4.6\times$
-below the population-proportional baseline at matched coverage,
-while three metaheuristics come within $20\%$ of this performance
-at $10^3\times$ the runtime.
+attains the lowest transfer burden among budget-exhausting policies at
+the reported operating point, $4.6\times$ below the population-
+proportional baseline under tied coverage; this is interpreted as a
+binding-budget routing effect rather than an unmet-demand reduction.
 (3)~\textbf{$SEI_aI_sHCRD$ clinical split.} The proposed model
 separates the hospitalisation ratio $\omega$ ($I_s\to H$) from the
 critical-care escalation rate $\phi$ ($H\to C$), correcting the
 overloaded $\omega$ used in~\cite{ajao2025hybrid}.
 
 The remainder of the paper is organised as follows.
-\Cref{sec:related_work} reviews related work;
 \Cref{sec:forecasting,sec:optimisation,sec:case_study} describe the
 forecasting and optimisation modules and the case study;
 \Cref{sec:results} reports results; and \Cref{sec:conclusion}

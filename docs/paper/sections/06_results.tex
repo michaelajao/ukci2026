@@ -10,26 +10,34 @@ All results use the Omicron test split (1~Dec~2021--31~Aug~2022).
 underestimation rate at $h{=}28$ for PinnGRU against four baselines, all
 sharing the same $32$-origin rolling-origin protocol. PinnGRU wins
 $h{=}7$ and $h{=}14$; at the operational $14$-day horizon it cuts RMSE
-by $19\%$ over ARIMA ($14.46$ vs $17.80$). The underestimation rate at
-$h{=}28$ falls from ARIMA's $44.2\%$ to $10.3\%$, a four-fold
-reduction consistent with the asymmetric design of the multi-quantile
-pinball loss (\Cref{eq:pinball}). ARIMA edges PinnGRU at $h{=}21,28$
-through its per-origin refit, a parity PinnGRU could close via online
-adaptation at the cost of its one-shot operational simplicity. The
-per-region forecast trajectories in \Cref{fig:forecast_panel} make
-this visible: PinnGRU tracks the Omicron descent in every region with
-shorter under-prediction episodes than the baselines.
+by $19\%$ over ARIMA ($14.46$ vs $17.80$) and by $37\%$ over the
+per-region GRU ($14.46$ vs $22.92$). Origin-bootstrap intervals in
+\Cref{fig:forecast_uncertainty} show that the paired $h{=}14$ RMSE
+gain is robust to rolling-origin uncertainty: PinnGRU--ARIMA is
+$-3.88$ MV beds (95\% CI $[-5.97,-1.74]$, Wilcoxon $p{=}0.003$),
+and PinnGRU--GRU is $-6.95$ MV beds (95\% CI $[-10.21,-4.33]$,
+$p{<}10^{-6}$). The same paired analysis makes the long-horizon trade-off
+explicit: ARIMA is significantly better than PinnGRU at $h{=}28$
+($+5.53$ MV beds, 95\% CI $[1.96,9.05]$, $p{=}0.006$), while PinnGRU
+continues to dominate the neural GRU baseline. Thus the proposed model is
+best read as a short-to-medium horizon operational forecaster, not a
+uniform point-accuracy winner across all horizons.
 
-The bottom block of \Cref{tab:forecast_accuracy} ablates the five
-architectural components. \textbf{(i)} Replacing the pinball loss with
+The bottom block of \Cref{tab:forecast_accuracy} ablates the three
+load-bearing components. \textbf{(i)} Replacing the pinball loss with
 MSE on the median channel inflates $h{=}14$ RMSE by $29\%$ and drops
-PinnGRU below several classical baselines; the loss, not the
-architecture, drives the gain. \textbf{(ii)} Zeroing the four PINN
+PinnGRU below several classical baselines; the cost-asymmetric loss
+improves the RMSE trade-off even though the MSE ablation has the lowest
+marginal $h{=}28$ underestimation rate. \textbf{(ii)} Zeroing the four PINN
 parameter features inflates $h{=}14$ RMSE almost two-fold
 ($14.46\!\to\!27.25$), the largest regression in the table.
-\textbf{(iii)} The level and trend anchors trade short-horizon
-flexibility for long-horizon stability. All five components are
-required.
+\textbf{(iii)} Skipping PINN pre-training inflates $h{=}14$ RMSE by
+$19\%$ ($14.46\!\to\!17.27$), confirming that the physics prior, not
+capacity, drives the gain over the per-region GRU baseline. Per-component
+anchor ablations (omitted for space) show the level anchor improves
+$h{=}7$ marginally but degrades $h{=}28$ by $17\%$ when removed, and
+the trend anchor degrades both ends; the anchor pair trades short-
+horizon flexibility for long-horizon stability.
 
 \begin{table}[t]
 \caption{Forecast accuracy and ablations, macro-averaged over seven
@@ -51,26 +59,24 @@ XGBoost (lag features)        & 12.45 & 22.90 & 36.42 & 58.88 & 27.7 \\
 GRU per region                & 14.13 & 22.92 & 33.35 & 43.97 & 7.6 \\
 \textbf{PinnGRU (proposed)}   & \textbf{11.02} & \textbf{14.46} & 24.19 & 34.63 & 10.3 \\
 \midrule
-\quad w/o decision-aware loss & 14.79 & 18.70 & 27.09 & 41.47 & \textbf{6.7} \\
+\quad w/o cost-asymmetric loss & 14.79 & 18.70 & 27.09 & 41.47 & \textbf{6.7} \\
 \quad w/o PINN pre-training   & 12.26 & 17.27 & 22.56 & 34.73 & 22.8 \\
 \quad w/o PINN params         & 23.97 & 27.25 & 32.94 & 44.59 & 8.5 \\
-\quad w/o level anchor        & 10.23 & 16.60 & 26.24 & 40.51 & 19.6 \\
-\quad w/o trend anchor        & 11.04 & 16.75 & 25.38 & 35.71 & 23.7 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{fig_forecast_panel.png}
-\caption{Per-region $h{=}14$ rolling-origin forecasts on the Omicron
-test period. PinnGRU (blue) tracks realised MV-bed occupancy (black)
-more closely than the four baselines, and its under-prediction
-episodes are visibly shorter than ARIMA's at the wave shoulders.}
-\label{fig:forecast_panel}
+\includegraphics[width=\textwidth]{fig_pinn_arima_gru_ci.png}
+\caption{Rolling-origin uncertainty for the two main comparator classes.
+Left: RMSE with 95\% origin-bootstrap intervals for ARIMA, a per-region
+neural GRU, and PinnGRU. Right: paired origin-level RMSE differences;
+negative values favour PinnGRU.}
+\label{fig:forecast_uncertainty}
 \end{figure}
 
-\subsection{Allocation: MILP, Metaheuristics, and Baselines}
+\subsection{Allocation Performance Across Solvers}
 \label{ssec:e2_e3}
 
 \Cref{tab:allocation} compares all eight policies on the seven-region
@@ -83,17 +89,17 @@ footing.
 
 \textbf{(i)} The \emph{robust MILP} achieves the lowest transfer
 burden in the table ($672$~bed-km, $4.6\times$ below
-population-proportional and $1.7\times$ below greedy shortage-first)
-at the same $E[u]$ and $u^{\text{worst}}$ as every budget-exhausting
-policy. \textbf{(ii)} The \emph{deterministic MILP} spends only $51$
-of the $213$ available beds and pays $\sim\!3\times$ higher $E[u]$
-and $u^{\text{worst}}$, quantifying the value of $\pi_s$-weighted
-expectation over median-only optimisation. \textbf{(iii)} The
-metaheuristics match the robust MILP on coverage
-($685$--$830$~bed-km transfer) at $500\text{--}3000\times$ slower
-runtime. The robust MILP wins on \emph{routing}, not coverage: once
-the budget binds, robust-feasible policies differentiate only on
-transfer burden.
+population-proportional and $1.7\times$ below greedy shortage-first),
+but this is a tie-break among policies with identical rounded $E[u]$
+and $u^{\text{worst}}$, not a coverage improvement. \textbf{(ii)} The
+\emph{deterministic MILP} spends only $51$ of the $213$ available beds
+and pays $\sim\!3\times$ higher $E[u]$ and $u^{\text{worst}}$,
+quantifying the value of $\pi_s$-weighted expectation over median-only
+optimisation. \textbf{(iii)} GA and SA match the robust MILP on the
+coverage metrics and come close on transfer ($685$--$830$~bed-km), but
+at substantially longer runtimes. The robust MILP wins on \emph{routing},
+not coverage: once the budget binds, robust-feasible policies
+differentiate only on transfer burden.
 
 \begin{table}[t]
 \caption{Allocation comparison under $B = 213$~beds, $\tau = 240$~min,
@@ -129,28 +135,11 @@ cover those two and differ markedly on the remaining five, with the
 robust MILP and GA finding compromise allocations with non-trivial
 North~West and London surge while population-proportional spreads
 mechanically and greedy concentrates on top-demand regions.
+The NSGA-II representative point is the L2-normalised ideal point on
+the Pareto front, so it deliberately selects a lower-surge elbow rather
+than matching the GA/robust-MILP coverage point.
 
-\subsection{Pareto Front}\label{ssec:e4}
-
-NSGA-II returns $50$ non-dominated solutions over $40$ generations on
-the three-objective formulation~\eqref{eq:nsga2_obj}; the two key
-slices in \Cref{fig:nsga2_pareto} show a sharp surge--unmet knee at
-$\sim\!200$~beds (below which each marginal bed reduces expected unmet
-demand and above which transfer burden dominates) and an
-order-of-magnitude spread in transfer burden at fixed total surge,
-with the lowest jointly achieved by the robust MILP and GA. The
-representative point lies at the curvature elbow, formalising that
-two-thirds of the expected-unmet reduction is captured by the first
-half of the budget.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\textwidth]{fig_nsga2_pareto.png}
-\caption{NSGA-II Pareto front with discrete-method solutions overlaid.}
-\label{fig:nsga2_pareto}
-\end{figure}
-
-\subsection{Forecaster and Parameter Sensitivity}
+\subsection{Forecast-Quality and Parameter Sensitivity}
 \label{ssec:e5_e6}
 
 \paragraph{Forecast-quality robustness.}
@@ -159,15 +148,22 @@ $29$~Dec~$2021$ origin: PinnGRU's $q^{(0.9)}$ peak sum
 ($1421$~beds$\,\to\,212.7$ surge), XGBoost ($1105\,\to\,197.5$), GRU
 ($973\,\to\,135.5$), ARIMA ($875\,\to\,73.2$), and seasonal-naive($7$)
 ($745\,\to\,0$); all exceed the realised peak ($797$) except
-seasonal-naive, the only baseline that would under-provision (by
-$52$~beds). Realised unmet is zero throughout including the oracle: at
-the Delta-peak baseline, under-provisioning is the danger and a
-conservative $q^{(0.9)}$ is operationally right. Forecast quality
-buys \emph{efficiency} at the $q^{(0.9)}$ margin, not coverage; the
-same margin would become the safety bound in a future wave exceeding
-the Delta ceiling.
+seasonal-naive, which under-forecasts the peak by $52$~beds. Realised
+unmet is zero throughout, including the oracle, so this origin cannot
+separate policies on realised coverage. Forecast quality buys
+\emph{efficiency} at the $q^{(0.9)}$ margin, not realised coverage in
+this observed Omicron instance; a wave exceeding the Delta baseline is
+needed to stress the under-provisioning metric directly.
 
-\paragraph{Sensitivity to $B$, $\lambda_3$, $\tau$.}
+Repeating the exact and closed-form policies over all $32$ Omicron origins
+supports the same interpretation. Robust MILP, population-proportional, and
+demand-proportional allocations have the same mean expected unmet to one
+decimal place ($2.9$), but the robust MILP reduces mean transfer burden to
+$76$~bed-km compared with $406$ and $337$~bed-km for the two proportional
+baselines. The all-origin check therefore confirms a routing-efficiency gain
+under tied coverage rather than a realised-unmet separation.
+
+\paragraph{Parameter sensitivity.}
 \Cref{tab:e6} sweeps each parameter around the operating point. The
 budget $B$ dominates: $B/\sum_r C_r$ from $0.20$ to $0.10$ doubles
 $E[u]$ and triples $u^{\text{worst}}$; $0.30$ cuts $E[u]$ to
