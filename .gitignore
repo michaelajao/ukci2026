@@ -70,7 +70,14 @@ htmlcov/
 # Project-specific
 # ---------------------------------------------------------------------------
 
-# Raw data — too large, downloaded from public sources
+# Raw data — too large, downloaded from public sources. Ignore raw archives
+# anywhere under data/raw/ (including the data/raw/ root itself, not just the
+# nhs/ and supporting/ subfolders) so manually-dropped downloads don't show up
+# as untracked noise for collaborators.
+data/raw/*.xlsx
+data/raw/*.xls
+data/raw/*.zip
+data/raw/*.csv
 data/raw/nhs/*.xlsx
 data/raw/nhs/*.zip
 data/raw/nhs/*.csv
@@ -92,17 +99,10 @@ data/processed/*.feather
 !data/processed/.gitkeep
 !data/processed/README.md
 
-# Results and figures — regeneratable
-results/*.csv
-results/*.json
-results/*.npy
-results/*.pkl
-!results/.gitkeep
-!results/README.md
-figures/*.png
-figures/*.pdf
-figures/*.svg
-!figures/.gitkeep
+# Results and figures are COMMITTED as the shared source of truth so the
+# co-author gets paper-facing tables/figures without re-running the heavy
+# pipeline. Do not ignore results/ or figures/ contents. (Bulky raw NHS data
+# is still ignored above; large model checkpoints are ignored via *.pt/*.pth.)
 
 # LaTeX build artefacts (when paper drafting begins)
 docs/paper/build/
