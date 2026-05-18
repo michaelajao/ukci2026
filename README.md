@@ -1,6 +1,6 @@
 ﻿# UKCI 2026 â€” Critical-Care Surge Capacity Planning
 
-**Working title:** Decision-Aware Physics-Informed Forecasting and Metaheuristic Allocation for NHS Critical-Care Surge Capacity Under Demand Uncertainty
+**Working title:** Physics-Informed ICU Bed Forecasting with Cost-Asymmetric Quantile Loss and Robust Optimisation for NHS Critical-Care Surge Capacity Under Demand Uncertainty
 
 **Authors (planned):** Michael Ajao-Olarinoye, Abiola Babatunde, Vasile Palade
 **Conference:** UKCI 2026, Coventry, 9â€“11 September 2026
@@ -80,7 +80,7 @@ ukci2026/
 â”‚   â””â”€â”€ graphs/                    # NHS region adjacency, distance, correlation
 â”œâ”€â”€ src/                           # Python packages and command entry points
 â”‚   â”œâ”€â”€ data/                      # NHS ingestion, splits, scenarios
-â”‚   â”œâ”€â”€ forecasting/               # PINN-SEIRD, decision-aware loss, baselines
+â”‚   â”œâ”€â”€ forecasting/               # PINN-SEIRD, cost-asymmetric loss, baselines
 â”‚   â”œâ”€â”€ optimization/              # MILP, robust MILP, heuristics, metaheuristics, Îµ-constraint
 â”‚   â”œâ”€â”€ evaluation/                # Forecast and allocation metrics
 â”‚   â””â”€â”€ utils.py                   # Shared infrastructure helpers
@@ -110,7 +110,7 @@ Conventional Commits format:
 - `feat(forecast): add PINN-SEIRD per-region module`
 - `fix(data): handle NHS region renaming in 2022-08 archive`
 - `experiment(opt): NSGA-II on London trust subset`
-- `docs(method): expand decision-aware loss derivation`
+- `docs(method): expand cost-asymmetric loss derivation`
 
 ### Tests
 
@@ -130,10 +130,11 @@ reproducibility statement.
 If this work is useful, please cite (placeholder until acceptance):
 
 ```bibtex
-@inproceedings{ajao-olarinoye2026decision,
-  title  = {Decision-Aware Physics-Informed Forecasting and
-            Metaheuristic Allocation for {NHS} Critical-Care
-            Surge Capacity Under Demand Uncertainty},
+@inproceedings{ajao-olarinoye2026physics,
+  title  = {Physics-Informed {ICU} Bed Forecasting with
+            Cost-Asymmetric Quantile Loss and Robust Optimisation
+            for {NHS} Critical-Care Surge Capacity Under
+            Demand Uncertainty},
   author = {Ajao-Olarinoye, Michael and Babatunde, Abiola and Palade, Vasile},
   booktitle = {Proceedings of the 25th UK Workshop on
                Computational Intelligence (UKCI 2026)},
