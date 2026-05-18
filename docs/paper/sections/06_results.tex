@@ -23,6 +23,21 @@ continues to dominate the neural GRU baseline. Thus the proposed model is
 best read as a short-to-medium horizon operational forecaster, not a
 uniform point-accuracy winner across all horizons.
 
+A second observation concerns the four non-ARIMA point-forecast
+baselines. XGBoost's $h{=}28$ RMSE ($58.88$) is the worst absolute
+number in the table, but its degradation from $h{=}14$ to $h{=}28$
+(factor $2.57$) is comparable to that of the per-region GRU
+($1.92\times$); both are lag-only learners bounded by the $28$-day
+history window and cannot extrapolate outside the training distribution
+into Omicron's altered case-to-hospitalisation regime. ARIMA's smaller
+degradation ($1.57\times$) reflects its per-origin refit, which absorbs
+the local trend at each test point. PinnGRU degrades by $2.39\times$
+but its absolute $h{=}28$ RMSE ($34.63$) is much closer to ARIMA's
+than to the other neural and tree baselines: the ODE-parameter features
+it consumes encode time-varying transmission dynamics that pure-lag
+inputs cannot, consistent with the ``w/o PINN params'' ablation
+isolated next.
+
 The bottom block of \Cref{tab:forecast_accuracy} ablates the three
 load-bearing components. \textbf{(i)} Replacing the pinball loss with
 MSE on the median channel inflates $h{=}14$ RMSE by $29\%$ and drops
@@ -33,11 +48,7 @@ parameter features inflates $h{=}14$ RMSE almost two-fold
 ($14.46\!\to\!27.25$), the largest regression in the table.
 \textbf{(iii)} Skipping PINN pre-training inflates $h{=}14$ RMSE by
 $19\%$ ($14.46\!\to\!17.27$), confirming that the physics prior, not
-capacity, drives the gain over the per-region GRU baseline. Per-component
-anchor ablations (omitted for space) show the level anchor improves
-$h{=}7$ marginally but degrades $h{=}28$ by $17\%$ when removed, and
-the trend anchor degrades both ends; the anchor pair trades short-
-horizon flexibility for long-horizon stability.
+capacity, drives the gain over the per-region GRU baseline.
 
 \begin{table}[t]
 \caption{Forecast accuracy and ablations, macro-averaged over seven
@@ -155,13 +166,19 @@ separate policies on realised coverage. Forecast quality buys
 this observed Omicron instance; a wave exceeding the Delta baseline is
 needed to stress the under-provisioning metric directly.
 
-Repeating the exact and closed-form policies over all $32$ Omicron origins
-supports the same interpretation. Robust MILP, population-proportional, and
-demand-proportional allocations have the same mean expected unmet to one
-decimal place ($2.9$), but the robust MILP reduces mean transfer burden to
-$76$~bed-km compared with $406$ and $337$~bed-km for the two proportional
-baselines. The all-origin check therefore confirms a routing-efficiency gain
-under tied coverage rather than a realised-unmet separation.
+Repeating the exact and closed-form policies over all $32$ Omicron
+origins supports the same interpretation. Robust MILP,
+population-proportional, and demand-proportional allocations have the
+same mean expected unmet to one decimal place ($2.9$), but the robust
+MILP reduces mean transfer burden to $76$~bed-km compared with $406$
+and $337$~bed-km for the two proportional baselines. Underneath these
+mean transfer figures is a structural asymmetry: the proportional
+baselines fill the full $212.7$-bed budget at every origin by
+construction, whereas the robust MILP scales surge to local demand
+pressure (mean total surge $35.4$~beds, reaching the budget cap only
+at peak origins such as $29$~Dec~$2021$). The routing-efficiency gain
+therefore holds across the full demand distribution rather than only
+at the peak.
 
 \paragraph{Parameter sensitivity.}
 \Cref{tab:e6} sweeps each parameter around the operating point. The

@@ -114,7 +114,22 @@ derivatives use PyTorch autograd at $256$ collocation points sampled
 uniformly in $\T_{\text{coll}}$, and observations are population-
 normalised. We pre-train each region's PINN for $1500$ Adam steps with
 $\lambda_{ode}=0.1$, $\text{lr}=5\!\times\!10^{-3}$; both terms converge
-to $\mathcal{O}(10^{-6})$.
+to the $2\text{--}8\times 10^{-6}$ range across regions
+(mean $\sim 4\times 10^{-6}$ for both).
+
+\paragraph{Identifiability note.}
+With only $H$ and $C$ observed at regional resolution, the four
+learnable parameters $(\beta_r, \gamma_{c,r}, \delta_{c,r}, \eta_r)$
+are not jointly identifiable from these series alone: $\gamma_{c,r}$
+and $\delta_{c,r}$ in particular appear additively in $\dot C_r$ and
+cannot be separated from the $C$ trajectory. We therefore make no
+epidemiological-interpretability claim for any individual parameter
+trajectory; the parameter-network output is consumed as a four-channel
+learned feature vector by the downstream GRU. The operational evidence
+that this bundle carries signal is the ``w/o PINN params'' ablation in
+\Cref{tab:forecast_accuracy} ($h{=}14$ RMSE inflates almost two-fold,
+$14.46\!\to\!27.25$); a formal structural identifiability analysis
+under $\{H, C\}$ observation is deferred to future work.
 
 \subsection{Temporal Head with Level-and-Trend Anchor}\label{ssec:temporal}
 
