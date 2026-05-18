@@ -18,7 +18,7 @@
 % Encoding and language
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
-\usepackage{microtype}
+\usepackage[protrusion=true,expansion=false]{microtype}
 \usepackage{etoolbox}
 \usepackage{url}
 \def\UrlFont{\rmfamily}
@@ -91,6 +91,17 @@
 %   Coventry University, Priory Street, Coventry CV1 5FB, United Kingdom \\
 %   \email{olarinoyem@coventry.ac.uk}}
 
+% Authors
+\author{Michael Ajao-Olarinoye\inst{1} \and
+        Abiola Babatunde\inst{1} \and
+        Vasile Palade\inst{1}}
+\authorrunning{M. Ajao-Olarinoye et al.}
+\tocauthor{Michael Ajao-Olarinoye, Abiola Babatunde, and Vasile Palade}
+
+\institute{Centre for Computational Sciences and Mathematical Modelling,
+  Coventry University, Priory Street, Coventry CV1 5FB, United Kingdom \\
+  \email{olarinoyem@coventry.ac.uk}}
+
 \maketitle
 
 % Abstract
@@ -109,6 +120,12 @@ NHS critical-care planning during epidemic waves must pre-position surge capacit
 \input{sections/05_case_study}
 \input{sections/06_results}
 \input{sections/08_conclusion}
+
+% =============================================================================
+\section*{Conflict of Interest}
+Vasile Palade is Conference Co-Chair of UKCI~2026. This is declared
+in the submission record and the paper's review allocation was handled
+accordingly.
 
 % Bibliography
 % Springer Math/Physics/Computer Science BibTeX style from the SVProc bundle.
