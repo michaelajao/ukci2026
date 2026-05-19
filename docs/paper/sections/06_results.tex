@@ -7,24 +7,20 @@ All results use the Omicron test split (1~Dec~2021--31~Aug~2022).
 \subsection{Forecasting Accuracy}\label{ssec:e1}
 
 \Cref{tab:forecast_accuracy} reports per-horizon RMSE and the
-underestimation rate at $h{=}28$ for PinnGRU against four baselines, all
-sharing the same $32$-origin rolling-origin protocol. PinnGRU wins
-$h{=}7$ and $h{=}14$; at the operational $14$-day horizon it cuts RMSE
-by $19\%$ over ARIMA ($14.46$ vs $17.80$) and by $37\%$ over the
-per-region GRU ($14.46$ vs $22.92$). Origin-bootstrap intervals in
-\Cref{fig:forecast_uncertainty} show that the paired $h{=}14$ RMSE
-gain is robust to rolling-origin uncertainty: PinnGRU--ARIMA is
-$-3.88$ MV beds (95\% CI $[-5.97,-1.74]$, Wilcoxon $p{=}0.003$),
-and PinnGRU--GRU is $-6.95$ MV beds (95\% CI $[-10.21,-4.33]$,
-$p{<}10^{-6}$). The same paired analysis makes the long-horizon trade-off
-explicit: ARIMA is significantly better than PinnGRU at $h{=}28$
-($+5.53$ MV beds, 95\% CI $[1.96,9.05]$, $p{=}0.006$), while PinnGRU
-continues to dominate the neural GRU baseline. Thus the proposed model is
-best read as a short-to-medium horizon operational forecaster, not a
-uniform point-accuracy winner across all horizons.
+$h{=}28$ underestimation rate for PinnGRU (the frozen PINN encoder of
+\Cref{ssec:pinn} with the GRU head of \Cref{ssec:temporal}) against
+four baselines under a common $32$-origin rolling-origin protocol. PinnGRU wins $h{=}7$ and
+$h{=}14$, cutting the operational $14$-day RMSE by $19\%$ over ARIMA
+and $37\%$ over the per-region GRU. Paired origin-level tests
+(\Cref{fig:forecast_uncertainty}) confirm the $h{=}14$ gain over ARIMA
+is significant ($-3.88$ MV beds, Wilcoxon $p{=}0.003$) and that ARIMA
+is in turn significantly stronger at $h{=}28$ ($+5.53$ MV beds,
+$p{=}0.006$). The proposed model is therefore best read as a
+short-to-medium-horizon operational forecaster, not a uniform
+point-accuracy winner across all horizons.
 
-A second observation concerns the four non-ARIMA point-forecast
-baselines. XGBoost's $h{=}28$ RMSE ($58.88$) is the worst absolute
+A second observation concerns the non-ARIMA models.
+XGBoost's $h{=}28$ RMSE ($58.88$) is the worst absolute
 number in the table, but its degradation from $h{=}14$ to $h{=}28$
 (factor $2.57$) is comparable to that of the per-region GRU
 ($1.92\times$); both are lag-only learners bounded by the $28$-day
@@ -90,27 +86,26 @@ negative values favour PinnGRU.}
 \subsection{Allocation Performance Across Solvers}
 \label{ssec:e2_e3}
 
-\Cref{tab:allocation} compares all eight policies on the seven-region
-problem with $B = 213$~beds ($20\%$ of total baseline), four-hour
+\Cref{tab:allocation} compares the allocation policies on the
+seven-region problem with $B = 213$~beds ($20\%$ of total baseline), four-hour
 mutual-aid cap, and PinnGRU $q^{(0.1)}\!/q^{(0.5)}\!/q^{(0.9)}$
 forecasts at the first Omicron-period origin. Every policy's chosen
-allocation is re-evaluated by the same LP slave on the full three-
-scenario set so $E[u]$ and $u^{\text{worst}}$ are reported on equal
-footing.
+allocation is re-scored by the common LP re-evaluation over the full
+three-scenario set so $E[u]$ and $u^{\text{worst}}$ are reported on
+equal footing.
 
-\textbf{(i)} The \emph{robust MILP} achieves the lowest transfer
+\textbf{(i)} The \emph{robust LP} achieves the lowest transfer
 burden in the table ($672$~bed-km, $4.6\times$ below
 population-proportional and $1.7\times$ below greedy shortage-first),
 but this is a tie-break among policies with identical rounded $E[u]$
 and $u^{\text{worst}}$, not a coverage improvement. \textbf{(ii)} The
-\emph{deterministic MILP} spends only $51$ of the $213$ available beds
+\emph{deterministic LP} spends only $51$ of the $213$ available beds
 and pays $\sim\!3\times$ higher $E[u]$ and $u^{\text{worst}}$,
 quantifying the value of $\pi_s$-weighted expectation over median-only
-optimisation. \textbf{(iii)} GA and SA match the robust MILP on the
-coverage metrics and come close on transfer ($685$--$830$~bed-km), but
-at substantially longer runtimes. The robust MILP wins on \emph{routing},
-not coverage: once the budget binds, robust-feasible policies
-differentiate only on transfer burden.
+optimisation. \textbf{(iii)} The robust LP therefore wins on
+\emph{routing} rather than coverage. Once the budget binds, every
+budget-exhausting policy ties on $E[u]$ and $u^{\text{worst}}$ and
+differs only on transfer burden.
 
 \begin{table}[t]
 \caption{Allocation comparison under $B = 213$~beds, $\tau = 240$~min,
@@ -129,32 +124,38 @@ and three PinnGRU scenarios.}
 Population-proportional    & 212.7 & 29.0  & 144.8 & 3119.8  & 0.00 \\
 Demand-proportional        & 212.7 & 29.0  & 144.8 & 2615.3  & 0.00 \\
 Greedy shortage-first      & 212.7 & 29.0  & 144.8 & 1140.0  & 9.98 \\
-Deterministic MILP         &  51.4 & 83.3  & 416.4 & 1175.1  & 0.03 \\
-\textbf{Robust MILP ($\lambda_3{=}1$)}
+Deterministic LP           &  51.4 & 83.3  & 416.4 & 1175.1  & 0.03 \\
+\textbf{Robust LP ($\lambda_3{=}1$)}
                            & 212.7 & 29.0  & 144.8 & \textbf{671.7} & 0.04 \\
-Genetic Algorithm          & 212.7 & 29.0  & 144.8 & 685.4   & 100.5 \\
-NSGA-II (repr.\ point)     & 116.5 & 57.2  & 286.1 & 1917.1  & 114.7 \\
-Simulated Annealing        & 212.7 & 29.0  & 144.8 & 829.8   & 21.6 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Inspecting the regional structure behind \Cref{tab:allocation}, the
-deterministic MILP allocates surge only into Midlands and South East
-(median demand exceeds baseline there); budget-exhausting policies all
-cover those two and differ markedly on the remaining five, with the
-robust MILP and GA finding compromise allocations with non-trivial
-North~West and London surge while population-proportional spreads
-mechanically and greedy concentrates on top-demand regions.
-The NSGA-II representative point is the L2-normalised ideal point on
-the Pareto front, so it deliberately selects a lower-surge elbow rather
-than matching the GA/robust-MILP coverage point.
+Inspecting the regional structure behind \Cref{tab:allocation}
+(\Cref{fig:alloc_budget}a), the deterministic LP allocates surge only into
+Midlands and South East (median demand exceeds baseline there);
+budget-exhausting policies all cover those two and differ markedly on
+the remaining five, with the robust LP finding a compromise allocation
+with non-trivial North~West and London surge while
+population-proportional spreads mechanically and greedy concentrates on
+top-demand regions.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{fig_alloc_budget.png}
+\caption{(a)~Per-region peak surge allocation (beds) by policy at the
+first Omicron origin. (b)~Exact robust-LP cost--shortage frontier
+showing how expected and worst-case unmet demand fall as the surge
+budget $B/\sum_r C_r$ grows. This is the decision-relevant trade-off a
+planner navigates.}
+\label{fig:alloc_budget}
+\end{figure}
 
 \subsection{Forecast-Quality and Parameter Sensitivity}
 \label{ssec:e5_e6}
 
 \paragraph{Forecast-quality robustness.}
-Substituting each forecaster into the robust MILP at the
+Substituting each forecaster into the robust LP at the
 $29$~Dec~$2021$ origin: PinnGRU's $q^{(0.9)}$ peak sum
 ($1421$~beds$\,\to\,212.7$ surge), XGBoost ($1105\,\to\,197.5$), GRU
 ($973\,\to\,135.5$), ARIMA ($875\,\to\,73.2$), and seasonal-naive($7$)
@@ -166,56 +167,30 @@ separate policies on realised coverage. Forecast quality buys
 this observed Omicron instance; a wave exceeding the Delta baseline is
 needed to stress the under-provisioning metric directly.
 
-Repeating the exact and closed-form policies over all $32$ Omicron
-origins supports the same interpretation. Robust MILP,
-population-proportional, and demand-proportional allocations have the
-same mean expected unmet to one decimal place ($2.9$), but the robust
-MILP reduces mean transfer burden to $76$~bed-km compared with $406$
-and $337$~bed-km for the two proportional baselines. Underneath these
-mean transfer figures is a structural asymmetry: the proportional
-baselines fill the full $212.7$-bed budget at every origin by
-construction, whereas the robust MILP scales surge to local demand
-pressure (mean total surge $35.4$~beds, reaching the budget cap only
-at peak origins such as $29$~Dec~$2021$). The routing-efficiency gain
-therefore holds across the full demand distribution rather than only
-at the peak.
+Across all $32$ Omicron origins the same pattern holds. Robust LP,
+population-proportional, and demand-proportional allocations share a
+mean expected unmet of $2.9$, but the robust LP cuts mean transfer
+burden to $76$~bed-km versus $406$ and $337$~bed-km for the
+proportional baselines. The proportional baselines fill the full
+$212.7$-bed budget at every origin by construction, whereas the robust
+LP scales surge to local demand pressure (mean total surge
+$35.4$~beds, hitting the cap only at peak origins), so the
+routing-efficiency gain holds across the full demand distribution, not
+only at the peak.
 
 \paragraph{Parameter sensitivity.}
-\Cref{tab:e6} sweeps each parameter around the operating point. The
-budget $B$ dominates: $B/\sum_r C_r$ from $0.20$ to $0.10$ doubles
-$E[u]$ and triples $u^{\text{worst}}$; $0.30$ cuts $E[u]$ to
-$\sim\!1/4$. $\lambda_3$ is \emph{non-binding} at $B = 0.20$ because
-the expectation-minimising solution already clears the high tail; a
-tighter budget ($\leq\!15\%$) would re-engage it, so the tail-risk
-term is best read as a diagnostic for when tail risk binds rather
-than a defect when it does not. The travel cap $\tau\!=\!120$~min cuts
-transfer burden by $34\%$ at a $3\%$ rise in $E[u]$;
-$\tau\!\geq\!240$~min is slack.
+A one-at-a-time sweep around the operating point isolates each control.
+The budget $B$ dominates (\Cref{fig:alloc_budget}b): $B/\sum_r C_r$
+from $0.20$ to $0.10$ doubles $E[u]$ and triples $u^{\text{worst}}$,
+while $0.30$ cuts $E[u]$ to $\sim\!1/4$. $\lambda_3$ is
+\emph{non-binding} at $B = 0.20$ (the expectation-minimising solution
+already clears the high tail): only a tighter budget ($\leq\!15\%$)
+re-engages it, so the tail-risk term is best read as a diagnostic for
+when tail risk binds rather than a defect when it does not. The travel
+cap $\tau\!=\!120$~min cuts transfer burden by $34\%$ at a $3\%$ rise
+in $E[u]$; $\tau\!\geq\!240$~min is slack.
 
-\begin{table}[!htbp]
-\caption{One-at-a-time robust-MILP sensitivity around the operating point.}
-\label{tab:e6}
-\centering
-\renewcommand{\arraystretch}{1.02}
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{lrrrr}
-\toprule
-\textbf{Sweep} & \textbf{Beds} & \textbf{$E[u]$}
-               & \textbf{$u^{\mathrm{worst}}$} & \textbf{Transfer}\\
-\midrule
-\multicolumn{5}{l}{\emph{Budget $B / \sum_r C_r$}}\\
-\quad 0.10                  & 106.4 & 61.3 & 306.4 &  982.5 \\
-\quad 0.15                  & 159.5 & 40.0 & 200.0 & 1130.7 \\
-\quad \textbf{0.20 (oper.)} & 212.7 & 29.0 & 144.8 &  671.7 \\
-\quad 0.25                  & 265.9 & 18.3 &  91.6 &  671.7 \\
-\quad 0.30                  & 319.1 &  7.7 &  38.4 &  821.9 \\
-\midrule
-\multicolumn{5}{l}{\emph{CVaR weight $\lambda_3$}}\\
-\quad $\lambda_3 \in \{0, 0.5, 1, 2, 4\}$ & 212.7 & 29.0 & 144.8 & 671.7 \\
-\midrule
-\multicolumn{5}{l}{\emph{Travel cap $\tau$ (min)}}\\
-\quad 120, 180                & 212.7 & 29.9 & 149.6 &  443.9 \\
-\quad \textbf{240 (oper.)}, 300, 360 & 212.7 & 29.0 & 144.8 &  671.7 \\
-\bottomrule
-\end{tabular}
-\end{table}
+% Table 3 (one-at-a-time sensitivity sweep) removed for the 12-page UKCI
+% limit: the budget/CVaR/travel-cap effects are reported in the prose
+% above and the exact budget frontier is Fig.~4(b). The full sweep CSVs
+% (e6_*.csv) remain in the repository for the journal extension.

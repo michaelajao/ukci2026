@@ -10,7 +10,7 @@ and mechanical-ventilation bed occupancy at NHS regional resolution; and
 ONS Mid-Year Population Estimates~\cite{ons_mye_2021} on 2021 geography,
 used both as the per-region PINN normaliser and as the denominator of
 the population-proportional allocation baseline. All experiments run on
-the seven NHS England commissioning regions (Y56--Y63), and
+the seven NHS England commissioning regions, and
 inter-regional travel times $T_{r r'}$ are approximated by
 inter-centroid great-circle distances $\times 1.3$ detour at $80$~km/h.
 The series is split chronologically by epidemic wave so the most
@@ -26,13 +26,13 @@ For the allocation problem, baseline capacity $C_r$ is each region's
 Delta-wave peak MV occupancy $\times 1.05$; per-region surge cap is
 $K_r=0.5\,C_r$; total budget is $B=0.20\sum_r C_r=213$~beds; and the
 mutual-aid travel cap is $\tau=240$~min. The transfer tie-break weight
-is $\rho=10^{-3}$, so one bed-day of unmet demand outweighs
+is $\rho=10^{-3}$, so one bed of snapshot unmet demand outweighs
 $1000$~bed-km of transfer. Scenario weights are $\pi=(0.2,0.6,0.2)$ and
-the robust CVaR weight is $\lambda_3=1$; all four are individually
-swept in \Cref{ssec:e5_e6}. Forecast metrics are macro-averaged across
+the robust CVaR weight is $\lambda_3=1$. The forecaster, budget $B$,
+$\lambda_3$, and travel cap $\tau$ are each swept in
+\Cref{ssec:e5_e6}. Forecast metrics are macro-averaged across
 the seven regions and the $32$ rolling-origin evaluations spanning the
 Omicron test period; the full solver comparison is reported at the first
 Omicron decision origin ($29$~Dec~$2021$), with an exact/closed-form
 all-origin check in \Cref{ssec:e5_e6}. Code, configurations, and the
-cleaned dataset are available at the repository linked in the
-acknowledgements.
+cleaned dataset are available in the project repository.

@@ -111,8 +111,8 @@ ODE residual against \Cref{eq:seird}:
 \end{equation}
 where $\mathcal{N}$ is the right-hand side of \Cref{eq:seird},
 derivatives use PyTorch autograd at $256$ collocation points sampled
-uniformly in $\T_{\text{coll}}$, and observations are population-
-normalised. We pre-train each region's PINN for $1500$ Adam steps with
+uniformly in $\T_{\text{coll}}$, and observations are
+population-normalised. We pre-train each region's PINN for $1500$ Adam steps with
 $\lambda_{ode}=0.1$, $\text{lr}=5\!\times\!10^{-3}$; both terms converge
 to the $2\text{--}8\times 10^{-6}$ range across regions
 (mean $\sim 4\times 10^{-6}$ for both).
