@@ -152,13 +152,16 @@ def main() -> int:
         greedy_shortage_first(p),
         solve_deterministic(p),
         solve_robust(p),
-        solve_ga(p, pop_size=50, n_gen=40),
-        # NSGA-II returns (sol, F, X) — capture the Pareto front below.
-        None,
-        solve_sa(p, n_iter=400),
+        # Metaheuristics are not reported at seven-region scale: the LP is
+        # exact in <0.1 s, so GA/NSGA-II/SA add no tractability benefit.
+        # Code retained (commented) for the planned trust-level journal
+        # extension; uncomment this block and the Pareto export below.
+        # solve_ga(p, pop_size=50, n_gen=40),
+        # None,  # placeholder for NSGA-II (returns (sol, F, X))
+        # solve_sa(p, n_iter=400),
     ]
-    sol_n, pareto_F, pareto_X = solve_nsga2(p, pop_size=50, n_gen=40)
-    solutions[7] = sol_n
+    # sol_n, pareto_F, pareto_X = solve_nsga2(p, pop_size=50, n_gen=40)
+    # solutions[7] = sol_n
 
     rows = []
     alloc_rows = []
@@ -203,17 +206,18 @@ def main() -> int:
     df.to_csv(OUT_DIR / "table2_allocation.csv", index=False)
     alloc.to_csv(OUT_DIR / "e2_per_region_b.csv", index=False)
 
-    # NSGA-II Pareto front to its own file.
-    pareto_df = pd.DataFrame({
-        "surge_beds": pareto_F[:, 0],
-        "expected_unmet": pareto_F[:, 1],
-        "transfer_burden": pareto_F[:, 2],
-    })
-    pareto_df.to_csv(OUT_DIR / "nsga2_pareto.csv", index=False)
-    print(f"\nNSGA-II Pareto front: {len(pareto_F)} non-dominated points")
+    # NSGA-II Pareto export, commented with the metaheuristics above.
+    # Uncomment together for the trust-level extension.
+    # pareto_df = pd.DataFrame({
+    #     "surge_beds": pareto_F[:, 0],
+    #     "expected_unmet": pareto_F[:, 1],
+    #     "transfer_burden": pareto_F[:, 2],
+    # })
+    # pareto_df.to_csv(OUT_DIR / "nsga2_pareto.csv", index=False)
+    # print(f"\nNSGA-II Pareto front: {len(pareto_F)} non-dominated points")
 
     print(f"Wrote {OUT_DIR / 'table2_allocation.csv'}")
-    print(f"Wrote {OUT_DIR / 'nsga2_pareto.csv'}")
+    print(f"Wrote {OUT_DIR / 'e2_per_region_b.csv'}")
     return 0
 
 
@@ -235,6 +239,18 @@ HEATMAP_POLICY_ORDER = (
     "Simulated Annealing",
 )
 
+# Policies shown in the UKCI paper. The metaheuristics are retained in the
+# code (HEATMAP_POLICY_ORDER) for the planned trust-level journal extension
+# but are not reported at seven-region scale, where the LP is exact.
+PAPER_POLICY_ORDER = (
+    "Status quo (no surge)",
+    "Population-proportional",
+    "Demand-proportional",
+    "Greedy shortage-first",
+    "Deterministic MILP",
+    "Robust MILP (CVaR, $\\lambda_3{=}1$)",
+)
+
 
 def _figure_allocation_heatmap() -> "Path":
     """Heatmap of peak surge beds by region (rows) × policy (columns)."""
@@ -247,7 +263,7 @@ def _figure_allocation_heatmap() -> "Path":
     apply_paper_style()
     alloc = pd.read_csv(OUT_DIR / "e2_per_region_b.csv")
     alloc = alloc.set_index("policy")
-    alloc = alloc.loc[[p for p in HEATMAP_POLICY_ORDER if p in alloc.index]]
+    alloc = alloc.loc[[p for p in PAPER_POLICY_ORDER if p in alloc.index]]
 
     regions = list(alloc.columns)
     values = alloc.to_numpy(dtype=float).T  # (R, P)
@@ -278,6 +294,64 @@ def _figure_allocation_heatmap() -> "Path":
         fontsize=10, pad=8,
     )
     return save_figure(fig, "fig_allocation_heatmap", close=True)
+
+
+def _figure_alloc_budget() -> "Path":
+    """Single two-panel paper figure (one float, fits the 12-page cap):
+    (a) per-region peak surge by policy; (b) exact robust-LP cost-shortage
+    frontier vs the surge budget."""
+    import matplotlib.pyplot as plt
+    from matplotlib.gridspec import GridSpec
+    from evaluation.figures import (
+        FULL_WIDTH_IN, apply_paper_style, save_figure,
+    )
+
+    apply_paper_style()
+    alloc = pd.read_csv(OUT_DIR / "e2_per_region_b.csv").set_index("policy")
+    alloc = alloc.loc[[p for p in PAPER_POLICY_ORDER if p in alloc.index]]
+    regions = list(alloc.columns)
+    values = alloc.to_numpy(dtype=float).T  # (R, P)
+
+    sweep = pd.read_csv(OUT_DIR / "e6_budget_sweep.csv")
+    sweep = sweep.sort_values("budget_fraction")
+    xb = sweep["budget_fraction"] * 100.0
+
+    fig = plt.figure(figsize=(FULL_WIDTH_IN, 3.4), layout="constrained")
+    gs = GridSpec(1, 2, figure=fig, width_ratios=[1.28, 1.0], wspace=0.05)
+    axh = fig.add_subplot(gs[0, 0])
+    axb = fig.add_subplot(gs[0, 1])
+
+    im = axh.imshow(values, aspect="auto", cmap="YlGnBu")
+    axh.set_xticks(range(len(alloc.index)))
+    axh.set_xticklabels([_pretty(p) for p in alloc.index],
+                        rotation=35, ha="right", fontsize=7)
+    axh.set_yticks(range(len(regions)))
+    axh.set_yticklabels(regions, fontsize=7)
+    axh.set_xlabel("Allocation policy", fontsize=8)
+    axh.set_ylabel("NHS region", fontsize=8)
+    for i in range(values.shape[0]):
+        for j in range(values.shape[1]):
+            v = values[i, j]
+            axh.text(j, i, f"{v:.0f}", ha="center", va="center", fontsize=6,
+                     color="white" if v > values.max() * 0.55 else "black")
+    cbar = fig.colorbar(im, ax=axh, shrink=0.82, pad=0.02)
+    cbar.set_label("Peak surge beds", fontsize=7)
+    cbar.ax.tick_params(labelsize=6)
+    axh.set_title("(a) Per-region peak surge allocation", fontsize=8)
+
+    axb.plot(xb, sweep["expected_unmet"], marker="o", ms=4, color="#0072B2",
+             label=r"$E[u]$")
+    axb.plot(xb, sweep["worst_case_unmet"], marker="s", ms=4, linestyle="--",
+             color="#D55E00", label=r"$u^{\mathrm{worst}}$")
+    axb.axvline(20.0, color="0.65", linewidth=0.8, linestyle=":")
+    axb.set_xlabel(r"Surge budget $B/\sum_r C_r$ (%)", fontsize=8)
+    axb.set_ylabel("Unmet demand (beds)", fontsize=8)
+    axb.set_title("(b) Exact cost-shortage frontier", fontsize=8)
+    axb.legend(frameon=False, fontsize=7)
+    axb.grid(True, alpha=0.25)
+    axb.tick_params(labelsize=7)
+
+    return save_figure(fig, "fig_alloc_budget", close=True)
 
 
 def _figure_nsga2_pareto() -> "Path":
@@ -368,10 +442,44 @@ def _figure_nsga2_pareto() -> "Path":
     return save_figure(fig, "fig_nsga2_pareto", close=True)
 
 
+def _figure_budget_tradeoff() -> "Path":
+    """Exact cost-shortage frontier from the robust-LP budget sweep:
+    expected and worst-case unmet demand against the surge budget."""
+    import matplotlib.pyplot as plt
+    from evaluation.figures import (
+        FULL_WIDTH_IN, apply_paper_style, save_figure,
+    )
+
+    apply_paper_style()
+    sweep = pd.read_csv(OUT_DIR / "e6_budget_sweep.csv")
+    sweep = sweep.sort_values("budget_fraction")
+    x = sweep["budget_fraction"] * 100.0
+
+    fig, ax = plt.subplots(
+        figsize=(FULL_WIDTH_IN * 0.60, 3.1), layout="constrained",
+    )
+    ax.plot(x, sweep["expected_unmet"], marker="o", color="#0072B2",
+            label=r"Expected unmet $E[u]$")
+    ax.plot(x, sweep["worst_case_unmet"], marker="s", linestyle="--",
+            color="#D55E00", label=r"Worst-case unmet $u^{\mathrm{worst}}$")
+    ax.axvline(20.0, color="0.65", linewidth=0.8, linestyle=":")
+    ax.text(20.4, ax.get_ylim()[1] * 0.88, "operating point",
+            fontsize=7, color="0.4")
+    ax.set_xlabel(r"Surge budget $B/\sum_r C_r$ (%)")
+    ax.set_ylabel("Unmet demand (beds)")
+    ax.set_title("Exact cost-shortage frontier (robust LP)", fontsize=10)
+    ax.legend(frameon=False, fontsize=8)
+    ax.grid(True, alpha=0.25)
+    return save_figure(fig, "fig_budget_tradeoff", close=True)
+
+
 def _pretty(label: str) -> str:
-    """Shorten policy labels for the heatmap x-axis."""
+    """Shorten policy labels for the heatmap x-axis. The regional model has
+    no integer variables, so the exact methods are labelled LP, matching the
+    paper."""
     return (label
-            .replace("Robust MILP (CVaR, $\\lambda_3{=}1$)", "Robust MILP")
+            .replace("Robust MILP (CVaR, $\\lambda_3{=}1$)", "Robust LP")
+            .replace("Deterministic MILP", "Deterministic LP")
             .replace("NSGA-II (repr.\\ point)", "NSGA-II")
             .replace("Genetic Algorithm", "GA")
             .replace("Simulated Annealing", "SA")
@@ -673,21 +781,25 @@ def run_allocation_revision_main() -> int:
 
 
 def build_allocation_figures_main() -> int:
-    """Build the two allocation figures from the saved E2/E3 CSVs."""
+    """Build the single combined paper allocation figure from the saved
+    CSVs: (a) per-region surge heatmap and (b) the exact budget
+    cost-shortage frontier, merged into one float to fit the 12-page cap.
+    The standalone heatmap/budget and NSGA-II Pareto figures are retained
+    (commented) for the trust-level journal extension."""
     required = [
-        OUT_DIR / "table2_allocation.csv",
         OUT_DIR / "e2_per_region_b.csv",
-        OUT_DIR / "nsga2_pareto.csv",
+        OUT_DIR / "e6_budget_sweep.csv",
     ]
     for path in required:
         if not path.exists():
             print(f"Missing input: {path.relative_to(ROOT)}", file=sys.stderr)
-            print("Run ukci-run-allocation-e2 first.", file=sys.stderr)
+            print("Run ukci-run-allocation-e2 / sweeps first.", file=sys.stderr)
             return 1
-    out_heatmap = _figure_allocation_heatmap()
-    out_pareto = _figure_nsga2_pareto()
-    print(f"Wrote {out_heatmap}")
-    print(f"Wrote {out_pareto}")
+    out_fig = _figure_alloc_budget()
+    # out_heatmap = _figure_allocation_heatmap()   # trust-level extension
+    # out_budget = _figure_budget_tradeoff()       # trust-level extension
+    # out_pareto = _figure_nsga2_pareto()          # trust-level extension
+    print(f"Wrote {out_fig}")
     return 0
 
 

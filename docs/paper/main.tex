@@ -18,7 +18,7 @@
 % Encoding and language
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
-\usepackage[protrusion=true,expansion=false]{microtype}
+\usepackage[protrusion=true,expansion=true]{microtype}
 \usepackage{etoolbox}
 \usepackage{url}
 \def\UrlFont{\rmfamily}
@@ -92,24 +92,24 @@
 %   \email{olarinoyem@coventry.ac.uk}}
 
 % Authors
-\author{Michael Ajao-Olarinoye\inst{1} \and
-        Abiola Babatunde\inst{1} \and
-        Vasile Palade\inst{1}}
-\authorrunning{M. Ajao-Olarinoye et al.}
-\tocauthor{Michael Ajao-Olarinoye, Abiola Babatunde, and Vasile Palade}
+% \author{Michael Ajao-Olarinoye\inst{1} \and
+%         Abiola Babatunde\inst{1} \and
+%         Vasile Palade\inst{1}}
+% \authorrunning{M. Ajao-Olarinoye et al.}
+% \tocauthor{Michael Ajao-Olarinoye, Abiola Babatunde, and Vasile Palade}
 
-\institute{Centre for Computational Sciences and Mathematical Modelling,
-  Coventry University, Priory Street, Coventry CV1 5FB, United Kingdom \\
-  \email{olarinoyem@coventry.ac.uk}}
+% \institute{Centre for Computational Sciences and Mathematical Modelling,
+%   Coventry University, Priory Street, Coventry CV1 5FB, United Kingdom \\
+%   \email{olarinoyem@coventry.ac.uk}}
 
 \maketitle
 
 % Abstract
 \begin{abstract}
-NHS critical-care planning during epidemic waves must pre-position surge capacity and route patients across regions under forecast uncertainty. We propose a forecast-to-decision pipeline coupling a per-region physics-informed forecaster on the $SEI_aI_sHCRD$ system to a tail-risk robust MILP for bed-surge allocation. The forecaster is trained on a cost-asymmetric multi-quantile pinball loss whose $q^{(0.9)}$ component penalises under-prediction nine-to-one and uses a learnable level-and-trend anchor. Quantile forecasts drive a hybrid-regional allocation solved exactly via PuLP+CBC and approximately via GA, NSGA-II, and Simulated Annealing on a shared LP-slave oracle. On a seven-region NHS England case study (Aug~$2020$ to Aug~$2022$), the forecaster improves $14$-day RMSE over per-origin re-fitted ARIMA and a neural GRU baseline, while ARIMA remains stronger at the longest horizon. At the reported operating point, the robust MILP minimises transfer burden among tied budget-exhausting policies, so the allocation result is a binding-budget routing effect rather than an unmet-demand reduction. A four-axis sensitivity sweep clarifies when each control binds.
+NHS critical-care planning during epidemic waves must pre-position surge capacity and route patients across regions before demand is known. We propose a forecast-to-decision pipeline that couples a per-region physics-informed forecaster on the $SEI_aI_sHCRD$ system to a tail-risk robust linear program for bed-surge allocation. The forecaster is trained with a cost-asymmetric multi-quantile pinball loss whose $q^{(0.9)}$ branch penalises under-prediction nine-to-one, together with a learnable level-and-trend anchor. On a seven-region NHS England case study (Aug~$2020$ to Aug~$2022$) it cuts $14$-day RMSE by $19\%$ over per-origin re-fitted ARIMA and by $37\%$ over a neural GRU, while ARIMA stays stronger at the longest horizon, so the model is best read as a short-to-medium-horizon operational forecaster. Its quantile forecasts drive a hybrid-regional allocation solved exactly. Among budget-exhausting policies with identical coverage, the tail-risk robust formulation attains the lowest patient-transfer burden, a binding-budget routing effect rather than an unmet-demand reduction at the reported operating point. A sensitivity analysis over the forecaster, budget, tail-risk weight, and travel cap shows the budget to be the dominant control.
 
 \keywords{physics-informed neural networks, cost-asymmetric forecasting,
-          pinball loss, robust optimisation, metaheuristics, NSGA-II,
+          pinball loss, robust optimisation, linear programming,
           NHS England}
 \end{abstract}
 
@@ -122,10 +122,10 @@ NHS critical-care planning during epidemic waves must pre-position surge capacit
 \input{sections/08_conclusion}
 
 % =============================================================================
-\section*{Conflict of Interest}
-Vasile Palade is Conference Co-Chair of UKCI~2026. This is declared
-in the submission record and the paper's review allocation was handled
-accordingly.
+% \section*{Conflict of Interest}
+% Vasile Palade is Conference Co-Chair of UKCI~2026. This is declared
+% in the submission record and the paper's review allocation was handled
+% accordingly.
 
 % Bibliography
 % Springer Math/Physics/Computer Science BibTeX style from the SVProc bundle.

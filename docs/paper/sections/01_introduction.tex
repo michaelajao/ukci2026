@@ -2,6 +2,18 @@
 \section{Introduction}\label{sec:introduction}
 % =============================================================================
 
+% Figure 1 declared at the top of the Introduction so the page-width float
+% lands at the top of page 2, rather than floating to page 3 and leaving
+% flushbottom to stretch the Introduction paragraphs.
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{figure1.png}
+\caption{Pipeline for NHS ICU surge planning, from
+regional data and physics-informed forecasting to scenario-based robust
+allocation and evaluation.}
+\label{fig:pipeline}
+\end{figure*}
+
 NHS critical-care surge planning during epidemic waves balances the
 cost of pre-positioning capacity against the risk of unmet demand while
 keeping inter-regional transfers manageable across the seven NHS England
@@ -27,10 +39,10 @@ inside a McCormick-relaxed facility-location model. Our setting differs
 from Smart Predict-then-Optimize~\cite{elmachtoub2022smart}: the
 forecaster is not trained through allocation regret, but its
 multi-quantile pinball objective is cost-asymmetric and feeds a robust
-optimisation comparison. To our knowledge, no prior work combines
+optimisation layer. To our knowledge, no prior work combines
 physics-informed NHS regional ICU-bed forecasting with cost-asymmetric
-quantile training and exact/metaheuristic robust allocation across the
-seven NHS England regions.
+quantile training and an exact robust linear-programming allocation
+across the seven NHS England regions.
 
 This paper presents a forecast-to-decision pipeline
 (\Cref{fig:pipeline}) organised in four phases. \emph{Phase~A}
@@ -46,21 +58,21 @@ skip-connects the most recent observation and its weekly slope to
 every quantile prediction. \emph{Phase~B} discretises these
 quantiles into three scenarios (low, median, and high) with weights
 $\pi=(0.2, 0.6, 0.2)$. \emph{Phase~C} solves the resulting
-allocation problem with eight methods: an exact MILP, a
-tail-risk-augmented robust MILP, a Genetic Algorithm with LP-slave
-decomposition, NSGA-II~\cite{deb2002fast}, Simulated Annealing, and
-three heuristic baselines. \emph{Phase~D} reports operational
+allocation exactly as a linear program (deterministic and
+tail-risk-robust) via PuLP$+$CBC, benchmarked against three
+closed-form heuristic baselines on a shared LP-slave oracle.
+\emph{Phase~D} reports operational
 metrics and a sensitivity analysis over the forecaster, the budget
 $B$, the transfer penalty $\lambda_3$, and the surge threshold
 $\tau$.
 
-\textbf{Contributions.}
+The main contributions are as follows:
 (1)~\textbf{Cost-asymmetric forecaster.} The combination of a
 multi-quantile pinball loss and a level-and-trend anchor reduces
 $h{=}14$ RMSE by $19\%$ relative to refitted ARIMA and $37\%$ relative
 to a per-region GRU; paired origin-level tests and ablations isolate
 where this gain holds and where ARIMA remains stronger.
-(2)~\textbf{Robust MILP allocation.} A hybrid-regional formulation
+(2)~\textbf{Robust LP allocation.} A hybrid-regional formulation
 attains the lowest transfer burden among budget-exhausting policies at
 the reported operating point, $4.6\times$ below the population-
 proportional baseline under tied coverage; this is interpreted as a
@@ -68,20 +80,8 @@ binding-budget routing effect rather than an unmet-demand reduction.
 (3)~\textbf{$SEI_aI_sHCRD$ clinical split.} The proposed model
 separates the hospitalisation ratio $\omega$ ($I_s\to H$) from the
 critical-care escalation rate $\phi$ ($H\to C$), correcting the
-overloaded $\omega$ used in~\cite{ajao2025hybrid}.
-
-The remainder of the paper is organised as follows.
+overloaded $\omega$ used in~\cite{ajao2025hybrid}. The remainder of the paper is organised as follows.
 \Cref{sec:forecasting,sec:optimisation,sec:case_study} describe the
 forecasting and optimisation modules and the case study;
 \Cref{sec:results} reports results; and \Cref{sec:conclusion}
 discusses limitations and concludes.
-
-% Figure 1: pipeline overview (rendered figure replaces TikZ schematic)
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{figure1.jpg}
-\caption{Forecast-to-decision pipeline for NHS ICU surge planning, from
-regional data and physics-informed forecasting to scenario-based robust
-allocation and evaluation.}
-\label{fig:pipeline}
-\end{figure*}

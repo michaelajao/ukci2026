@@ -2,17 +2,24 @@
 \section{Conclusion}\label{sec:conclusion}
 % =============================================================================
 
-A per-region PINN-GRU on the $SEI_aI_sHCRD$ system with a
-cost-asymmetric multi-quantile pinball loss cuts $14$-day RMSE over
-re-fitted ARIMA by $19\%$ and over a per-region GRU by $37\%$, while
-ARIMA remains stronger at the longest point-forecast horizon. Its
-quantile forecasts drive a hybrid-regional bed-surge allocation in
-which the tail-risk robust MILP attains the lowest transfer burden
-among tied budget-exhausting policies. The deterministic--robust gap
-quantifies the value of $\pi_s$-weighted expectation over median-only
-optimisation, and the sensitivity sweep clarifies when each control
-binds. Detour-scaled travel times, well-mixed regional populations,
-beds--bed-km cost units, and the single realised allocation origin are
-the principal caveats; age-stratified pathways, all-origin allocation
-distributions, and other health-system topologies remain natural
-extensions~\cite{shamseddin2025optimization}.
+We presented a forecast-to-decision pipeline for NHS critical-care
+surge planning that couples a per-region physics-informed forecaster
+to a tail-risk robust allocation linear program. Matching the
+forecaster's loss to the operational cost of under-prediction is what
+makes it useful. PinnGRU wins the short-to-medium horizons that drive
+surge decisions, cutting $14$-day RMSE by $19\%$ over re-fitted ARIMA
+and $37\%$ over a neural GRU, and we report rather than hide that
+ARIMA is stronger at the longest horizon. On the decision side the
+gain is structural. Once the budget binds, every budget-exhausting
+policy ties on coverage and the robust formulation wins by routing the
+same surge with the least patient transfer, while the
+deterministic-to-robust gap measures what scenario-weighted
+expectation buys over median-only planning. The principal caveats are
+detour-scaled travel times, well-mixed regional populations, scaled
+bed and bed-km cost units, and a single realised allocation origin.
+The clearest next step is a trust-level instance with hundreds of
+sites, where exact solution becomes expensive and a metaheuristic
+comparison regains its purpose, alongside age-stratified pathways and
+all-origin allocation distributions. The wider contribution is a
+reproducible template for tying cost-asymmetric epidemic forecasting
+to transparent and robust capacity planning on open NHS data.

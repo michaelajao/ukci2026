@@ -5,8 +5,8 @@
 The allocation module decides how many surge beds to place in each NHS
 region and how to route excess demand through inter-regional patient
 transfers, given the quantile forecasts of \Cref{sec:forecasting}. We
-present a deterministic MILP, a tail-risk robust extension, and three
-metaheuristic comparators.
+present a deterministic linear program, a tail-risk robust extension,
+and closed-form heuristic baselines.
 
 \subsection{Sets, Parameters, and Decision Variables}\label{ssec:notation}
 
@@ -36,7 +36,7 @@ auxiliary $W\!\geq\!0$. Of the $42$ ordered region pairs, $24$ satisfy
 $T_{r r'}\!\leq\!\tau$, yielding $12$ undirected mutual-aid links. Midlands 
 connects to every other region within the cap; South West connects only to Midlands.
 
-\subsection{Deterministic Median-Scenario MILP}\label{ssec:milp}
+\subsection{Deterministic Median-Scenario LP}\label{ssec:milp}
 
 The deterministic model optimises the median scenario $m$ ($q^{(0.5)}$):
 \begin{equation}\label{eq:deterministic_objective}
@@ -92,53 +92,27 @@ over-conservative relative to the true joint distribution; we treat
 this as an explicit stress-test design choice and examine its efficiency
 cost in \Cref{ssec:e5_e6}.
 
-\subsection{Exact and Metaheuristic Solvers}\label{ssec:solvers}
+\subsection{Exact LP Solution and Baselines}\label{ssec:solvers}
 
-The robust model has $28$ horizon-specific surge variables, $7$ peak
-auxiliaries, up to $588$ transfer flows, $84$ unmet variables, and the
-tail auxiliary. We compare an exact MILP, three metaheuristics, and
-three heuristic baselines on the same instance.
+Both the deterministic and robust models are linear programs ($28$
+surge variables, $7$ peak auxiliaries, up to $588$ transfer flows,
+$84$ unmet variables, and the tail auxiliary, all continuous). We
+solve them exactly in PuLP with bundled CBC; at seven-region scale
+each instance reaches global optimality in $<\!0.1$~s, so metaheuristic
+or decomposition search adds nothing here and is deferred to the
+trust-level extension (\Cref{sec:conclusion}).
 
-\paragraph{Exact MILP via PuLP$+$CBC.}
-Both models are solved in PuLP with bundled CBC. The deterministic
-allocation is re-evaluated by an LP slave over all three scenarios to
-report honest $E[u]$ and $u^{\text{worst}}$. Both runs finish in
-$<\!0.1$~s.
-
-\paragraph{Master--slave structure.}
-For fixed peak surge $\mathbf{b}^\star\in\mathbb{R}_+^7$ subject to
+Every policy is scored on equal footing by a common LP re-evaluation.
+For a fixed peak surge $\mathbf{b}^\star\in\mathbb{R}_+^7$ with
 $\sum_r b^\star_r\leq B$ and $b^\star_r\leq K_r$, the residual problem
-in $(z,u)$ is an LP. All metaheuristics operate on
-$\mathbf{b}^\star$, calling the LP slave once per fitness evaluation.
-
-\paragraph{GA (single-objective).}
-A pymoo Genetic Algorithm minimises $E[u]$ (plus the tie-break term)
-over $\mathbf{b}^\star$: real-valued encoding, SBX crossover
-($\eta_c\!=\!15$, $p_c\!=\!0.9$), polynomial mutation
-($\eta_m\!=\!20$, $p_m\!=\!1/7$), tournament selection, population
-$50$, $40$ generations, simplex-repair after every operator.
-
-\paragraph{NSGA-II (three-objective).}
-NSGA-II~\cite{deb2002fast} evaluates three objectives jointly:
-\begin{equation}\label{eq:nsga2_obj}
-f_1\!=\!\textstyle\sum_r b^\star_r,\quad
-f_2\!=\!\textstyle\sum_{r,h,s}\!\pi_s u_{r,h}^{s\star},\quad
-f_3\!=\!\textstyle\sum_{r\neq r',h,s}\!\pi_s D_{r r'} z_{r r',h}^{s\star},
-\end{equation}
-where $f_1$ is total surge beds, $f_2$ is $E[u]$, $f_3$ is transfer
-burden, and $\star$-quantities come from the LP slave. We use the same
-encoding, population, and generation count as the GA, and select a
-\emph{representative point} from the front by L2 distance to the
-normalised ideal.
-
-\paragraph{Simulated Annealing.}
-Geometric cooling ($T_0{=}1$, $\gamma{=}0.97$) over Gaussian
-neighbourhoods ($\sigma{=}0.10 B$) with simplex repair on the same LP
-slave; $400$ proposals.
+in $(z,u)$ is an LP that fills in transfers and unmet demand across all
+three scenarios, giving honest $E[u]$ and $u^{\text{worst}}$ for the
+deterministic, robust, and heuristic allocations alike.
 
 \paragraph{Heuristic baselines.}
-Three closed-form policies provide a no-optimisation floor:
-\emph{population-proportional} (ONS region populations);
-\emph{demand-proportional} (expected peak demand); and \emph{greedy
-shortage-first} (single-bed increments to the currently most-unmet
-region). Each closes $\mathbf{b}^\star$ via the same LP slave.
+Three closed-form policies provide a no-optimisation floor.
+Population-proportional uses ONS region populations,
+demand-proportional uses expected peak demand, and greedy
+shortage-first adds single-bed increments to the currently most-unmet
+region. Each fixes $\mathbf{b}^\star$, which the same LP step then
+completes.
