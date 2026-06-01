@@ -1,0 +1,171 @@
+% =============================================================================
+%  JOURNAL PAPER (extension of the UKCI 2026 conference paper)
+%
+%  Working title:
+%    Forecast-Driven Robust Allocation of Critical-Care Surge Capacity
+%    in NHS England
+%
+%  Core contribution: a forecast-to-decision framework in which
+%  physics-informed regional demand forecasts drive a REALISTIC, SCALABLE
+%  robust optimisation for critical-care surge capacity. The optimisation
+%  is the contribution; the forecaster is infrastructure (summarised and
+%  cited, not re-derived).
+%
+%  Positioning:
+%    * vs UKCI conference paper : conference = proof of concept (7 regions,
+%      snapshot demand, small LP). Journal = operational realism.
+%    * vs MSAGAT-Net (Elsevier) : that is forecasting (graph attention);
+%      this is decision-making. Forecasting is cited, not the novelty.
+%    * vs Shams Eddin & El Hajj (2025): NHS England, critical-care/MV,
+%      PINN-estimated flow demand, cost-asymmetric forecasts, equity,
+%      exact-vs-metaheuristic at scale.
+%
+%  TARGET JOURNAL (decided): Health Care Management Science (Springer Nature).
+%    - Final submission uses the Springer Nature LaTeX template
+%      (`\documentclass[sn-mathphys-num]{sn-jnl}`, sn-jnl.cls). Download from
+%      springernature.com/gp/authors/campaigns/latex-author-support .
+%    - VERIFY Springer OA coverage for Coventry (oa.lib@coventry.ac.uk):
+%      HCMS is hybrid; Coventry's participation in the Springer-Jisc
+%      transformative agreement was not confirmed on the library page.
+%      Fallback if not covered: EJOR / Computers & OR (Elsevier hybrid,
+%      Coventry-covered).
+%    - This skeleton keeps `article` so it compiles during drafting; swap to
+%      sn-jnl before submission.
+% =============================================================================
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+\usepackage[capitalise,noabbrev]{cleveref}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\title{Forecast-Driven Robust Allocation of Critical-Care Surge Capacity
+       in NHS England}
+% TODO confirm affiliations. ORCIDs: AmirHosein Sadeghimanesh 0000-0002-6945-3118;
+% Matthew England 0000-0001-5729-3420 (Centre Director) -- both Research Centre for
+% Computational Science and Mathematical Modelling, Coventry. Fei He, Petra A. Wark:
+% confirm Coventry centre/department.
+\author{Michael Ajao-Olarinoye \and Abiola Babatunde \and Vasile Palade \and
+        AmirHosein Sadeghimanesh \and Fei He \and Petra A. Wark \and
+        Matthew England}
+\date{Draft -- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+% TODO. ~200 words. Lead with the DECISION problem (where to place surge
+% capacity and how to route critical-care patients under demand
+% uncertainty), state that physics-informed regional forecasts drive a
+% realistic robust optimisation at trust/ICB scale, list the realism
+% upgrades (flow demand, correlated scenarios, equity, facility-opening,
+% true CVaR/DRO), and the exact-vs-metaheuristic comparison. Close with
+% the headline operational result.
+\end{abstract}
+
+% =============================================================================
+\section{Introduction}\label{sec:intro}
+% Problem: NHS critical-care surge planning under demand uncertainty.
+% Gap: forecasting papers (incl. our own) optimise accuracy, not decisions;
+%   existing allocation papers are not NHS critical-care / not forecast-driven
+%   / not at trust scale.
+% Contributions (decision-led):
+%   (1) forecast-to-decision framework with patient-flow demand;
+%   (2) correlated demand scenarios from the joint forecast distribution;
+%   (3) trust/ICB-scale robust allocation with facility-opening + equity;
+%   (4) exact MILP vs metaheuristic comparison at operational scale;
+%   (5) NHS England case study with stress-tested decision value.
+
+% =============================================================================
+\section{Related Work}\label{sec:related}
+% REUSE + EXPAND docs/paper/sections/02_related_work.tex (currently unused).
+% Threads: (a) forecast-to-decision / predict-then-optimise; (b) robust &
+% two-stage health-resource location-allocation; (c) ICU/bed allocation &
+% metaheuristics; (d) spatiotemporal/physics-informed epidemic forecasting
+% (cite MSAGAT-Net, STAN, HOIST, PINNs). Position vs Shams Eddin & El Hajj.
+
+% =============================================================================
+\section{Problem Setting and Data}\label{sec:data}
+% NEW. Spatial scope: ICB (42 Integrated Care Boards). Demand UNIT =
+% ADULT CRITICAL CARE BEDS OCCUPIED (MV beds do not exist publicly below
+% NHS region; switch made deliberately and stated).
+%   - Demand: per-ICB daily adult critical-care occupancy, NHS England UEC
+%     SitRep "Critical Care and General & Acute Beds", trust->ICB, Mar 2020-.
+%   - Capacity: per-ICB adult critical-care beds OPEN/available (same SitRep)
+%     -> REAL measured capacity, replaces the 1.05*peak proxy. Realism gain.
+%   - Geography: ICB centroids (ONS Open Geography Portal); distance/travel
+%     matrix (great-circle * detour).
+%   - Population: ICB pops via ONS LSOA->ICB lookup + MYE (equity + pop-prop
+%     baseline).
+%   - Splits: chronological by wave/season; held-out test.
+
+% =============================================================================
+\section{Forecasting Module}\label{sec:forecast}
+% REUSE / infrastructure (summarise, cite conference paper + ajao2025hybrid +
+% MSAGAT-Net as a backend option). Per-ICB forecaster of adult critical-care
+% occupancy -> quantile/scenario forecasts. INCLUDE the per-origin bias
+% recalibration so the forecaster is accurate across ALL horizons (the
+% conference model over-predicts long horizons). Keep short.
+
+% =============================================================================
+\section{Demand Scenario Generation}\label{sec:scenarios}
+% NEW -- the key realism upgrade.
+%  5.1 Patient-flow / length-of-stay demand (bed-day, not weekly snapshot).
+%  5.2 Correlated scenarios: empirical or Gaussian-copula coupling of the
+%      regional forecast residuals (replaces co-monotone q90 stacking).
+
+% =============================================================================
+\section{Robust Allocation Model}\label{sec:model}
+% NEW / EXTENDED.
+%  - first-stage: surge placement + facility-opening (binary x_j at scale);
+%  - second-stage recourse: local service, transfers, unmet;
+%  - true CVaR or distributionally-robust objective (not the degenerate
+%    single-tail penalty of the conference version);
+%  - equity term (e.g. max regional shortage ratio, linearised);
+%  - budget, capacity, travel-time constraints.
+
+% =============================================================================
+\section{Solution Methods}\label{sec:solvers}
+% NEW at scale. Exact MILP (CBC/Gurobi) vs metaheuristics (NSGA-II, GA, SA).
+% Justified ONLY at trust/ICB scale where exact solution becomes expensive.
+% Report solution quality, robustness, and runtime.
+
+% =============================================================================
+\section{Case Study and Experimental Design}\label{sec:casestudy}
+% NHS England, 42 ICBs. Wave-based split. Operating point + sweeps
+% (budget, travel cap, equity weight, robustness level). Stress-test
+% instances where demand exceeds capacity.
+% BASELINES:
+%   Allocation (core): status quo / population-proportional /
+%     demand-proportional / greedy shortage-first / deterministic MILP /
+%     robust MILP (CVaR-DRO, proposed) / metaheuristics (NSGA-II,GA,SA) /
+%     perfect-foresight oracle (upper bound).
+%   Forecasting (infrastructure): seasonal-naive, ARIMA, GRU/LSTM, XGBoost,
+%     recalibrated PINN-SEIRD; optional MSAGAT-Net backend.
+%   Published comparison: Shams Eddin & El Hajj (2025), nearest optimisation
+%     result -- re-implement key elements if feasible.
+
+% =============================================================================
+\section{Results}\label{sec:results}
+% Scale results; robustness; equity trade-offs; exact-vs-metaheuristic
+% (quality + runtime); forecast-quality sensitivity; stress-test decision
+% value (unmet-demand reduction, not just transfer efficiency).
+
+% =============================================================================
+\section{Discussion}\label{sec:discussion}
+% Realism achieved vs remaining limitations; policy implications for NHS
+% surge planning; generalisability.
+
+% =============================================================================
+\section{Conclusion}\label{sec:conclusion}
+% Summary + future directions.
+
+% \bibliographystyle{elsarticle-num}
+% \bibliography{references}
+
+\end{document}

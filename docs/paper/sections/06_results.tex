@@ -7,48 +7,47 @@ All results use the Omicron test split (1~Dec~2021--31~Aug~2022).
 \subsection{Forecasting Accuracy}\label{ssec:e1}
 
 \Cref{tab:forecast_accuracy} reports per-horizon RMSE and the
-$h{=}28$ underestimation rate for PinnGRU (the frozen PINN encoder of
-\Cref{ssec:pinn} with the GRU head of \Cref{ssec:temporal}) against
-four baselines under a common $32$-origin rolling-origin protocol. PinnGRU wins $h{=}7$ and
-$h{=}14$, cutting the operational $14$-day RMSE by $19\%$ over ARIMA
-and $37\%$ over the per-region GRU. Paired origin-level tests
-(\Cref{fig:forecast_uncertainty}) confirm the $h{=}14$ gain over ARIMA
-is significant ($-3.88$ MV beds, Wilcoxon $p{=}0.003$) and that ARIMA
-is in turn significantly stronger at $h{=}28$ ($+5.53$ MV beds,
-$p{=}0.006$). The proposed model is therefore best read as a
-short-to-medium-horizon operational forecaster, not a uniform
-point-accuracy winner across all horizons.
+$h{=}28$ underestimation rate against four baselines under a common
+$32$-origin rolling-origin protocol. The \emph{raw} PinnGRU point
+forecast (frozen PINN encoder of \Cref{ssec:pinn} with the GRU head of
+\Cref{ssec:temporal}) wins $h{=}7$ and $h{=}14$---paired origin-level
+tests confirm the $h{=}14$ gain over ARIMA ($-3.88$ MV beds, Wilcoxon
+$p{=}0.003$)---but degrades at long
+horizons, where a regime-shift over-prediction bias (its $h{=}28$
+underestimation rate is only $10.3\%$) leaves it behind ARIMA and
+seasonal-naive ($+5.53$ MV beds vs ARIMA at $h{=}28$, $p{=}0.006$). A
+leakage-free per-origin recalibration (\Cref{ssec:recal}) removes this
+bias and blends with persistence at long horizons: the recalibrated
+model is best at $h{=}7$, $14$ and $21$---cutting the operational
+$14$-day RMSE by $25\%$ over ARIMA and $42\%$ over the per-region
+GRU---and at $h{=}28$ ties ARIMA ($28.5$ vs $28.0$), with only
+seasonal-naive ($26.0$) still ahead. Its $h{=}28$ underestimation rate
+rises to $37\%$: the point forecast is now a well-calibrated median, not
+a systematic over-predictor.
 
-A second observation concerns the non-ARIMA models.
-XGBoost's $h{=}28$ RMSE ($58.88$) is the worst absolute
-number in the table, but its degradation from $h{=}14$ to $h{=}28$
-(factor $2.57$) is comparable to that of the per-region GRU
-($1.92\times$); both are lag-only learners bounded by the $28$-day
-history window and cannot extrapolate outside the training distribution
-into Omicron's altered case-to-hospitalisation regime. ARIMA's smaller
-degradation ($1.57\times$) reflects its per-origin refit, which absorbs
-the local trend at each test point. PinnGRU degrades by $2.39\times$
-but its absolute $h{=}28$ RMSE ($34.63$) is much closer to ARIMA's
-than to the other neural and tree baselines: the ODE-parameter features
-it consumes encode time-varying transmission dynamics that pure-lag
-inputs cannot, consistent with the ``w/o PINN params'' ablation
-isolated next.
+A second observation concerns the non-ARIMA models. XGBoost and the
+per-region GRU are lag-only learners bounded by the $28$-day window;
+unable to extrapolate into Omicron's altered case-to-hospitalisation
+regime, they degrade sharply ($h{=}28$ RMSE $58.9$ and $44.0$). ARIMA's
+per-origin refit keeps its degradation modest, and the recalibrated
+PinnGRU matches it across horizons, consistent with the ``w/o PINN
+params'' ablation isolated next.
 
-The bottom block of \Cref{tab:forecast_accuracy} ablates the three
-load-bearing components. \textbf{(i)} Replacing the pinball loss with
-MSE on the median channel inflates $h{=}14$ RMSE by $29\%$ and drops
-PinnGRU below several classical baselines; the cost-asymmetric loss
-improves the RMSE trade-off even though the MSE ablation has the lowest
-marginal $h{=}28$ underestimation rate. \textbf{(ii)} Zeroing the four PINN
-parameter features inflates $h{=}14$ RMSE almost two-fold
-($14.46\!\to\!27.25$), the largest regression in the table.
-\textbf{(iii)} Skipping PINN pre-training inflates $h{=}14$ RMSE by
-$19\%$ ($14.46\!\to\!17.27$), confirming that the physics prior, not
-capacity, drives the gain over the per-region GRU baseline.
+The bottom block of \Cref{tab:forecast_accuracy} ablates three
+load-bearing components. Replacing the pinball loss with MSE inflates
+$h{=}14$ RMSE by $29\%$; zeroing the four PINN parameter features
+inflates it almost two-fold ($14.46\!\to\!27.25$, the largest regression
+in the table); and skipping PINN pre-training inflates it by $19\%$
+($\to\!17.27$), confirming that the physics prior, not capacity, drives
+the gain over the per-region GRU.
 
 \begin{table}[t]
 \caption{Forecast accuracy and ablations, macro-averaged over seven
-NHS regions and $32$ rolling origins.}
+NHS regions and $32$ rolling origins. \textbf{Bold}: best;
+\underline{underline}: second best, per column (among the baselines and
+the proposed model). MASE is the horizon-averaged mean absolute scaled
+error (scaled by the in-sample seasonal-naive($7$) MAE; $<\!1$ beats
+that benchmark, lower is better).}
 \label{tab:forecast_accuracy}
 \centering
 \renewcommand{\arraystretch}{1.02}
@@ -56,32 +55,23 @@ NHS regions and $32$ rolling origins.}
 \begin{tabular}{lcccc@{\hskip 1em}c}
 \toprule
 \textbf{Model} & \multicolumn{4}{c}{\textbf{RMSE by horizon (days)}}
-               & \textbf{Under-} \\
+               & \textbf{MASE} \\
 \cmidrule(lr){2-5}
-               & 7 & 14 & 21 & 28 & \textbf{estim.\ (\%)} \\
+               & 7 & 14 & 21 & 28 & \textbf{(all $h$)} \\
 \midrule
-Seasonal-naive(7)             & 13.53 & 18.16 & \textbf{22.31} & \textbf{25.98} & 37.5 \\
-ARIMA per region              & 11.33 & 17.80 & 23.41 & 28.02 & 44.2 \\
-XGBoost (lag features)        & 12.45 & 22.90 & 36.42 & 58.88 & 27.7 \\
-GRU per region                & 14.13 & 22.92 & 33.35 & 43.97 & 7.6 \\
-\textbf{PinnGRU (proposed)}   & \textbf{11.02} & \textbf{14.46} & 24.19 & 34.63 & 10.3 \\
+Seasonal-naive(7)             & 13.53 & 18.16 & \underline{22.31} & \textbf{25.98} & 0.63 \\
+ARIMA per region              & 11.33 & 17.80 & 23.41 & \underline{28.02} & \underline{0.61} \\
+XGBoost (lag features)        & 12.45 & 22.90 & 36.42 & 58.88 & 0.89 \\
+GRU per region                & 14.13 & 22.92 & 33.35 & 43.97 & 0.90 \\
+PinnGRU (raw)                 & \underline{11.02} & \underline{14.46} & 24.19 & 34.63 & 0.77 \\
+\textbf{PinnGRU+recal (prop.)} & \textbf{10.56} & \textbf{13.34} & \textbf{20.79} & 28.54 & \textbf{0.56} \\
 \midrule
-\quad w/o cost-asymmetric loss & 14.79 & 18.70 & 27.09 & 41.47 & \textbf{6.7} \\
-\quad w/o PINN pre-training   & 12.26 & 17.27 & 22.56 & 34.73 & 22.8 \\
-\quad w/o PINN params         & 23.97 & 27.25 & 32.94 & 44.59 & 8.5 \\
+\quad w/o cost-asymmetric loss & 14.79 & 18.70 & 27.09 & 41.47 & 0.97 \\
+\quad w/o PINN pre-training   & 12.26 & 17.27 & 22.56 & 34.73 & 0.76 \\
+\quad w/o PINN params         & 23.97 & 27.25 & 32.94 & 44.59 & 1.23 \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\textwidth]{fig_pinn_arima_gru_ci.png}
-\caption{Rolling-origin uncertainty for the two main comparator classes.
-Left: RMSE with 95\% origin-bootstrap intervals for ARIMA, a per-region
-neural GRU, and PinnGRU. Right: paired origin-level RMSE differences;
-negative values favour PinnGRU.}
-\label{fig:forecast_uncertainty}
-\end{figure}
 
 \subsection{Allocation Performance Across Solvers}
 \label{ssec:e2_e3}
@@ -132,13 +122,10 @@ Deterministic LP           &  51.4 & 83.3  & 416.4 & 1175.1  & 0.03 \\
 \end{table}
 
 Inspecting the regional structure behind \Cref{tab:allocation}
-(\Cref{fig:alloc_budget}a), the deterministic LP allocates surge only into
-Midlands and South East (median demand exceeds baseline there);
-budget-exhausting policies all cover those two and differ markedly on
-the remaining five, with the robust LP finding a compromise allocation
-with non-trivial North~West and London surge while
-population-proportional spreads mechanically and greedy concentrates on
-top-demand regions.
+(\Cref{fig:alloc_budget}a), the deterministic LP surges only Midlands
+and South East (where median demand exceeds baseline); budget-exhausting
+policies all cover those two and differ on the rest, the robust LP
+finding a compromise with non-trivial North~West and London surge.
 
 \begin{figure}[ht]
 \centering
@@ -155,42 +142,34 @@ planner navigates.}
 \label{ssec:e5_e6}
 
 \paragraph{Forecast-quality robustness.}
-Substituting each forecaster into the robust LP at the
-$29$~Dec~$2021$ origin: PinnGRU's $q^{(0.9)}$ peak sum
-($1421$~beds$\,\to\,212.7$ surge), XGBoost ($1105\,\to\,197.5$), GRU
-($973\,\to\,135.5$), ARIMA ($875\,\to\,73.2$), and seasonal-naive($7$)
-($745\,\to\,0$); all exceed the realised peak ($797$) except
-seasonal-naive, which under-forecasts the peak by $52$~beds. Realised
-unmet is zero throughout, including the oracle, so this origin cannot
-separate policies on realised coverage. Forecast quality buys
-\emph{efficiency} at the $q^{(0.9)}$ margin, not realised coverage in
-this observed Omicron instance; a wave exceeding the Delta baseline is
-needed to stress the under-provisioning metric directly.
+Substituting each forecaster into the robust LP at the $29$~Dec~$2021$
+origin, the $q^{(0.9)}$ peak sums (PinnGRU $1421$, XGBoost $1105$, GRU
+$973$, ARIMA $875$, seasonal-naive $745$~beds) all exceed the realised
+peak ($797$) except seasonal-naive. Realised unmet is zero throughout,
+including the oracle, so this origin cannot separate policies on
+realised coverage: forecast quality buys \emph{efficiency} at the
+$q^{(0.9)}$ margin, not coverage, in this mild Omicron instance.
 
-Across all $32$ Omicron origins the same pattern holds. Robust LP,
+Across all $32$ Omicron origins the pattern holds: robust LP,
 population-proportional, and demand-proportional allocations share a
 mean expected unmet of $2.9$, but the robust LP cuts mean transfer
-burden to $76$~bed-km versus $406$ and $337$~bed-km for the
-proportional baselines. The proportional baselines fill the full
-$212.7$-bed budget at every origin by construction, whereas the robust
-LP scales surge to local demand pressure (mean total surge
-$35.4$~beds, hitting the cap only at peak origins), so the
-routing-efficiency gain holds across the full demand distribution, not
-only at the peak.
+burden to $76$~bed-km versus $406$ and $337$~bed-km. The proportional
+baselines fill the full $212.7$-bed budget at every origin, whereas the
+robust LP scales surge to local demand (mean total surge $35.4$~beds,
+hitting the cap only at peaks), so the routing-efficiency gain holds
+across the full demand distribution.
 
 \paragraph{Parameter sensitivity.}
-A one-at-a-time sweep around the operating point isolates each control.
-The budget $B$ dominates (\Cref{fig:alloc_budget}b): $B/\sum_r C_r$
-from $0.20$ to $0.10$ doubles $E[u]$ and triples $u^{\text{worst}}$,
-while $0.30$ cuts $E[u]$ to $\sim\!1/4$. $\lambda_3$ is
-\emph{non-binding} at $B = 0.20$ (the expectation-minimising solution
-already clears the high tail): only a tighter budget ($\leq\!15\%$)
-re-engages it, so the tail-risk term is best read as a diagnostic for
-when tail risk binds rather than a defect when it does not. The travel
-cap $\tau\!=\!120$~min cuts transfer burden by $34\%$ at a $3\%$ rise
-in $E[u]$; $\tau\!\geq\!240$~min is slack.
+A one-at-a-time sweep isolates each control. The budget $B$ dominates
+(\Cref{fig:alloc_budget}b): $B/\sum_r C_r$ from $0.20$ to $0.10$ doubles
+$E[u]$ and triples $u^{\text{worst}}$, while $0.30$ cuts $E[u]$ to
+$\sim\!1/4$. $\lambda_3$ is \emph{non-binding} at $B=0.20$ (the
+expectation-minimising solution already clears the high tail); only a
+tighter budget ($\leq\!15\%$) re-engages it. The travel cap
+$\tau\!=\!120$~min cuts transfer burden by $34\%$ at a $3\%$ rise in
+$E[u]$; $\tau\!\geq\!240$~min is slack.
 
 % Table 3 (one-at-a-time sensitivity sweep) removed for the 12-page UKCI
-% limit: the budget/CVaR/travel-cap effects are reported in the prose
+% limit: the budget/tail-penalty/travel-cap effects are reported in the prose
 % above and the exact budget frontier is Fig.~4(b). The full sweep CSVs
 % (e6_*.csv) remain in the repository for the journal extension.

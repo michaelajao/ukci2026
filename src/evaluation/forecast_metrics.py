@@ -1,6 +1,6 @@
 """Forecast metrics for the UKCI 2026 paper.
 
-Implements the full metric set named in `02_METHODOLOGY.md` §4.1:
+Implements the full metric set:
 
 Standard accuracy:
     MAE       Mean Absolute Error
@@ -74,7 +74,7 @@ def mase(
 
     Scales test-set MAE by in-sample MAE of a seasonal-naive forecaster on
     ``y_train`` (Hyndman & Koehler 2006). ``seasonality=1`` corresponds to
-    the random-walk baseline (most common; matches `02_METHODOLOGY.md` §4.1).
+    the random-walk baseline (most common).
     Use ``seasonality=7`` for weekly seasonality.
     """
     yt, yp = _flatten(y_true, y_pred)

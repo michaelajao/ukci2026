@@ -32,7 +32,8 @@ BASELINE_ROWS = [
     ("arima_per_region", "ARIMA"),
     ("xgboost_per_region", "XGBoost (lag features)"),
     ("gru_per_region", "GRU per region"),
-    ("pinn_gru", "PinnGRU (proposed)"),
+    ("pinn_gru", "PinnGRU (raw)"),
+    ("pinn_gru_cal", "PinnGRU+recal (proposed)"),
 ]
 ABLATION_ROWS = [
     ("pinn_gru__no_decision_aware", "w/o decision-aware loss (MSE)"),
@@ -48,6 +49,7 @@ FORECAST_FILES = {
     "xgboost_per_region": "forecasts_xgboost_per_region.parquet",
     "gru_per_region": "forecasts_gru_per_region.parquet",
     "pinn_gru": "forecasts_pinn_gru.parquet",
+    "pinn_gru_cal": "forecasts_pinn_gru_cal.parquet",
     "pinn_gru__no_decision_aware": "forecasts_pinn_gru__no_decision_aware.parquet",
     "pinn_gru__no_pretrain": "forecasts_pinn_gru__no_pretrain.parquet",
     "pinn_gru__no_params": "forecasts_pinn_gru__no_params.parquet",

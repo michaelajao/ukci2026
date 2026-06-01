@@ -35,7 +35,7 @@ escalation thresholds independently identifiable.
 % Figure 2: SEIRD compartment graph
 \begin{figure}[!hb]
 \centering
-\resizebox{0.88\columnwidth}{!}{%
+\resizebox{0.74\columnwidth}{!}{%
 \begin{tikzpicture}[
   font=\footnotesize,
   >={Stealth[length=1.7mm,width=1.25mm]},
@@ -147,17 +147,18 @@ $q\in\Qset=\{0.1,0.5,0.9\}$.
 A \emph{level-and-trend anchor} makes the GRU's job residual:
 \begin{equation}\label{eq:anchor}
 \hat z_{r,t}^{h,q} \;=\; \Delta_{r,t}^{h,q}
-  \;+\; \alpha^{h,q}\, \tilde y_{r,t}
-  \;+\; \gamma^{h,q}\, s_{r,t}^{(7)}\,
-        \!\left(\tfrac{h}{7}\right)^{\!\!\varphi^q},
+  \;+\; a^{h,q}\, \tilde y_{r,t}
+  \;+\; g^{h,q}\, v_{r,t}^{(7)}\,
+        \!\left(\tfrac{h}{7}\right)^{\!\!\psi^q},
 \end{equation}
 where $\tilde y_{r,t}$ is the most recent z-scored observation,
-$s_{r,t}^{(7)} = \tilde y_{r,t}-\tilde y_{r,t-7}$ is the one-week slope,
-and $\alpha^{h,q},\gamma^{h,q},\varphi^q\in(0,1)$ are learnable scalars.
-The Holt-Winters-style damping exponent $\varphi^q$ prevents
+$v_{r,t}^{(7)} = \tilde y_{r,t}-\tilde y_{r,t-7}$ is the one-week slope,
+and $a^{h,q},g^{h,q},\psi^q\in(0,1)$ are learnable scalars (distinct from
+the SEIRD constants $\alpha,\gamma_{c,r}$ of \Cref{eq:seird}).
+The Holt-Winters-style damping exponent $\psi^q$ prevents
 slope-extrapolation overshoot at long horizons; we initialise
-$\varphi^{0.5}\!\approx\!0.88$ (near-linear) and
-$\varphi^{0.1}=\varphi^{0.9}=0.5$ (square-root damping). Forecasts in
+$\psi^{0.5}\!\approx\!0.88$ (near-linear) and
+$\psi^{0.1}=\psi^{0.9}=0.5$ (square-root damping). Forecasts in
 the original scale follow by inverting standardisation.
 
 \subsection{Pinball Loss for Cost-Asymmetric Quantiles}\label{ssec:loss}
@@ -184,3 +185,17 @@ $10^{-4}$, cosine annealing) on Alpha-wave lookback windows, with early
 stopping (patience $80$) on Delta-wave validation pinball loss. Once
 selected, the model is frozen and applied to the Omicron test period via
 $\Delta t = 7$-day rolling origins, yielding $32$ origin dates.
+
+\subsection{Per-Origin Recalibration}\label{ssec:recal}
+Applied frozen across a regime shift (high-demand Alpha/Delta training,
+mild Omicron test), the point forecast inherits a systematic
+over-prediction that grows with horizon. We correct it with two
+leakage-free steps. \emph{(i)~Bias recalibration:} at each rolling origin
+$t$ and horizon $h$, subtract the mean of the model's last $K{=}3$
+$h$-step errors whose target date is already observed ($<t$)---the
+adaptation a per-origin refit gives for free. \emph{(ii)~Persistence
+blend:} blend the recalibrated point forecast with seasonal-naive($7$)
+using a per-horizon weight chosen by an expanding window over realised
+past origins, so long horizons lean on persistence. Both use only
+information available at $t$; the $80\%$ interval is left as produced by
+the quantile heads, so the downstream allocation is unchanged.

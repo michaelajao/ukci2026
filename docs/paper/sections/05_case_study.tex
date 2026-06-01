@@ -22,13 +22,15 @@ early stopping, and testing on $1$~Dec~$2021$ -- $31$~Aug~$2022$
 hospitalisation-to-critical-care ratios differ markedly from earlier
 waves, providing a regime-shift stress test.
 
-For the allocation problem, baseline capacity $C_r$ is each region's
-Delta-wave peak MV occupancy $\times 1.05$; per-region surge cap is
-$K_r=0.5\,C_r$; total budget is $B=0.20\sum_r C_r=213$~beds; and the
-mutual-aid travel cap is $\tau=240$~min. The transfer tie-break weight
-is $\rho=10^{-3}$, so one bed of snapshot unmet demand outweighs
+For the allocation problem, baseline capacity $C_r$ is \emph{measured}
+as each region's Delta-wave peak MV-bed occupancy $\times 1.05$, whereas
+the per-region surge cap $K_r=0.5\,C_r$, total budget
+$B=0.20\sum_r C_r=213$~beds, and mutual-aid travel cap $\tau=240$~min are
+planning assumptions. The surge $b_r$ is the model's decision---the
+extra MV beds a region stands up above its measured baseline. The transfer tie-break weight
+is $\theta=10^{-3}$, so one bed of snapshot unmet demand outweighs
 $1000$~bed-km of transfer. Scenario weights are $\pi=(0.2,0.6,0.2)$ and
-the robust CVaR weight is $\lambda_3=1$. The forecaster, budget $B$,
+the tail-penalty weight is $\lambda_3=1$. The forecaster, budget $B$,
 $\lambda_3$, and travel cap $\tau$ are each swept in
 \Cref{ssec:e5_e6}. Forecast metrics are macro-averaged across
 the seven regions and the $32$ rolling-origin evaluations spanning the

@@ -3,23 +3,19 @@
 % =============================================================================
 
 We presented a forecast-to-decision pipeline for NHS critical-care
-surge planning that couples a per-region physics-informed forecaster
-to a tail-risk robust allocation linear program. Matching the
-forecaster's loss to the operational cost of under-prediction is what
-makes it useful. PinnGRU wins the short-to-medium horizons that drive
-surge decisions, cutting $14$-day RMSE by $19\%$ over re-fitted ARIMA
-and $37\%$ over a neural GRU, and we report rather than hide that
-ARIMA is stronger at the longest horizon. On the decision side the
-gain is structural. Once the budget binds, every budget-exhausting
+surge planning that couples a per-region physics-informed forecaster to
+a tail-risk robust allocation linear program. With a leakage-free
+per-origin recalibration, PinnGRU is competitive across the horizons
+that drive surge decisions, cutting $14$-day RMSE by $25\%$ over
+re-fitted ARIMA and $42\%$ over a neural GRU. On the decision side the
+gain is structural: once the budget binds, every budget-exhausting
 policy ties on coverage and the robust formulation wins by routing the
-same surge with the least patient transfer, while the
-deterministic-to-robust gap measures what scenario-weighted
-expectation buys over median-only planning. The principal caveats are
-detour-scaled travel times, well-mixed regional populations, scaled
-bed and bed-km cost units, and a single realised allocation origin.
-The clearest next step is a trust-level instance with hundreds of
-sites, where exact solution becomes expensive and a metaheuristic
-comparison regains its purpose, alongside age-stratified pathways and
-all-origin allocation distributions. The wider contribution is a
-reproducible template for tying cost-asymmetric epidemic forecasting
-to transparent and robust capacity planning on open NHS data.
+same surge with the least patient transfer. Principal caveats are
+detour-scaled travel times, well-mixed populations, scaled cost units,
+and a single realised origin. A deeper limitation couples the modules:
+the per-region forecaster and co-monotone scenarios over-state the joint
+tail and understate transfers, which pay off most under
+\emph{asynchronous} regional peaks. Correlated demand scenarios from the
+joint forecast distribution, and a trust-level instance where exact
+solution grows expensive enough to warrant metaheuristics, are the
+natural next steps.

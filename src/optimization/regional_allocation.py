@@ -20,10 +20,9 @@ UKCI 2026 pipeline. Section markers below split the responsibilities:
       and a SA comparator, all via pymoo / hand-rolled SA, sharing the
       same encoding and LP slave.
 
-Hybrid-scope formulation per ``docs/02_METHODOLOGY.md`` §3.1 (revised
-12 May): sites collapse to NHS regions (``j ≡ r``), every region is
-always "open" (no ``x_j`` binary), per-bed cost uniform, transfer cost
-proportional to centroid distance.
+Hybrid-scope formulation: sites collapse to NHS regions (``j ≡ r``),
+every region is always "open" (no ``x_j`` binary), per-bed cost uniform,
+transfer cost proportional to centroid distance.
 """
 
 from __future__ import annotations

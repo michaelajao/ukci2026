@@ -24,15 +24,23 @@ of lower, central, and upper demand stress points. The tail quantiles are
 not conditional tail means; the weights define the optimisation scenario
 mixture rather than calibrated probability-bin averages.
 Parameters: forecast demand
-$d_{r,h}^s=\hat q_r^{(s)}(t_0+h)$; baseline capacity
-$C_r=1.05\times$Delta-peak; per-region surge cap $K_r=0.5\,C_r$; budget
-$B=0.20\sum_r C_r$; great-circle inter-centroid distance $D_{r r'}$ in
+$d_{r,h}^s=\hat q_r^{(s)}(t_0+h)$; baseline critical-care capacity
+$C_r=1.05\times$Delta-peak (the bed ceiling of region $r$; distinct from
+the compartment $C$ of \Cref{eq:seird}); per-region surge cap
+$K_r=0.5\,C_r$; budget
+$B=0.20\sum_r C_r$; great-circle inter-centroid distance $\ell_{r r'}$ in
 km ($\times 1.3$ road-detour); travel time
-$T_{r r'}=60\,D_{r r'}/80$~min; mutual-aid cap $\tau=240$~min. Decision
-variables: surge $b_{r,h}\!\in\![0,K_r]$, peak auxiliary
-$\bar b_r\!\geq\!0$, transfer flows $z_{r r',h}^s\!\geq\!0$ defined only
-for $T_{r r'}\!\leq\!\tau$, unmet $u_{r,h}^s\!\geq\!0$, and tail-risk
-auxiliary $W\!\geq\!0$. Of the $42$ ordered region pairs, $24$ satisfy 
+$T_{r r'}=60\,\ell_{r r'}/80$~min; mutual-aid cap $\tau=240$~min.
+Decision variables fall in two layers. The \emph{first-stage}
+(here-and-now) capacity decision is the surge allocation
+$b_{r,h}\!\in\![0,K_r]$ with peak auxiliary $\bar b_r\!\geq\!0$, shared
+across scenarios---this is the planner's only true control. The
+per-scenario \emph{second-stage} recourse is the flow
+$z_{r r',h}^s\!\geq\!0$ (defined for $T_{r r'}\!\leq\!\tau$), whose
+self-loop $z_{r r,h}^s$ is demand served \emph{locally} at zero distance
+and whose off-diagonal ($r'\!\neq\!r$) entries are inter-regional
+transfers, together with the unmet demand $u_{r,h}^s\!\geq\!0$; a tail
+auxiliary $W\!\geq\!0$ completes the robust variant. Of the $42$ ordered region pairs, $24$ satisfy 
 $T_{r r'}\!\leq\!\tau$, yielding $12$ undirected mutual-aid links. Midlands 
 connects to every other region within the cap; South West connects only to Midlands.
 
@@ -42,18 +50,21 @@ The deterministic model optimises the median scenario $m$ ($q^{(0.5)}$):
 \begin{equation}\label{eq:deterministic_objective}
 \min\;
 \textstyle\sum_{r,h} u_{r,h}^{m}
-\;+\;\rho\sum_{r\neq r',h} D_{r r'}\, z_{r r',h}^{m},
+\;+\;\theta\sum_{r\neq r',h} \ell_{r r'}\, z_{r r',h}^{m},
 \end{equation}
-with $\rho=10^{-3}$ a transfer tie-break weight (one bed of weekly
-snapshot unmet outweighs $1000$~bed-km of transfer). Each $u_{r,h}^{m}$
-is a snapshot of bed-shortfall at the weekly checkpoint $h$, so the
-objective is the snapshot unmet summed over the four-week planning
-horizon, not a continuous bed-day integral. Constraints:
+with $\theta=10^{-3}$ a transfer tie-break weight (one bed of weekly
+snapshot unmet outweighs $1000$~bed-km of transfer). The objective
+minimises \emph{unmet demand}; the second term only breaks ties between
+equal-coverage plans by preferring less patient transport, so the surge
+beds $b$ are placed to reduce shortage, not to minimise transfers. Each
+$u_{r,h}^{m}$ is a snapshot of bed-shortfall at the weekly checkpoint
+$h$, so the objective is the snapshot unmet summed over the four-week
+planning horizon, not a continuous bed-day integral. Constraints:
 \begin{align}
-\textstyle\sum_{r':T_{r r'}\leq\tau}\! z_{r r',h}^{m} + u_{r,h}^{m}
+z_{r r,h}^{m}+\!\!\textstyle\sum_{r'\neq r:\,T_{r r'}\leq\tau}\! z_{r r',h}^{m} + u_{r,h}^{m}
   &\geq d_{r,h}^{m}
   && \forall r,h, \label{eq:demand}\\
-\textstyle\sum_{r':T_{r' r}\leq\tau}\! z_{r' r,h}^{m}
+z_{r r,h}^{m}+\!\!\textstyle\sum_{r'\neq r:\,T_{r' r}\leq\tau}\! z_{r' r,h}^{m}
   &\leq C_r + b_{r,h}
   && \forall r,h, \label{eq:capacity}\\
 b_{r,h} \leq K_r,\quad b_{r,h} &\leq \bar b_r
@@ -64,11 +75,14 @@ z_{r r',h}^{m} &= 0
   && \text{if } T_{r r'}\!>\!\tau, \label{eq:travel}\\
 b_{r,h},\bar b_r,z_{r r',h}^{m},u_{r,h}^{m} &\geq 0.
 \end{align}
-\Cref{eq:demand} ensures each region's demand is treated locally,
-transferred, or recorded as unmet; \Cref{eq:capacity} caps inbound flow
-at baseline plus surge; \Cref{eq:expansion_peak,eq:budget} charge each
-region for its peak-horizon allocation (same physical beds serve every
-horizon up to peak); \Cref{eq:travel} suppresses transfers beyond the
+\Cref{eq:demand} is a demand balance: each region's forecast demand is
+served locally ($z_{r r,h}^{m}$), transferred to a reachable region
+($z_{r r',h}^{m}$, $r'\!\neq\!r$), or left unmet ($u_{r,h}^{m}$).
+\Cref{eq:capacity} caps the beds a region uses---its own local patients
+plus those transferred in---at baseline plus surge.
+\Cref{eq:expansion_peak,eq:budget} charge each region for its
+peak-horizon allocation (the same physical beds serve every horizon up
+to the peak); \Cref{eq:travel} suppresses transfers beyond the
 mutual-aid window.
 
 \subsection{Tail-Risk Robust Objective}\label{ssec:robust}
@@ -80,23 +94,28 @@ $s\in\Sset_{\text{tail}}=\{\text{high}\}$:
 \begin{equation}\label{eq:robust_objective}
 \min\;
 \sum_{s\in\Sset}\!\pi_s\!\Big(
-\textstyle\sum_{r,h} u_{r,h}^s + \rho \sum_{r\neq r',h} D_{r r'} z_{r r',h}^s
+\textstyle\sum_{r,h} u_{r,h}^s + \theta \sum_{r\neq r',h} \ell_{r r'} z_{r r',h}^s
 \Big)\;+\;\lambda_3\, W.
 \end{equation}
 $\lambda_3{=}0$ recovers the three-scenario risk-neutral objective;
 $\lambda_3\!\to\!\infty$ yields a worst-case policy on the high
-scenario. We report $\lambda_3{=}1$ throughout. The three-scenario
-construction is co-monotone across regions and horizons (the high
-scenario imposes $q^{(0.9)}$ jointly), so the resulting tail is
-over-conservative relative to the true joint distribution; we treat
-this as an explicit stress-test design choice and examine its efficiency
-cost in \Cref{ssec:e5_e6}.
+scenario. We report $\lambda_3{=}1$ throughout. With a single tail
+scenario, minimisation drives $W=\sum_{r,h}u_{r,h}^{\text{high}}$, so
+$\lambda_3 W$ is a linear penalty on the worst-scenario shortfall
+(equivalently, extra weight on the high scenario), not a
+Rockafellar--Uryasev CVaR. The three-scenario construction is also
+co-monotone across regions and horizons (the high scenario imposes
+$q^{(0.9)}$ jointly), so the resulting tail is over-conservative
+relative to the true joint distribution; we treat this as an explicit
+stress-test design choice and examine its efficiency cost in
+\Cref{ssec:e5_e6}.
 
 \subsection{Exact LP Solution and Baselines}\label{ssec:solvers}
 
 Both the deterministic and robust models are linear programs ($28$
-surge variables, $7$ peak auxiliaries, up to $588$ transfer flows,
-$84$ unmet variables, and the tail auxiliary, all continuous). We
+surge variables, $7$ peak auxiliaries, $84$ local-service self-loops,
+up to $504$ inter-regional transfer flows, $84$ unmet variables, and the
+tail auxiliary, all continuous). We
 solve them exactly in PuLP with bundled CBC; at seven-region scale
 each instance reaches global optimality in $<\!0.1$~s, so metaheuristic
 or decomposition search adds nothing here and is deferred to the

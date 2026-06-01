@@ -17,7 +17,7 @@ Outputs:
                                           y_true
   results/forecasting/table_metrics.csv   metrics per (model, horizon) and overall
 
-Rolling-origin protocol (matches 02_METHODOLOGY.md Sec 4.2):
+Rolling-origin protocol:
   - Origins every ORIGIN_STRIDE=14 days from test_start + LOOKBACK to
     test_end - max(HORIZONS).
   - For each origin t the model receives history up to and including date t-1.

@@ -1,8 +1,8 @@
 """Data loading, chronological-by-wave splitting, and sliding-window batching.
 
 Single source of truth for everything between ``data/processed/regional_daily.csv``
-and a model's ``forward()``. Loads the tidy CSV, partitions by epidemic wave per
-``01_RESEARCH_PROGRAMME.md`` §6 (Alpha train / Delta validation / Omicron test),
+and a model's ``forward()``. Loads the tidy CSV, partitions by epidemic wave
+(Alpha train / Delta validation / Omicron test),
 applies per-region standardisation fitted on the training period only, and
 yields ``(X, y)`` mini-batches of shape ``(B, L, F)`` × ``(B, H_max)`` for
 multi-horizon forecasting.
@@ -44,7 +44,7 @@ DEFAULT_CSV = REPO_ROOT / "data" / "processed" / "regional_daily.csv"
 DEFAULT_TARGET = "mv_beds"
 DEFAULT_COVARIATES: tuple[str, ...] = ("admissions", "hospital_cases", "occupied_beds")
 
-# Chronological-by-wave split per 01_RESEARCH_PROGRAMME.md §6.
+# Chronological-by-wave split (Alpha train / Delta val / Omicron test).
 # Train: 1 Aug 2020 – 31 May 2021 (Alpha + early vaccination).
 # Val:   1 Jun 2021 – 30 Nov 2021 (Delta).
 # Test:  1 Dec 2021 – 31 Aug 2022 (Omicron and beyond).
@@ -54,7 +54,7 @@ DEFAULT_SPLIT_DATES: dict[str, tuple[str, str]] = {
     "test":  ("2021-12-01", "2022-08-31"),
 }
 
-# Default sliding-window settings per 02_METHODOLOGY.md §0.
+# Default sliding-window settings.
 DEFAULT_LOOKBACK = 28
 DEFAULT_HORIZONS: tuple[int, ...] = (7, 14, 21, 28)
 

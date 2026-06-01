@@ -1,8 +1,8 @@
 """Per-region Physics-Informed Neural Network for SEI_aI_sHCRD epidemic modelling.
 
-This module implements the per-region PINN-SEIRD forecaster described in
-docs/02_METHODOLOGY.md §1. The compartmental structure is reused from
-Ajao-Olarinoye et al. (2025) [book chapter] with one refinement:
+This module implements the per-region PINN-SEIRD forecaster. The
+compartmental structure is reused from Ajao-Olarinoye et al. (2025)
+[book chapter] with one refinement:
 
     The 2025 chapter overloaded the parameter omega to represent both the
     I_s -> H hospitalisation ratio AND, via (1 - omega), the H -> C critical-

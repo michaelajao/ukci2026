@@ -6,10 +6,9 @@
 **Conference:** UKCI 2026, Coventry, 9â€“11 September 2026
 **Submission deadline:** 31 May 2026 via Microsoft CMT
 
-This repository implements the full forecast-to-decision pipeline described in
-`docs/01_RESEARCH_PROGRAMME.md`: per-region physics-informed neural epidemic
-forecasting, demand scenario generation, and metaheuristic robust optimisation
-for NHS England critical-care surge capacity planning.
+This repository implements the full forecast-to-decision pipeline: per-region
+physics-informed neural epidemic forecasting, demand scenario generation, and
+robust optimisation for NHS England critical-care surge capacity planning.
 
 ## Quickstart
 
@@ -59,9 +58,6 @@ conda run -n pyt_env python -m compileall -q src
 
 | Document | Purpose |
 |---|---|
-| [`docs/01_RESEARCH_PROGRAMME.md`](docs/01_RESEARCH_PROGRAMME.md) | Strategic plan, paper structure, contributions, risks |
-| [`docs/02_METHODOLOGY.md`](docs/02_METHODOLOGY.md) | Mathematical formulation, architecture, hyperparameters |
-| [`docs/03_TIMELINE.md`](docs/03_TIMELINE.md) | Day-by-day work plan, gates, experiment matrix |
 | [`docs/paper/`](docs/paper/) | Actual UKCI manuscript source and `docs/paper/out/` build artifacts |
 | [`docs/ukci_springer_template/`](docs/ukci_springer_template/) | Original UKCI/Springer SVProc template bundle downloaded from the conference website |
 | `docs/status/` | Dated status notes recording gate decisions |

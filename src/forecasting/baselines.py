@@ -1,7 +1,6 @@
 """Forecasting baselines for the UKCI 2026 E1 experiment.
 
-Retained baselines after the 12 May 2026 trim (see
-``docs/04_IMPLEMENTATION_PLAN.md`` §3.1):
+Retained baselines after the 12 May 2026 trim:
 
 ==================  =====  =======================================================
 Model               Tier   Purpose
@@ -255,7 +254,7 @@ class _SingleRegionGRU(nn.Module):
 
 class GRUPerRegion(BaselineModel):
     """Independent GRU per region — the **non-physics control** for the
-    PINN ablation (``02_METHODOLOGY.md`` §1.4 + §5.1).
+    PINN ablation.
 
     Univariate sequence-to-vector: takes the last ``lookback`` raw target
     values per region and emits multi-horizon point forecasts. No PINN

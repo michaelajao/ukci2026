@@ -11,12 +11,6 @@ This module is the load-bearing methodological contribution of the paper:
 3. ``pinball_loss_multiq`` — strictly proper multi-quantile pinball loss
    (Koenker & Bassett 1978; Gneiting & Raftery 2007). The asymmetry at
    ``q = 0.9`` carries the decision-aware "avoid under-prediction" mass.
-
-Cross-references:
-    docs/02_METHODOLOGY.md §1.4 (temporal head),
-    docs/02_METHODOLOGY.md §1.5 (multi-quantile pinball loss),
-    docs/02_METHODOLOGY.md §1.6 (level + trend anchor),
-    docs/02_METHODOLOGY.md §6   (hyperparameter table).
 """
 
 from __future__ import annotations
@@ -34,10 +28,10 @@ from forecasting.pinn_seird import RegionalPINN
 # ---------------------------------------------------------------------------
 
 HORIZONS: tuple[int, ...] = (7, 14, 21, 28)
-"""Forecast horizons in days (``02_METHODOLOGY.md`` §0)."""
+"""Forecast horizons in days."""
 
 LOOKBACK_DEFAULT: int = 28
-"""Lookback window length in days (``02_METHODOLOGY.md`` §0)."""
+"""Lookback window length in days."""
 
 
 # ---------------------------------------------------------------------------

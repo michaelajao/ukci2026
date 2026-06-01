@@ -45,33 +45,28 @@ quantile training and an exact robust linear-programming allocation
 across the seven NHS England regions.
 
 This paper presents a forecast-to-decision pipeline
-(\Cref{fig:pipeline}) organised in four phases. \emph{Phase~A}
-pre-trains a per-region PINN on the $SEI_aI_sHCRD$ ODE system. Its
-twelve outputs, comprising eight compartmental states and four
-transmission and clinical parameters, are frozen and passed to a
-temporal GRU head that emits the horizon-wise quantiles
-$q^{(0.1)}$, $q^{(0.5)}$, $q^{(0.9)}$ trained directly with a
-multi-quantile pinball loss. The loss is operationally aligned rather
-than solver-coupled: the $q^{(0.9)}$ branch penalises under-prediction
-at a nine-to-one ratio. A level-and-trend anchor
-skip-connects the most recent observation and its weekly slope to
-every quantile prediction. \emph{Phase~B} discretises these
-quantiles into three scenarios (low, median, and high) with weights
-$\pi=(0.2, 0.6, 0.2)$. \emph{Phase~C} solves the resulting
-allocation exactly as a linear program (deterministic and
-tail-risk-robust) via PuLP$+$CBC, benchmarked against three
-closed-form heuristic baselines on a shared LP-slave oracle.
-\emph{Phase~D} reports operational
-metrics and a sensitivity analysis over the forecaster, the budget
-$B$, the transfer penalty $\lambda_3$, and the surge threshold
-$\tau$.
+(\Cref{fig:pipeline}) in four phases. \emph{Phase~A} pre-trains a
+per-region PINN on the $SEI_aI_sHCRD$ ODE system; its twelve outputs
+(eight compartmental states, four transmission and clinical parameters)
+are frozen and passed to a temporal GRU head that emits the horizon-wise
+quantiles $q^{(0.1)}$, $q^{(0.5)}$, $q^{(0.9)}$ under a multi-quantile
+pinball loss whose $q^{(0.9)}$ branch penalises under-prediction
+nine-to-one, with a level-and-trend anchor skip-connecting the most
+recent observation and weekly slope to every prediction. \emph{Phase~B}
+discretises these quantiles into three scenarios with weights
+$\pi=(0.2,0.6,0.2)$. \emph{Phase~C} solves the allocation exactly as a
+linear program (deterministic and tail-risk-robust) via PuLP$+$CBC
+against three heuristic baselines on a shared LP-slave oracle.
+\emph{Phase~D} reports operational metrics and a sensitivity analysis
+over the forecaster, budget $B$, tail-risk weight $\lambda_3$, and
+travel cap $\tau$.
 
 The main contributions are as follows:
-(1)~\textbf{Cost-asymmetric forecaster.} The combination of a
-multi-quantile pinball loss and a level-and-trend anchor reduces
-$h{=}14$ RMSE by $19\%$ relative to refitted ARIMA and $37\%$ relative
-to a per-region GRU; paired origin-level tests and ablations isolate
-where this gain holds and where ARIMA remains stronger.
+(1)~\textbf{Cost-asymmetric forecaster.} A multi-quantile pinball loss,
+a level-and-trend anchor, and a leakage-free per-origin recalibration
+reduce $h{=}14$ RMSE by $25\%$ relative to refitted ARIMA and $42\%$
+relative to a per-region GRU, and make the model competitive across all
+horizons (best at $h{=}7$--$21$, tying ARIMA at $h{=}28$).
 (2)~\textbf{Robust LP allocation.} A hybrid-regional formulation
 attains the lowest transfer burden among budget-exhausting policies at
 the reported operating point, $4.6\times$ below the population-
@@ -80,8 +75,4 @@ binding-budget routing effect rather than an unmet-demand reduction.
 (3)~\textbf{$SEI_aI_sHCRD$ clinical split.} The proposed model
 separates the hospitalisation ratio $\omega$ ($I_s\to H$) from the
 critical-care escalation rate $\phi$ ($H\to C$), correcting the
-overloaded $\omega$ used in~\cite{ajao2025hybrid}. The remainder of the paper is organised as follows.
-\Cref{sec:forecasting,sec:optimisation,sec:case_study} describe the
-forecasting and optimisation modules and the case study;
-\Cref{sec:results} reports results; and \Cref{sec:conclusion}
-discusses limitations and concludes.
+overloaded $\omega$ used in~\cite{ajao2025hybrid}.
