@@ -30,7 +30,8 @@ in the Claude memory dir: paper-landscape, ukci-paper-state.)
   1. Values are **monthly averages** ("Average daily number"), not daily — so the public trust/ICB critical-care series is **monthly** (~24 points over 2020–22) and smooths the surge peaks. Daily trust-level data is not publicly downloadable.
   2. Trusts are identified by **name only (no ODS code)** → a trust-name→ICB mapping is needed (fuzzy/name match, then ODS→ICB).
 - Upside: "available" beds = **real measured capacity** (better than the conference Delta-peak proxy); 7-region adult-critical-care series is directly available too.
-- **Parser next:** extract the trust block, map trust-name→ICB, stack monthly files → monthly ICB demand+capacity series.
+- **Parser DONE** — `src/data/sitrep_dataset.py` (run `python -m data.sitrep_dataset`). Stacks the monthly workbooks → `data/processed/sitrep_trust_monthly.csv` (**130 trusts × 12 months, 2021-22**) and `sitrep_region_monthly.csv` (7 regions × 12 months), with columns `cc_available` (capacity) and `cc_occupied` (demand). England adult-CC occupancy peaks **Nov 2021 (80%, 3220/4005 beds)** — the peak-month stress scenario (note: CC peak is the Delta tail, not Omicron, since Omicron was milder for critical care).
+- **Next for ICB build:** (i) trust-name→ICB mapping (ODS/name match) → aggregate to 42 ICBs; (ii) extend download to 2020-21 and 2022-23 for a longer monthly series; (iii) ICB centroids (ONS geoportal) + populations (LSOA→ICB) for the distance matrix and denominators; (iv) wire ICB demand/capacity into the allocation model (dimension-agnostic, so minimal code change).
 
 ## Open tasks
 - [ ] Integrate forecaster recalibration + leakage-free blend; regenerate Table 1.
