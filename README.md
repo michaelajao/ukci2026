@@ -1,10 +1,13 @@
-﻿# UKCI 2026 â€” Critical-Care Surge Capacity Planning
+# UKCI 2026 - Critical-Care Surge Capacity Planning
 
-**Working title:** Physics-Informed ICU Bed Forecasting with Cost-Asymmetric Quantile Loss and Robust Optimisation for NHS Critical-Care Surge Capacity Under Demand Uncertainty
+**Working title:** Physics-Informed ICU Bed Forecasting with Cost-Asymmetric
+Quantile Loss and Robust Optimisation for NHS Critical-Care Surge Capacity
+Under Demand Uncertainty
 
-**Authors (planned):** Michael Ajao-Olarinoye, Abiola Babatunde, Vasile Palade
-**Conference:** UKCI 2026, Coventry, 9â€“11 September 2026
-**Submission deadline:** 31 May 2026 via Microsoft CMT
+**Authors:** Michael Ajao-Olarinoye, Abiola Babatunde, AmirHosein Sadeghimanesh
+(Centre for Computational Sciences and Mathematical Modelling, Coventry University)
+
+**Conference:** UKCI 2026, Coventry, 9-11 September 2026
 
 This repository implements the full forecast-to-decision pipeline: per-region
 physics-informed neural epidemic forecasting, demand scenario generation, and
@@ -21,11 +24,13 @@ python -m pip install -e ".[dev]"
 
 # 2. Download NHS data (one-off, ~50 MB total)
 ukci-download-nhs-data
+ukci-download-supporting-data        # ONS populations, geography
 
-# 3. Build the regional tidy dataset
+# 3. Build the regional tidy dataset and features
 ukci-build-regional-dataset
+ukci-build-regional-features
 
-# 4. Train forecasters
+# 4. Train forecasters (PINN-SEIRD + baselines)
 ukci-train-forecasters
 
 # 5. Rebuild paper-facing forecast outputs
@@ -35,9 +40,9 @@ ukci-forecast-evaluation all
 ukci-run-allocation-e2
 ```
 
-Forecast evaluation artifacts are generated from saved outputs. Use the CSVs as
-the internal source of truth for manuscript values, then enter those values into
-the LaTeX table directly:
+Forecast evaluation artifacts are generated from saved outputs. The CSVs are the
+internal source of truth for manuscript values; enter those values into the
+LaTeX tables directly:
 
 ```bash
 ukci-forecast-evaluation sources   # list CSVs used as paper source tables
@@ -54,50 +59,76 @@ When running checks without activating the environment first, use:
 conda run -n pyt_env python -m compileall -q src
 ```
 
+## Command reference
+
+All `ukci-*` console commands are declared in `pyproject.toml` and become
+available after the editable install.
+
+| Command | Purpose |
+|---|---|
+| `ukci-download-nhs-data` | Download NHS England COVID-19 hospital-activity archives |
+| `ukci-download-supporting-data` | Download ONS populations and geography |
+| `ukci-build-regional-dataset` | Build the tidy per-region daily dataset |
+| `ukci-build-regional-features` | Derive modelling features (lags, slopes, splits) |
+| `ukci-train-forecasters` | Train PINN-SEIRD and baseline forecasters |
+| `ukci-run-pinn-ablations` | Run the PINN ablation study |
+| `ukci-forecast-evaluation` | Rebuild forecast metrics, Table 1, and figures |
+| `ukci-run-eda` | Generate exploratory-data-analysis figures |
+| `ukci-run-allocation-e2` | Run the core allocation experiment (deterministic + robust LP + baselines) |
+| `ukci-run-allocation-sweeps` | Budget / travel-cap / tail-weight sensitivity sweeps |
+| `ukci-run-allocation-revision` | Revision-pass allocation re-runs |
+| `ukci-build-allocation-figures` | Build allocation figures from saved results |
+
 ## Documentation
 
 | Document | Purpose |
 |---|---|
-| [`docs/paper/`](docs/paper/) | Actual UKCI manuscript source and `docs/paper/out/` build artifacts |
-| [`docs/ukci_springer_template/`](docs/ukci_springer_template/) | Original UKCI/Springer SVProc template bundle downloaded from the conference website |
-| `docs/status/` | Dated status notes recording gate decisions |
+| [`docs/paper/`](docs/paper/) | UKCI conference manuscript source (build with `make`; PDF in `docs/paper/out/`) |
+| [`docs/journal/`](docs/journal/) | Journal-extension skeleton (Health Care Management Science target); PDF in `docs/journal/out/` |
+| [`docs/ukci_springer_template/`](docs/ukci_springer_template/) | Original UKCI/Springer SVProc template bundle from the conference website |
+| [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) | Running status notes and gate decisions |
+| [`presentation.md`](presentation.md) | Marp slide deck for the talk (renders to `presentation.pdf`) |
 
 ## Repository layout
 
 Reusable research logic and command entry points live under `src`. Editable
 installs expose the `ukci-*` console commands declared in `pyproject.toml`.
+Results and figures are committed as the shared source of truth so co-authors
+get paper-facing tables and figures without re-running the heavy pipeline; only
+bulky raw NHS data and LaTeX build artifacts are gitignored.
 
-```
+```text
 ukci2026/
-â”œâ”€â”€ docs/                          # Planning and methodology documents
-â”œâ”€â”€ data/
-â”‚   â”œâ”€â”€ raw/                       # NHS XLSX archives (gitignored, downloaded)
-â”‚   â”œâ”€â”€ processed/                 # Tidy regional CSV
-â”‚   â””â”€â”€ graphs/                    # NHS region adjacency, distance, correlation
-â”œâ”€â”€ src/                           # Python packages and command entry points
-â”‚   â”œâ”€â”€ data/                      # NHS ingestion, splits, scenarios
-â”‚   â”œâ”€â”€ forecasting/               # PINN-SEIRD, cost-asymmetric loss, baselines
-â”‚   â”œâ”€â”€ optimization/              # MILP, robust MILP, heuristics, metaheuristics, Îµ-constraint
-â”‚   â”œâ”€â”€ evaluation/                # Forecast and allocation metrics
-â”‚   â””â”€â”€ utils.py                   # Shared infrastructure helpers
-â”œâ”€â”€ configs/                       # YAML experiment configs
-â”œâ”€â”€ notebooks/                     # EDA and analysis notebooks
-â”œâ”€â”€ tests/                         # pytest unit tests
-â”œâ”€â”€ results/                       # Output tables and metrics (gitignored)
-â”œâ”€â”€ figures/                       # Output figures (gitignored)
-â”œâ”€â”€ pyproject.toml
-â””â”€â”€ README.md
+|-- docs/                          # Manuscripts, journal extension, status notes
+|-- data/
+|   |-- raw/                       # NHS XLSX archives (gitignored, downloaded)
+|   |-- processed/                 # Tidy regional CSV
+|   `-- graphs/                    # NHS region adjacency, distance, correlation
+|-- src/                           # Python packages and command entry points
+|   |-- data/                      # NHS ingestion, splits, scenarios
+|   |-- forecasting/               # PINN-SEIRD, cost-asymmetric loss, baselines
+|   |-- optimization/              # LP, robust LP, heuristics, sensitivity sweeps
+|   |-- evaluation/                # Forecast and allocation metrics, EDA
+|   `-- utils.py                   # Shared infrastructure helpers
+|-- configs/                       # YAML experiment configs
+|-- notebooks/                     # EDA and analysis notebooks
+|-- tests/                         # pytest unit tests
+|-- results/                       # Output tables and metrics (committed)
+|-- figures/                       # Output figures (committed)
+|-- presentation.md                # Marp slide deck
+|-- pyproject.toml
+`-- README.md
 ```
 
 ## Development workflow
 
 ### Branching
 
-- `main` â€” protected, only via PR
-- `paper/draft` â€” paper writing, LaTeX
-- `forecast/<feature>` â€” forecasting experiments
-- `opt/<feature>` â€” optimisation experiments
-- `data/<task>` â€” data ingestion and processing
+- `main` - protected, only via PR
+- `paper/draft` - paper writing, LaTeX
+- `forecast/<feature>` - forecasting experiments
+- `opt/<feature>` - optimisation experiments
+- `data/<task>` - data ingestion and processing
 
 ### Commits
 
@@ -131,7 +162,8 @@ If this work is useful, please cite (placeholder until acceptance):
             Cost-Asymmetric Quantile Loss and Robust Optimisation
             for {NHS} Critical-Care Surge Capacity Under
             Demand Uncertainty},
-  author = {Ajao-Olarinoye, Michael and Babatunde, Abiola and Palade, Vasile},
+  author = {Ajao-Olarinoye, Michael and Babatunde, Abiola and
+            Sadeghimanesh, AmirHosein},
   booktitle = {Proceedings of the 25th UK Workshop on
                Computational Intelligence (UKCI 2026)},
   year   = {2026},

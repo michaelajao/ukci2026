@@ -86,7 +86,7 @@ section.divider::after { color: #6f8cb0; }
 
 <div class="sub">For NHS Critical-Care Surge Capacity Under Demand Uncertainty</div>
 
-<div class="authors"><strong>Michael Ajao-Olarinoye</strong> · Abiola Babatunde · Vasile Palade</div>
+<div class="authors"><strong>Michael Ajao-Olarinoye</strong> · Abiola Babatunde · AmirHosein Sadeghimanesh</div>
 <div class="affil">Centre for Computational Sciences and Mathematical Modelling, Coventry University</div>
 
 <div class="venue">UKCI 2026 · Coventry · 9–11 September 2026</div>
@@ -104,6 +104,22 @@ During an epidemic wave, NHS planners must **pre-position critical-care beds** a
 
 ---
 
+# The Setting: Seven NHS England Regions
+
+![w:900](figures/fig_region_context.png)
+
+Population, deprivation (IMD), and observed peak load vary widely across the seven regions; this geography underpins the inter-centroid travel-time parameterisation and the mutual-aid link structure.
+
+---
+
+# The Regime Shift: Three Distinct Waves
+
+![w:980](figures/fig_wave_overlay.png)
+
+Alpha / Delta / Omicron differ markedly in case-to-hospitalisation and H-to-C ratios — the demand regime is non-stationary, which motivates the held-out Omicron test split.
+
+---
+
 # Contributions
 
 1. **Cost-asymmetric forecaster** — a multi-quantile pinball loss (the $q^{0.9}$ branch penalises under-prediction **9-to-1**) plus a learnable level-and-trend anchor. Cuts 14-day RMSE **19%** vs refitted ARIMA, **37%** vs a per-region GRU.
@@ -118,9 +134,9 @@ During an epidemic wave, NHS planners must **pre-position critical-care beds** a
 
 # A Forecast-to-Decision Pipeline
 
-![w:1120](figures/figure1.png)
+![w:830](figures/figure1.png)
 
-**A** Per-region PINN-SEIRD forecaster, cost-asymmetric pinball loss → **B** discretise quantiles into low/median/high scenarios $\pi=(0.2,0.6,0.2)$ → **C** solve allocation exactly (deterministic & robust LP, PuLP+CBC) → **D** evaluate + sensitivity analysis.
+**A** Per-region PINN-SEIRD forecaster (cost-asymmetric loss) → **B** discretise into low/median/high scenarios $\pi=(0.2,0.6,0.2)$ → **C** solve allocation exactly (deterministic & robust LP) → **D** evaluate + sensitivity.
 
 ---
 
@@ -216,8 +232,8 @@ $$
 # Deterministic Median-Scenario LP
 
 $$
-\min\; \sum_{r,h} u_{r,h}^{m} \;+\; \rho\!\sum_{r\neq r',h} D_{rr'}\, z_{rr',h}^{m}
-\qquad (\rho = 10^{-3}\text{: unmet} \gg \text{routing})
+\min\; \sum_{r,h} u_{r,h}^{m} \;+\; \theta\!\sum_{r\neq r',h} D_{rr'}\, z_{rr',h}^{m}
+\qquad (\theta = 10^{-3}\text{: unmet} \gg \text{routing})
 $$
 
 $$
@@ -237,7 +253,7 @@ $$
 Impose demand & capacity for **every** scenario; add a tail penalty $\lambda_3 W$ with $W \ge \sum_{r,h} u^{s}_{r,h}$ on the **high** scenario:
 
 $$
-\min\;\sum_{s\in\mathcal{S}}\pi_s\Big(\textstyle\sum_{r,h} u_{r,h}^s + \rho\sum_{r\neq r',h} D_{rr'} z_{rr',h}^s\Big) + \lambda_3\, W
+\min\;\sum_{s\in\mathcal{S}}\pi_s\Big(\textstyle\sum_{r,h} u_{r,h}^s + \theta\sum_{r\neq r',h} D_{rr'} z_{rr',h}^s\Big) + \lambda_3\, W
 $$
 
 - $\lambda_3{=}0$ → risk-neutral; $\lambda_3{\to}\infty$ → worst-case. **We report $\lambda_3{=}1$**
@@ -369,19 +385,3 @@ Code, configs & cleaned dataset — project repository.
 - **Bertsimas et al. (2022)** DELPHI → vaccine-site MIP — *Naval Res. Logistics*
 - **Luo & Stellato (2024)** Neural-ODE facility location (McCormick relaxation)
 - **Ajao et al. (2025)** Hybrid physics-informed SEIRD forecasting — CRC Press
-
----
-
-# Backup — Wave Overlay (Regime Shift)
-
-![w:980](figures/fig_wave_overlay.png)
-
-Alpha / Delta / Omicron differ markedly in case-to-hospitalisation and H-to-C ratios — motivating the held-out Omicron test split.
-
----
-
-# Backup — Regional Context
-
-![w:900](figures/fig_region_context.png)
-
-Geography of the seven NHS England regions underpins the inter-centroid travel-time parameterisation and the mutual-aid link structure.
