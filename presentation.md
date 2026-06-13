@@ -145,7 +145,7 @@ Alpha / Delta / Omicron differ markedly in case-to-hospitalisation and H-to-C ra
 ![w:760](figures/fig_seird_model.png)
 
 - Eight compartments; only **$H$ (hospitalised)** and **$C$ (critical-care)** are observed at regional resolution (shaded)
-- **Key fix:** distinct $\omega$ ($I_s\!\to\!H$) and $\phi$ ($H\!\to\!C$) make the two clinical thresholds independently identifiable
+- **Key fix:** distinct $\omega$ ($I_s\!\to\!H$) and $\phi$ ($H\!\to\!C$) keep the two clinical thresholds modelled separately
 
 ---
 

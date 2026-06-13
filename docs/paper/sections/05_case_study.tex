@@ -10,10 +10,7 @@ and mechanical-ventilation bed occupancy at NHS regional resolution; and
 ONS Mid-Year Population Estimates~\cite{ons_mye_2021} on 2021 geography,
 used both as the per-region PINN normaliser and as the denominator of
 the population-proportional allocation baseline. All experiments run on
-the seven NHS England commissioning regions, and
-inter-regional travel times $T_{r r'}$ are approximated by
-inter-centroid great-circle distances $\times 1.3$ detour at $80$~km/h.
-The series is split chronologically by epidemic wave so the most
+the seven NHS England commissioning regions. The series is split chronologically by epidemic wave so the most
 clinically distinct wave is held out: training on $1$~Aug~$2020$ --
 $31$~May~$2021$ (Alpha and early vaccination), validation on
 $1$~Jun -- $30$~Nov~$2021$ (Delta) for hyper-parameter selection and
@@ -22,19 +19,20 @@ early stopping, and testing on $1$~Dec~$2021$ -- $31$~Aug~$2022$
 hospitalisation-to-critical-care ratios differ markedly from earlier
 waves, providing a regime-shift stress test.
 
-For the allocation problem, baseline capacity $C_r$ is \emph{measured}
+For the allocation problem, baseline capacity $\Gamma_r$ is \emph{measured}
 as each region's Delta-wave peak MV-bed occupancy $\times 1.05$, whereas
-the per-region surge cap $K_r=0.5\,C_r$, total budget
-$B=0.20\sum_r C_r=213$~beds, and mutual-aid travel cap $\tau=240$~min are
-planning assumptions. The surge $b_r$ is the model's decision---the
-extra MV beds a region stands up above its measured baseline. The transfer tie-break weight
-is $\theta=10^{-3}$, so one bed of snapshot unmet demand outweighs
-$1000$~bed-km of transfer. Scenario weights are $\pi=(0.2,0.6,0.2)$ and
-the tail-penalty weight is $\lambda_3=1$. The forecaster, budget $B$,
-$\lambda_3$, and travel cap $\tau$ are each swept in
-\Cref{ssec:e5_e6}. Forecast metrics are macro-averaged across
+the per-region surge cap $K_r=0.5\,\Gamma_r$, total budget
+$B=0.20\sum_r \Gamma_r\approx213$~beds (the surge headroom above the
+$\sum_r\Gamma_r\approx1065$-bed measured baseline, not existing beds),
+mutual-aid travel cap $\tau=240$~min, and
+uncapped outbound transfers ($\kappa=\infty$) are
+planning assumptions. The surge $b_r$ is the model's decision, the
+extra MV beds a region stands up above its measured baseline. The
+forecaster, budget $B$, tail weight $\lambda_3$, travel cap $\tau$, and
+transfer cap $\kappa$ are each swept in \Cref{ssec:e5_e6}. Forecast
+metrics are macro-averaged across
 the seven regions and the $32$ rolling-origin evaluations spanning the
 Omicron test period; the full solver comparison is reported at the first
-Omicron decision origin ($29$~Dec~$2021$), with an exact/closed-form
+Omicron decision origin ($29$~Dec~$2021$), with an
 all-origin check in \Cref{ssec:e5_e6}. Code, configurations, and the
 cleaned dataset are available in the project repository.

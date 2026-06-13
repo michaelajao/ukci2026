@@ -100,6 +100,10 @@ class AllocationProblem:
     max_travel_min: float
     forecast_source: str = "pinn_gru"
     origin: pd.Timestamp | None = None
+    # Per-region cap on outbound displaced patients sustained at any
+    # checkpoint (clinically: regional critical-care transfer-service
+    # capacity). None = uncapped, the headline operating point.
+    max_transfer_out: float | None = None
 
     @property
     def n_regions(self) -> int: return len(self.regions)
@@ -235,6 +239,7 @@ def load_allocation_problem(
     max_expansion_fraction: float = DEFAULT_MAX_EXPANSION_FRACTION,
     max_travel_min: float = DEFAULT_MAX_TRAVEL_MIN,
     travel_cost_per_km: float = DEFAULT_TRAVEL_COST_PER_KM,
+    max_transfer_out: float | None = None,
 ) -> AllocationProblem:
     if forecasts_parquet is None:
         forecasts_parquet = ROOT / "results" / "forecasting" / "forecasts.parquet"
@@ -272,6 +277,7 @@ def load_allocation_problem(
         max_travel_min=max_travel_min,
         forecast_source=forecast_model,
         origin=picked_origin,
+        max_transfer_out=max_transfer_out,
     )
 
 
@@ -332,6 +338,17 @@ def _lp_slave(
                     + u[r, h, s] >= float(p.demand[r, h, s]),
                     f"demand_{r}_{h}_{s}",
                 )
+    if p.max_transfer_out is not None:
+        for r in range(R):
+            off_pairs = [(r2, rp) for (r2, rp) in feasible_rr
+                         if r2 == r and rp != r]
+            for h in range(H):
+                for s in range(S):
+                    prob += (
+                        pulp.lpSum(z[(rr, rp, h, s)] for (rr, rp) in off_pairs)
+                        <= float(p.max_transfer_out),
+                        f"transfer_cap_{r}_{h}_{s}",
+                    )
     for rp in range(R):
         in_pairs = [(r, rp) for (r, rp2) in feasible_rr if rp2 == rp]
         for h in range(H):
@@ -399,6 +416,8 @@ def _build_milp(
     cvar_lambda: float = 0.0,
     cvar_scenarios: list[int] | None = None,
     transfer_cost_weight: float = 1e-3,
+    facility_opening: bool = False,
+    open_cost: float = 0.0,
 ):
     R, H = p.n_regions, p.n_horizons
     feasible_rr = [
@@ -408,9 +427,13 @@ def _build_milp(
     pi = {s: float(scenario_weights[i]) for i, s in enumerate(scenarios_used)}
     prob = pulp.LpProblem("regional_bed_surge", pulp.LpMinimize)
 
+    # Single per-region surge variable. Surge only relaxes the capacity
+    # constraint and the budget charges the standing allocation once, so a
+    # per-horizon copy b_{r,h} would always sit at its peak — the collapsed
+    # form is exact (and matches the LP re-evaluation slave).
     b = {
-        (r, h): pulp.LpVariable(f"b_{r}_{h}", lowBound=0, upBound=float(p.max_expansion[r]))
-        for r in range(R) for h in range(H)
+        r: pulp.LpVariable(f"b_{r}", lowBound=0, upBound=float(p.max_expansion[r]))
+        for r in range(R)
     }
     z = {
         (r, rp, h, s): pulp.LpVariable(f"z_{r}_{rp}_{h}_{s}", lowBound=0)
@@ -420,15 +443,22 @@ def _build_milp(
         (r, h, s): pulp.LpVariable(f"u_{r}_{h}_{s}", lowBound=0)
         for r in range(R) for h in range(H) for s in scenarios_used
     }
+    # With a single tail scenario, W is equivalent to extra weight on that
+    # scenario's unmet term; the auxiliary is retained because it
+    # generalises unchanged to multiple tail scenarios (journal extension).
     W = pulp.LpVariable("W_worst", lowBound=0) if cvar_lambda > 0.0 else None
-    b_peak = {
-        r: pulp.LpVariable(f"b_peak_{r}", lowBound=0, upBound=float(p.max_expansion[r]))
-        for r in range(R)
-    }
-    for r in range(R):
-        for h in range(H):
-            prob += b_peak[r] >= b[r, h], f"peakdef_{r}_{h}"
-    prob += pulp.lpSum(b_peak[r] for r in range(R)) <= float(p.budget), "budget"
+    x = None
+    if facility_opening:
+        # binary "open a surge unit at r"; surge only where opened; fixed
+        # opening cost (in bed-equivalents) competes with beds for the budget.
+        x = {r: pulp.LpVariable(f"x_{r}", cat="Binary") for r in range(R)}
+        for r in range(R):
+            prob += b[r] <= float(p.max_expansion[r]) * x[r], f"open_{r}"
+        prob += (pulp.lpSum(b[r] for r in range(R))
+                 + open_cost * pulp.lpSum(x[r] for r in range(R))
+                 <= float(p.budget)), "budget"
+    else:
+        prob += pulp.lpSum(b[r] for r in range(R)) <= float(p.budget), "budget"
 
     for r in range(R):
         out_pairs = [(r, rp) for (r2, rp) in feasible_rr if r2 == r]
@@ -439,13 +469,24 @@ def _build_milp(
                     + u[r, h, s] >= float(p.demand[r, h, s]),
                     f"demand_{r}_{h}_{s}",
                 )
+    if p.max_transfer_out is not None:
+        for r in range(R):
+            off_pairs = [(r2, rp) for (r2, rp) in feasible_rr
+                         if r2 == r and rp != r]
+            for h in range(H):
+                for s in scenarios_used:
+                    prob += (
+                        pulp.lpSum(z[(rr, rp, h, s)] for (rr, rp) in off_pairs)
+                        <= float(p.max_transfer_out),
+                        f"transfer_cap_{r}_{h}_{s}",
+                    )
     for rp in range(R):
         in_pairs = [(r, rp) for (r, rp2) in feasible_rr if rp2 == rp]
         for h in range(H):
             for s in scenarios_used:
                 prob += (
                     pulp.lpSum(z[(r, rp, h, s)] for (r, _) in in_pairs)
-                    <= float(p.baseline_capacity[rp]) + b[rp, h],
+                    <= float(p.baseline_capacity[rp]) + b[rp],
                     f"cap_{rp}_{h}_{s}",
                 )
     if cvar_lambda > 0.0:
@@ -470,7 +511,7 @@ def _build_milp(
     if cvar_lambda > 0.0:
         obj = obj + cvar_lambda * W
     prob += obj, "obj"
-    return prob, {"b": b, "z": z, "u": u, "W": W, "b_peak": b_peak,
+    return prob, {"b": b, "z": z, "u": u, "W": W, "x": x,
                   "feasible_rr": feasible_rr, "S_used": scenarios_used, "pi": pi}
 
 
@@ -490,7 +531,7 @@ def solve_deterministic(
     status_int = prob.solve(_solver(time_limit))
     runtime = time.time() - t0
     b_peak = np.array(
-        [h["b_peak"][r].value() or 0.0 for r in range(p.n_regions)], dtype=float
+        [h["b"][r].value() or 0.0 for r in range(p.n_regions)], dtype=float
     )
     z_arr, u_arr, eu, tb, wc = _lp_slave(p, b_peak, transfer_cost_weight)
     R, H = p.n_regions, p.n_horizons
@@ -511,9 +552,12 @@ def solve_robust(
     cvar_lambda: float = 1.0,
     cvar_scenarios: list[str] | None = None,
     time_limit: float | None = 60.0,
+    facility_opening: bool = False,
+    open_cost: float = 0.0,
 ) -> AllocationSolution:
     """3-scenario expectation + CVaR on the upper-quantile worst-case set
-    (default {high})."""
+    (default {high}). With ``facility_opening`` the surge placement becomes a
+    MILP (binary open/closed per node, fixed ``open_cost`` in bed-equivalents)."""
     S_used = list(range(p.n_scenarios))
     if cvar_scenarios is None:
         cvar_idx = [p.scenarios.index("high")]
@@ -523,14 +567,16 @@ def solve_robust(
                           scenarios_used=S_used,
                           scenario_weights=p.scenario_weights,
                           cvar_lambda=cvar_lambda, cvar_scenarios=cvar_idx,
-                          transfer_cost_weight=transfer_cost_weight)
+                          transfer_cost_weight=transfer_cost_weight,
+                          facility_opening=facility_opening, open_cost=open_cost)
     t0 = time.time()
     status_int = prob.solve(_solver(time_limit))
     runtime = time.time() - t0
     R, H, S = p.n_regions, p.n_horizons, p.n_scenarios
-    b_arr = np.zeros((R, H), dtype=float)
-    for (r, hh), var in h["b"].items():
-        b_arr[r, hh] = var.value() or 0.0
+    b_peak = np.array(
+        [h["b"][r].value() or 0.0 for r in range(R)], dtype=float
+    )
+    b_arr = np.broadcast_to(b_peak.reshape(R, 1), (R, H)).copy()
     feasible = set(h["feasible_rr"])
     z_arr = np.zeros((R, R, H, S), dtype=float)
     for (r, rp, hh, s), var in h["z"].items():
@@ -550,6 +596,9 @@ def solve_robust(
                 for s in range(S)
             )
     wc = float(max(u_arr[:, :, s].sum() for s in range(S)))
+    n_open = None
+    if h["x"] is not None:
+        n_open = int(sum(1 for r in range(R) if (h["x"][r].value() or 0) > 0.5))
     return AllocationSolution(
         method=f"robust_milp_cvar{cvar_lambda:g}",
         b=b_arr, z=z_arr, u=u_arr,
@@ -557,6 +606,7 @@ def solve_robust(
         total_surge_beds=float(b_arr.max(axis=1).sum()),
         objective=float(pulp.value(prob.objective) or 0.0),
         runtime_s=runtime, status=pulp.LpStatus[status_int],
+        extra=({"n_open": n_open} if n_open is not None else None),
     )
 
 

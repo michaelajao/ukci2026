@@ -10,39 +10,42 @@ and closed-form heuristic baselines.
 
 \subsection{Sets, Parameters, and Decision Variables}\label{ssec:notation}
 
-The scope is \emph{hybrid regional}: candidate sites coincide with the
-seven NHS England commissioning regions, so demand nodes and capacity
-sites collapse to one set $\R=\{r_1,\ldots,r_7\}$. Every region is
-always ``open'' (no facility-opening binary) and per-bed surge cost is
-uniform; the model decides only how many beds per region and how to
-route patients. Indices: regions $r,r'\!\in\!\R$; horizons
+The scope is \emph{hybrid regional}: demand nodes and capacity sites
+coincide with the seven NHS England commissioning regions, one set
+$\R=\{r_1,\ldots,r_7\}$. Unlike facility-location models that choose
+which sites to open~\cite{bertsimas2022where}, every region already
+operates critical care, so there is no opening decision and per-bed
+surge cost is uniform; the model decides only how many beds per region
+and how to route patients. Indices: regions $r,r'\!\in\!\R$; horizons
 $h\!\in\!\Hset=\{7,14,21,28\}$~days; scenarios
 $s\!\in\!\Sset=\{\text{low},\text{median},\text{high}\}$ from
 $q^{(0.1)},q^{(0.5)},q^{(0.9)}$ with weights
 $\pi=(0.2,0.6,0.2)$, a tractable representative-quantile discretisation
-of lower, central, and upper demand stress points. The tail quantiles are
-not conditional tail means; the weights define the optimisation scenario
-mixture rather than calibrated probability-bin averages.
+of lower, central, and upper demand stress points; the weights define
+the optimisation scenario mixture, not calibrated probability bins.
 Parameters: forecast demand
-$d_{r,h}^s=\hat q_r^{(s)}(t_0+h)$; baseline critical-care capacity
-$C_r=1.05\times$Delta-peak (the bed ceiling of region $r$; distinct from
-the compartment $C$ of \Cref{eq:seird}); per-region surge cap
-$K_r=0.5\,C_r$; budget
-$B=0.20\sum_r C_r$; great-circle inter-centroid distance $\ell_{r r'}$ in
+$\xi_{r,h}^s=\hat q_r^{(s)}(t_0+h)$; baseline critical-care capacity
+$\Gamma_r=1.05\times$Delta-peak (the bed ceiling of region $r$);
+per-region surge cap
+$K_r=0.5\,\Gamma_r$; budget
+$B=0.20\sum_r \Gamma_r$; great-circle inter-centroid distance $\ell_{r r'}$ in
 km ($\times 1.3$ road-detour); travel time
-$T_{r r'}=60\,\ell_{r r'}/80$~min; mutual-aid cap $\tau=240$~min.
+$T_{r r'}=60\,\ell_{r r'}/80$~min; mutual-aid cap $\tau=240$~min; outbound transfer cap $\kappa$
+(displaced patients a region's transfer service can sustain at a
+checkpoint; uncapped at the headline operating point).
 Decision variables fall in two layers. The \emph{first-stage}
 (here-and-now) capacity decision is the surge allocation
-$b_{r,h}\!\in\![0,K_r]$ with peak auxiliary $\bar b_r\!\geq\!0$, shared
-across scenarios---this is the planner's only true control. The
+$b_{r}\!\in\![0,K_r]$, shared across scenarios and horizons (beds stood
+up once serve every weekly checkpoint). This is the planner's only
+true control. The
 per-scenario \emph{second-stage} recourse is the flow
 $z_{r r',h}^s\!\geq\!0$ (defined for $T_{r r'}\!\leq\!\tau$), whose
 self-loop $z_{r r,h}^s$ is demand served \emph{locally} at zero distance
 and whose off-diagonal ($r'\!\neq\!r$) entries are inter-regional
 transfers, together with the unmet demand $u_{r,h}^s\!\geq\!0$; a tail
-auxiliary $W\!\geq\!0$ completes the robust variant. Of the $42$ ordered region pairs, $24$ satisfy 
-$T_{r r'}\!\leq\!\tau$, yielding $12$ undirected mutual-aid links. Midlands 
-connects to every other region within the cap; South West connects only to Midlands.
+auxiliary $W\!\geq\!0$ completes the robust variant. Of the $42$ ordered region pairs, $24$ satisfy
+$T_{r r'}\!\leq\!\tau$ ($12$ undirected mutual-aid links); Midlands
+reaches every region, South West only Midlands.
 
 \subsection{Deterministic Median-Scenario LP}\label{ssec:milp}
 
@@ -53,7 +56,7 @@ The deterministic model optimises the median scenario $m$ ($q^{(0.5)}$):
 \;+\;\theta\sum_{r\neq r',h} \ell_{r r'}\, z_{r r',h}^{m},
 \end{equation}
 with $\theta=10^{-3}$ a transfer tie-break weight (one bed of weekly
-snapshot unmet outweighs $1000$~bed-km of transfer). The objective
+snapshot unmet outweighs $1000$~patient-km of transfer). The objective
 minimises \emph{unmet demand}; the second term only breaks ties between
 equal-coverage plans by preferring less patient transport, so the surge
 beds $b$ are placed to reduce shortage, not to minimise transfers. Each
@@ -62,34 +65,40 @@ $h$, so the objective is the snapshot unmet summed over the four-week
 planning horizon, not a continuous bed-day integral. Constraints:
 \begin{align}
 z_{r r,h}^{m}+\!\!\textstyle\sum_{r'\neq r:\,T_{r r'}\leq\tau}\! z_{r r',h}^{m} + u_{r,h}^{m}
-  &\geq d_{r,h}^{m}
+  &\geq \xi_{r,h}^{m}
   && \forall r,h, \label{eq:demand}\\
 z_{r r,h}^{m}+\!\!\textstyle\sum_{r'\neq r:\,T_{r' r}\leq\tau}\! z_{r' r,h}^{m}
-  &\leq C_r + b_{r,h}
+  &\leq \Gamma_r + b_{r}
   && \forall r,h, \label{eq:capacity}\\
-b_{r,h} \leq K_r,\quad b_{r,h} &\leq \bar b_r
-  && \forall r,h, \label{eq:expansion_peak}\\
-\textstyle\sum_r \bar b_r &\leq B,
+\textstyle\sum_{r'\neq r}\, z_{r r',h}^{m} &\leq \kappa
+  && \forall r,h, \label{eq:transfercap}\\
+\textstyle\sum_r b_r &\leq B,
   && \label{eq:budget}\\
 z_{r r',h}^{m} &= 0
   && \text{if } T_{r r'}\!>\!\tau, \label{eq:travel}\\
-b_{r,h},\bar b_r,z_{r r',h}^{m},u_{r,h}^{m} &\geq 0.
+b_{r},z_{r r',h}^{m},u_{r,h}^{m} &\geq 0.
 \end{align}
-\Cref{eq:demand} is a demand balance: each region's forecast demand is
-served locally ($z_{r r,h}^{m}$), transferred to a reachable region
-($z_{r r',h}^{m}$, $r'\!\neq\!r$), or left unmet ($u_{r,h}^{m}$).
-\Cref{eq:capacity} caps the beds a region uses---its own local patients
-plus those transferred in---at baseline plus surge.
-\Cref{eq:expansion_peak,eq:budget} charge each region for its
-peak-horizon allocation (the same physical beds serve every horizon up
-to the peak); \Cref{eq:travel} suppresses transfers beyond the
-mutual-aid window.
+\Cref{eq:demand} is a demand balance in which each region's forecast
+demand is served locally ($z_{r r,h}^{m}$), transferred to a reachable
+region ($z_{r r',h}^{m}$, $r'\!\neq\!r$), or left unmet
+($u_{r,h}^{m}$). \Cref{eq:capacity} caps the beds a region uses (its
+own local patients plus those transferred in) at baseline plus surge.
+\Cref{eq:transfercap} bounds the patients a region can sustain away
+from home by its transfer-service capacity $\kappa$;
+\Cref{eq:budget} charges the budget once per region (the same physical
+beds serve every horizon); \Cref{eq:travel} suppresses transfers beyond
+the mutual-aid window. Because $u_{r,h}^{m}$ is minimised,
+\Cref{eq:demand} holds it at the positive part of the residual
+shortfall, $\max(0,\, \xi_{r,h}^{m}-\sum_{r'} z_{r r',h}^{m})$, so unmet
+demand is a derived quantity rather than a free decision.
 
 \subsection{Tail-Risk Robust Objective}\label{ssec:robust}
 
 To hedge against the high-demand scenario the robust model imposes
-\Cref{eq:demand,eq:capacity} for every $s\in\Sset$ and adds the
-tail-risk term $\lambda_3 W$ where $W\geq\sum_{r,h} u_{r,h}^s$ for
+\Cref{eq:demand,eq:capacity,eq:transfercap} for every $s\in\Sset$,
+retains \Cref{eq:budget,eq:travel}, and
+adds the tail-risk term $\lambda_3 W$ where
+$W\geq\sum_{r,h} u_{r,h}^s$ for
 $s\in\Sset_{\text{tail}}=\{\text{high}\}$:
 \begin{equation}\label{eq:robust_objective}
 \min\;
@@ -102,8 +111,9 @@ $\lambda_3\!\to\!\infty$ yields a worst-case policy on the high
 scenario. We report $\lambda_3{=}1$ throughout. With a single tail
 scenario, minimisation drives $W=\sum_{r,h}u_{r,h}^{\text{high}}$, so
 $\lambda_3 W$ is a linear penalty on the worst-scenario shortfall
-(equivalently, extra weight on the high scenario), not a
-Rockafellar--Uryasev CVaR. The three-scenario construction is also
+(equivalently, extra weight on the high scenario) rather than a
+Rockafellar--Uryasev CVaR; the auxiliary form generalises unchanged to
+multiple tail scenarios. The three-scenario construction is also
 co-monotone across regions and horizons (the high scenario imposes
 $q^{(0.9)}$ jointly), so the resulting tail is over-conservative
 relative to the true joint distribution; we treat this as an explicit
@@ -112,25 +122,26 @@ stress-test design choice and examine its efficiency cost in
 
 \subsection{Exact LP Solution and Baselines}\label{ssec:solvers}
 
-Both the deterministic and robust models are linear programs ($28$
-surge variables, $7$ peak auxiliaries, $84$ local-service self-loops,
+Both the deterministic and robust models are linear programs ($7$
+surge variables, $84$ local-service self-loops,
 up to $504$ inter-regional transfer flows, $84$ unmet variables, and the
-tail auxiliary, all continuous). We
+tail auxiliary, all continuous). A deployed plan rounds the resulting
+per-region surge allocations to integers, which changes total coverage
+by at most a few beds at this budget. We
 solve them exactly in PuLP with bundled CBC; at seven-region scale
-each instance reaches global optimality in $<\!0.1$~s, so metaheuristic
-or decomposition search adds nothing here and is deferred to the
-trust-level extension (\Cref{sec:conclusion}).
+each instance reaches global optimality in $<\!0.1$~s, so
+metaheuristic search is deferred to the trust-level extension
+(\Cref{sec:conclusion}).
 
 Every policy is scored on equal footing by a common LP re-evaluation.
-For a fixed peak surge $\mathbf{b}^\star\in\mathbb{R}_+^7$ with
+For a fixed surge $\mathbf{b}^\star\in\mathbb{R}_+^7$ with
 $\sum_r b^\star_r\leq B$ and $b^\star_r\leq K_r$, the residual problem
 in $(z,u)$ is an LP that fills in transfers and unmet demand across all
 three scenarios, giving honest $E[u]$ and $u^{\text{worst}}$ for the
 deterministic, robust, and heuristic allocations alike.
 
-\paragraph{Heuristic baselines.}
-Three closed-form policies provide a no-optimisation floor.
-Population-proportional uses ONS region populations,
+Finally, three closed-form heuristics give a no-optimisation floor:
+population-proportional uses ONS region populations,
 demand-proportional uses expected peak demand, and greedy
 shortage-first adds single-bed increments to the currently most-unmet
 region. Each fixes $\mathbf{b}^\star$, which the same LP step then

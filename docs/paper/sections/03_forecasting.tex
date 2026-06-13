@@ -26,16 +26,15 @@ thresholds. The system evolves as
 \end{equation}
 subject to $S_r + E_r + I_{a,r} + I_{s,r} + H_r + C_r + R_r + D_r = N_r$. Here
 $\alpha, d_s, d_a, d_H, \rho, \omega, \mu, \phi$ are fixed clinical
-constants and $\beta_r,\gamma_{c,r},\delta_{c,r},\eta_r$ are
-time-varying region-specific parameters learned from data. The earlier
-formulation in~\cite{ajao2025hybrid} overloaded $\omega$ to play both
-roles; the present split makes the hospitalisation and critical-care
-escalation thresholds independently identifiable.
+constants (values from~\cite{ajao2025hybrid}, Table~1) and
+$\beta_r,\gamma_{c,r},\delta_{c,r},\eta_r$ are time-varying
+region-specific parameters (transmission, critical-care
+recovery and death, and immunity waning) learned from data.
 
 % Figure 2: SEIRD compartment graph
 \begin{figure}[!hb]
 \centering
-\resizebox{0.74\columnwidth}{!}{%
+\resizebox{0.82\columnwidth}{!}{%
 \begin{tikzpicture}[
   font=\footnotesize,
   >={Stealth[length=1.7mm,width=1.25mm]},
@@ -48,8 +47,8 @@ escalation thresholds independently identifiable.
   elabel/.style={font=\scriptsize, fill=white, inner sep=1pt,
                  fill opacity=0.94, text opacity=1},
 ]
-\path[use as bounding box] (-0.45,-2.75) rectangle (6.25,1.35);
-\node[comp]                       (S)  at (0, 0)    {$S$};
+\path[use as bounding box] (-2.05,-2.75) rectangle (6.25,1.35);
+\node[comp]                       (S)  at (-1.5, 0) {$S$};
 \node[comp]                       (E)  at (1, 0)    {$E$};
 \node[comp]                       (Ia) at (2, 0.62) {$I_a$};
 \node[comp]                       (Is) at (2,-0.62) {$I_s$};
@@ -64,17 +63,17 @@ escalation thresholds independently identifiable.
 \coordinate (Rwaning) at ($(R.south)+(0,-0.32)$);
 \coordinate (Swaning) at ($(S.south)+(0,-2.10)$);
 
-\draw[edge] (S) -- node[elabel, above] {$\beta_r$} (E);
+\draw[edge] (S) -- node[elabel, above] {$\beta_r(I_s{+}I_a)/N_r$} (E);
 \draw[edge] (E) -- node[elabel, above, pos=0.55] {$\alpha(1-\rho)$} (Ia);
 \draw[edge] (E) -- node[elabel, below, pos=0.55] {$\alpha\rho$} (Is);
 \draw[edge] (Is) -- node[elabel, above] {$d_s\omega$} (H);
 \draw[edge] (Is.south east) --
-  node[elabel, below, pos=0.48] {$d_s(1-\omega)$} (R.west);
+  node[elabel, below, pos=0.58] {$d_s(1-\omega)$} (R.west);
 \draw[edge] (Ia.east) -- (IarecTop) --
   node[elabel, right, pos=0.48] {$d_a$} (IarecDrop) -- (R.east);
 \draw[edge] (H) -- node[elabel, above] {$\phi d_H$} (C);
 \draw[edge] (H.south east) --
-  node[elabel, left, pos=0.56] {$(1-\phi)d_H$} (R.north west);
+  node[elabel, above, pos=0.30] {$(1-\phi)d_H$} (R.north west);
 \draw[edge] (C) -- node[elabel, above] {$\delta_{c,r}$} (D);
 \draw[edge] (C.south) --
   node[elabel, right, pos=0.50] {$\gamma_{c,r}$} (R.north);
@@ -96,9 +95,12 @@ The PINN consists of two MLPs following~\cite{ajao2025hybrid}: a state
 network $U^r_{NN}$ (five hidden layers of $20$ units) and a parameter
 network $X^r_{NN}$ for $(\beta_r,\gamma_{c,r},\delta_{c,r},\eta_r)$
 (three hidden layers of $20$ units), with tanh hidden activations and
-sigmoid outputs. The loss combines a data fit on observable compartments
-$\{H,C\}$, the only ones with daily regional NHS counts, with an
-ODE residual against \Cref{eq:seird}:
+sigmoid outputs. The loss combines a data fit on the two observable
+compartments with an ODE residual against \Cref{eq:seird}. The observed
+compartments are $H$ (daily general-and-acute hospital bed occupancy)
+and $C$ (mechanical-ventilation, i.e.\ critical-care, bed occupancy),
+the only states with daily regional NHS counts; $C$ is the quantity the
+temporal head forecasts and the allocation consumes as demand $\xi$:
 \begin{equation}\label{eq:pinn_loss}
 \begin{aligned}
 \mathcal{L}^{PINN}_r
@@ -114,31 +116,34 @@ derivatives use PyTorch autograd at $256$ collocation points sampled
 uniformly in $\T_{\text{coll}}$, and observations are
 population-normalised. We pre-train each region's PINN for $1500$ Adam steps with
 $\lambda_{ode}=0.1$, $\text{lr}=5\!\times\!10^{-3}$; both terms converge
-to the $2\text{--}8\times 10^{-6}$ range across regions
-(mean $\sim 4\times 10^{-6}$ for both).
+to the $2\text{--}8\times 10^{-6}$ range across regions.
 
-\paragraph{Identifiability note.}
-With only $H$ and $C$ observed at regional resolution, the four
-learnable parameters $(\beta_r, \gamma_{c,r}, \delta_{c,r}, \eta_r)$
-are not jointly identifiable from these series alone: $\gamma_{c,r}$
-and $\delta_{c,r}$ in particular appear additively in $\dot C_r$ and
-cannot be separated from the $C$ trajectory. We therefore make no
-epidemiological-interpretability claim for any individual parameter
-trajectory; the parameter-network output is consumed as a four-channel
-learned feature vector by the downstream GRU. The operational evidence
-that this bundle carries signal is the ``w/o PINN params'' ablation in
-\Cref{tab:forecast_accuracy} ($h{=}14$ RMSE inflates almost two-fold,
-$14.46\!\to\!27.25$); a formal structural identifiability analysis
-under $\{H, C\}$ observation is deferred to future work.
+With only $H$ and $C$ observed regionally, the four learnable parameters
+$(\beta_r, \gamma_{c,r}, \delta_{c,r}, \eta_r)$ are not jointly
+identifiable ($\gamma_{c,r}$ and $\delta_{c,r}$ appear additively in
+$\dot C_r$), so we make no interpretability claim for individual
+trajectories: the four-channel output is consumed as a learned feature
+vector by the GRU, whose signal the ``w/o PINN params'' ablation
+confirms (\Cref{ssec:e1}; $h{=}14$ RMSE $14.46\!\to\!27.25$).
+Structural identifiability under $\{H,C\}$ observation is future work.
 
 \subsection{Temporal Head with Level-and-Trend Anchor}\label{ssec:temporal}
 
-Once pre-trained the PINN is \emph{frozen}: its outputs are reused as a
-physics-informed temporal embedding. For each lookback window of length
+Once pre-trained the PINN is \emph{frozen}: at every origin, including
+those in the Omicron test period, its networks are \emph{evaluated}
+(never refit) to supply features, so any temporal extrapolation of the
+state network beyond its Alpha/Delta fit is absorbed and corrected
+downstream by the GRU and the anchor of \Cref{eq:anchor}. For each
+lookback window of length
 $L=28$ ending at origin $t$, the augmented feature sequence is
-$\mathbf{f}_{r,\tau} = [U^r_{NN}(\tau)\,\|\,X^r_{NN}(\tau)\,\|\,
-\tilde y_{r,\tau}] \in \mathbb{R}^{13}$, $\tau \in \{t-L+1,\dots,t\}$,
-where $\tilde y_{r,\tau}$ is the z-scored observed target. A two-layer
+$\mathbf{f}_{r,i} = [U^r_{NN}(i)\,\|\,X^r_{NN}(i)\,\|\,
+\tilde y_{r,i}] \in \mathbb{R}^{13}$, $i \in \{t-L+1,\dots,t\}$.
+Here $U^r_{NN}(i)$ contributes all eight compartments (including the
+latent $S,E,I_a,I_s,R,D$ that are never directly observed), so the
+head receives the full physics-inferred state rather than the two
+fitted channels alone, and $\tilde y_{r,i}$ is the observed target
+z-scored with training-period statistics only (no test-set leakage).
+A two-layer
 GRU (hidden $128$, dropout $0.15$) decodes the final hidden state via a
 per-horizon two-layer MLP (width $64$, GELU) into standardised quantile
 deltas $\Delta_{r,t}^{h,q}$ for $h\in\Hset=\{7,14,21,28\}$ and
@@ -146,15 +151,14 @@ $q\in\Qset=\{0.1,0.5,0.9\}$.
 
 A \emph{level-and-trend anchor} makes the GRU's job residual:
 \begin{equation}\label{eq:anchor}
-\hat z_{r,t}^{h,q} \;=\; \Delta_{r,t}^{h,q}
+\hat\zeta_{r,t}^{h,q} \;=\; \Delta_{r,t}^{h,q}
   \;+\; a^{h,q}\, \tilde y_{r,t}
   \;+\; g^{h,q}\, v_{r,t}^{(7)}\,
         \!\left(\tfrac{h}{7}\right)^{\!\!\psi^q},
 \end{equation}
 where $\tilde y_{r,t}$ is the most recent z-scored observation,
 $v_{r,t}^{(7)} = \tilde y_{r,t}-\tilde y_{r,t-7}$ is the one-week slope,
-and $a^{h,q},g^{h,q},\psi^q\in(0,1)$ are learnable scalars (distinct from
-the SEIRD constants $\alpha,\gamma_{c,r}$ of \Cref{eq:seird}).
+and $a^{h,q},g^{h,q},\psi^q\in(0,1)$ are learnable scalars.
 The Holt-Winters-style damping exponent $\psi^q$ prevents
 slope-extrapolation overshoot at long horizons; we initialise
 $\psi^{0.5}\!\approx\!0.88$ (near-linear) and
@@ -169,20 +173,25 @@ loss~\cite{koenker1978regression}:
 \mathcal{L}_{\text{pinball}} = \frac{1}{|\Qset|}\sum_{q\in\Qset}
   \mathbb{E}_{(t,h)}\!\big[\max\!\big(
     q\, e,\, (q{-}1)\, e\big)\big],\quad
-    e = \tilde y_{r,t+h-1} - \hat z_{r,t}^{h,q},
+    e = \tilde y_{r,t+h-1} - \hat\zeta_{r,t}^{h,q},
 \end{equation}
 evaluated at all $(h,q)\in\Hset\!\times\!\Qset$. The $q=0.5$ pinball
 collapses to L1 (point accuracy); the $q=0.9$ pinball penalises
-under-prediction nine-to-one. We use this as a cost-asymmetric proxy for
-the downstream shortage asymmetry (an under-bed risks a stranded patient;
-an over-bed only wastes pre-positioned capacity)~\cite{elmachtoub2022smart};
-the forecaster is not trained through the allocation solver. We report $\hat y^{0.5}$
+under-prediction nine-to-one. Splitting the kernel into its two arms,
+$\max(q e,(q{-}1)e)=q\max(e,0)+(1{-}q)\max(-e,0)$, exposes it as a
+convex newsvendor surrogate of the allocation's positive-part shortage
+cost, with the $q{=}0.9$ asymmetry encoding that an under-bed risks a
+stranded patient whereas an over-bed only wastes pre-positioned
+capacity~\cite{elmachtoub2022smart}. The
+forecaster is not trained through the allocation solver. We report $\hat y^{0.5}$
 as the point forecast and $[\hat y^{0.1},\hat y^{0.9}]$ as an $80\%$
 interval.
 
 We train for up to $800$ AdamW epochs ($\text{lr}=10^{-3}$, weight decay
-$10^{-4}$, cosine annealing) on Alpha-wave lookback windows, with early
-stopping (patience $80$) on Delta-wave validation pinball loss. Once
+$10^{-4}$, cosine annealing) on one-day-stride Alpha-wave lookback
+windows ($270$ per region, $1{,}890$ in total), with early stopping
+(patience $80$) on the $1{,}134$ Delta-wave validation windows' pinball
+loss. Once
 selected, the model is frozen and applied to the Omicron test period via
 $\Delta t = 7$-day rolling origins, yielding $32$ origin dates.
 
@@ -190,12 +199,15 @@ $\Delta t = 7$-day rolling origins, yielding $32$ origin dates.
 Applied frozen across a regime shift (high-demand Alpha/Delta training,
 mild Omicron test), the point forecast inherits a systematic
 over-prediction that grows with horizon. We correct it with two
-leakage-free steps. \emph{(i)~Bias recalibration:} at each rolling origin
-$t$ and horizon $h$, subtract the mean of the model's last $K{=}3$
-$h$-step errors whose target date is already observed ($<t$)---the
-adaptation a per-origin refit gives for free. \emph{(ii)~Persistence
-blend:} blend the recalibrated point forecast with seasonal-naive($7$)
-using a per-horizon weight chosen by an expanding window over realised
-past origins, so long horizons lean on persistence. Both use only
-information available at $t$; the $80\%$ interval is left as produced by
-the quantile heads, so the downstream allocation is unchanged.
+leakage-free steps. The first recalibrates the bias, subtracting at
+each rolling origin $t$ and horizon $h$ the mean of the model's last
+$K{=}3$ $h$-step errors whose target date is already observed ($<t$),
+the adaptation that a per-origin refit gives for free. The second blends
+with persistence, mixing the recalibrated point forecast with
+seasonal-naive($7$) under a per-horizon weight
+$\alpha\in\{0,0.1,\dots,1\}$ chosen on an expanding window of realised
+past origins (fitted once at least seven origin--region pairs are
+realised; until then $\alpha{=}1$, pure model), so long horizons lean on
+persistence. Both use only information available at $t$, and the
+$80\%$ interval is left as produced by the quantile heads, so the
+downstream allocation is unchanged.

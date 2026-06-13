@@ -81,6 +81,16 @@ REVISION_FORECASTERS = (
 
 REVISION_BUDGET_FRACTIONS = (0.10, 0.15, 0.20)
 
+# Dense (4 h) vs sparse (2 h) mutual-aid networks for the E9 connectivity
+# comparison: at 240 min the 7 regions form 12 undirected links, at 120 min
+# only 5, so surge placement stops being fungible.
+REVISION_TAU_MINUTES = (240.0, 120.0)
+
+# E10: per-region outbound transfer caps (displaced patients sustained at a
+# checkpoint — regional critical-care transfer-service capacity). None is
+# the uncapped headline operating point.
+REVISION_TRANSFER_CAPS = (None, 20.0, 10.0, 5.0)
+
 
 def _solution_row(sol, *, origin=None, budget_fraction: float | None = None) -> dict:
     row = {
@@ -297,18 +307,19 @@ def _figure_allocation_heatmap() -> "Path":
 
 
 def _figure_alloc_budget() -> "Path":
-    """Single two-panel paper figure (one float, fits the 12-page cap):
+    """Two-panel paper figure (one float, fits the 12-page cap):
     (a) per-region peak surge by policy; (b) exact robust-LP cost-shortage
     frontier vs the surge budget."""
     import matplotlib.pyplot as plt
     from matplotlib.gridspec import GridSpec
-    from evaluation.figures import (
-        FULL_WIDTH_IN, apply_paper_style, save_figure,
-    )
+    from evaluation.figures import apply_paper_style, save_figure
 
     apply_paper_style()
     alloc = pd.read_csv(OUT_DIR / "e2_per_region_b.csv").set_index("policy")
-    alloc = alloc.loc[[p for p in PAPER_POLICY_ORDER if p in alloc.index]]
+    # Status quo is omitted: its allocation is identically zero by
+    # definition, and it appears in neither Table 2 nor panel (c).
+    alloc = alloc.loc[[p for p in PAPER_POLICY_ORDER
+                       if p in alloc.index and p != "Status quo (no surge)"]]
     regions = list(alloc.columns)
     values = alloc.to_numpy(dtype=float).T  # (R, P)
 
@@ -316,40 +327,56 @@ def _figure_alloc_budget() -> "Path":
     sweep = sweep.sort_values("budget_fraction")
     xb = sweep["budget_fraction"] * 100.0
 
-    fig = plt.figure(figsize=(FULL_WIDTH_IN, 3.4), layout="constrained")
-    gs = GridSpec(1, 2, figure=fig, width_ratios=[1.28, 1.0], wspace=0.05)
+    # Side-by-side panels keep Figure 3 compact while preserving the two
+    # decision messages: where beds go and how shortage falls with budget.
+    fig = plt.figure(figsize=(7.2, 2.55), layout="constrained")
+    # Under constrained layout, GridSpec wspace/hspace are ignored; spacing
+    # between panels must be set on the layout engine.
+    fig.get_layout_engine().set(w_pad=0.05, h_pad=0.06,
+                                wspace=0.10, hspace=0.12)
+    gs = GridSpec(1, 2, figure=fig, width_ratios=[1.45, 1.0])
     axh = fig.add_subplot(gs[0, 0])
     axb = fig.add_subplot(gs[0, 1])
 
-    im = axh.imshow(values, aspect="auto", cmap="YlGnBu")
+    # Heatmap: every cell is annotated with its value, so a colorbar adds
+    # nothing and (squeezed between panels) collided with panel (b).
+    short = {
+        "Status quo (no surge)": "Status quo",
+        "Population-proportional": "Pop.",
+        "Demand-proportional": "Demand",
+        "Greedy shortage-first": "Greedy",
+        "Deterministic MILP": "Det. LP",
+        "Robust MILP (CVaR, $\\lambda_3{=}1$)": "Robust LP",
+    }
+    region_short = {
+        "East of England": "East Eng.",
+        "North East and Yorkshire": "NE & Yorks",
+    }
+    axh.imshow(values, aspect="auto", cmap="YlGnBu")
     axh.set_xticks(range(len(alloc.index)))
-    axh.set_xticklabels([_pretty(p) for p in alloc.index],
-                        rotation=35, ha="right", fontsize=7)
+    axh.set_xticklabels([short.get(p, _pretty(p)) for p in alloc.index],
+                        fontsize=9, rotation=20, ha="right")
     axh.set_yticks(range(len(regions)))
-    axh.set_yticklabels(regions, fontsize=7)
-    axh.set_xlabel("Allocation policy", fontsize=8)
-    axh.set_ylabel("NHS region", fontsize=8)
+    axh.set_yticklabels([region_short.get(r, r) for r in regions], fontsize=9)
+    axh.set_ylabel("NHS region", fontsize=10)
     for i in range(values.shape[0]):
         for j in range(values.shape[1]):
             v = values[i, j]
-            axh.text(j, i, f"{v:.0f}", ha="center", va="center", fontsize=6,
+            axh.text(j, i, f"{v:.0f}", ha="center", va="center", fontsize=9,
                      color="white" if v > values.max() * 0.55 else "black")
-    cbar = fig.colorbar(im, ax=axh, shrink=0.82, pad=0.02)
-    cbar.set_label("Peak surge beds", fontsize=7)
-    cbar.ax.tick_params(labelsize=6)
-    axh.set_title("(a) Per-region peak surge allocation", fontsize=8)
+    axh.set_title("(a) Peak surge beds by policy", fontsize=11, pad=3)
 
-    axb.plot(xb, sweep["expected_unmet"], marker="o", ms=4, color="#0072B2",
+    axb.plot(xb, sweep["expected_unmet"], marker="o", ms=4.2, color="#0072B2",
              label=r"$E[u]$")
-    axb.plot(xb, sweep["worst_case_unmet"], marker="s", ms=4, linestyle="--",
+    axb.plot(xb, sweep["worst_case_unmet"], marker="s", ms=4.2, linestyle="--",
              color="#D55E00", label=r"$u^{\mathrm{worst}}$")
     axb.axvline(20.0, color="0.65", linewidth=0.8, linestyle=":")
-    axb.set_xlabel(r"Surge budget $B/\sum_r C_r$ (%)", fontsize=8)
-    axb.set_ylabel("Unmet demand (beds)", fontsize=8)
-    axb.set_title("(b) Exact cost-shortage frontier", fontsize=8)
-    axb.legend(frameon=False, fontsize=7)
+    axb.set_xlabel("Surge budget (% of baseline)", fontsize=10, labelpad=2)
+    axb.set_ylabel("Unmet (beds)", fontsize=10)
+    axb.set_title("(b) Cost-shortage frontier", fontsize=11, pad=3)
+    axb.legend(frameon=False, fontsize=9, ncol=2, loc="upper right")
     axb.grid(True, alpha=0.25)
-    axb.tick_params(labelsize=7)
+    axb.tick_params(labelsize=9)
 
     return save_figure(fig, "fig_alloc_budget", close=True)
 
@@ -709,6 +736,42 @@ def build_tighter_budget_policy_tables() -> pd.DataFrame:
     return table
 
 
+def build_tau_policy_comparison() -> pd.DataFrame:
+    """Run Table-2-style policies under dense (240 min) and sparse (120 min)
+    mutual-aid networks across the revision budgets — the E9 check of
+    whether surge placement matters once the transfer network thins."""
+    rows = []
+    for tau in REVISION_TAU_MINUTES:
+        for frac in REVISION_BUDGET_FRACTIONS:
+            p = load_allocation_problem(
+                max_travel_min=float(tau), budget_fraction=frac,
+            )
+            for sol in _table2_policy_solutions(p):
+                row = _solution_row(sol, origin=p.origin, budget_fraction=frac)
+                row["tau_min"] = float(tau)
+                rows.append(row)
+    table = pd.DataFrame(rows)
+    table.to_csv(OUT_DIR / "e9_tau_policy_comparison.csv", index=False)
+    return table
+
+
+def build_transfer_cap_policy_comparison() -> pd.DataFrame:
+    """Run Table-2-style policies under per-region outbound transfer caps
+    at the headline operating point (tau=240, B=0.20) — the E10 check of
+    whether limited transfer-service capacity breaks placement fungibility
+    even on the dense network."""
+    rows = []
+    for cap in REVISION_TRANSFER_CAPS:
+        p = load_allocation_problem(max_transfer_out=cap)
+        for sol in _table2_policy_solutions(p):
+            row = _solution_row(sol, origin=p.origin, budget_fraction=0.20)
+            row["transfer_cap"] = np.nan if cap is None else float(cap)
+            rows.append(row)
+    table = pd.DataFrame(rows)
+    table.to_csv(OUT_DIR / "e10_transfer_cap_policy_comparison.csv", index=False)
+    return table
+
+
 def build_stress_forecast_robustness() -> pd.DataFrame:
     """Re-evaluate forecaster-driven robust allocations under scaled realised demand."""
     p0 = load_allocation_problem()
@@ -772,6 +835,14 @@ def run_allocation_revision_main() -> int:
     print("\n=== E8: tighter-budget policy comparisons ===")
     budget_table = build_tighter_budget_policy_tables()
     print(f"Wrote {OUT_DIR / 'e8_budget_policy_comparison.csv'} ({len(budget_table):,} rows)")
+
+    print("\n=== E9: dense vs sparse mutual-aid network policy comparison ===")
+    tau_table = build_tau_policy_comparison()
+    print(f"Wrote {OUT_DIR / 'e9_tau_policy_comparison.csv'} ({len(tau_table):,} rows)")
+
+    print("\n=== E10: outbound transfer-cap policy comparison ===")
+    cap_table = build_transfer_cap_policy_comparison()
+    print(f"Wrote {OUT_DIR / 'e10_transfer_cap_policy_comparison.csv'} ({len(cap_table):,} rows)")
 
     print("\n=== E5 stress: scaled realised demand ===")
     stress = build_stress_forecast_robustness()

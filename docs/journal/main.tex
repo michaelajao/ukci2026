@@ -111,6 +111,13 @@
 % occupancy -> quantile/scenario forecasts. INCLUDE the per-origin bias
 % recalibration so the forecaster is accurate across ALL horizons (the
 % conference model over-predicts long horizons). Keep short.
+% TODO FIGURE (deferred from the conference paper for space): a TikZ
+% architecture diagram of the PinnGRU+recal forecaster -- frozen PINN-SEIRD
+% encoder (state net U_NN + parameter net X_NN) -> augmented feature window
+% -> two-layer GRU -> per-horizon quantile head with the level-and-trend
+% anchor -> per-origin recalibration (bias step + persistence blend). The
+% conference paper has room only for the high-level pipeline (its Fig. 1);
+% the journal version should show the per-layer architecture explicitly.
 
 % =============================================================================
 \section{Demand Scenario Generation}\label{sec:scenarios}

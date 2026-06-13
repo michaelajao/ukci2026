@@ -1,14 +1,9 @@
 % =============================================================================
-%  Physics-Informed ICU Bed Forecasting with Cost-Asymmetric Quantile Loss
-%  and Robust Optimisation
-%  for NHS Critical-Care Surge Capacity Under Demand Uncertainty
+%  Cost-Asymmetric Physics-Informed Forecasting for Robust NHS
+%  Critical-Care Surge Allocation
 %
 %  Submission to UKCI 2026 (Coventry, 9-11 September 2026)
 %  Springer proceedings (SVProc), 12-page full paper
-%
-%  Authors: Michael Ajao-Olarinoye, Abiola Babatunde, Vasile Palade
-%  Centre for Computational Sciences and Mathematical Modelling
-%  Coventry University
 %
 %  Compile with: latexmk -pdf -outdir=out main.tex
 % =============================================================================
@@ -61,44 +56,50 @@
 \setlength{\belowdisplayshortskip}{1pt}
 \medskipamount=2pt
 \bigskipamount=4pt
+% Do not stretch inter-heading glue to flush the bottom of sparse pages
+% (page-6 gap before/after subsection headings).
+\raggedbottom
 
 % Custom commands
-\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
 \newcommand{\R}{\mathcal{R}}
 \newcommand{\T}{\mathcal{T}}
 \newcommand{\Sset}{\mathcal{S}}
-\newcommand{\Iset}{\mathcal{I}}
-\newcommand{\Jset}{\mathcal{J}}
 \newcommand{\Hset}{\mathcal{H}}
 \newcommand{\Qset}{\mathcal{Q}}
-\newcommand{\E}{\mathbb{E}}
 
 % =============================================================================
 \begin{document}
 
 % Title
-\title{Physics-Informed Cost-Asymmetric Forecasting and Robust Allocation for NHS Critical-Care Surge Capacity}
-\titlerunning{Physics-Informed Forecasting and Allocation for NHS Surge Capacity}
+\title{Cost-Asymmetric Physics-Informed Forecasting for Robust NHS Critical-Care Surge Allocation}
+\titlerunning{Cost-Asymmetric Forecasting for NHS Surge Allocation}
 
 % Authors
 % AmirHosein Sadeghimanesh ORCID: 0000-0002-6945-3118
 % (Vasile Palade removed from this conference paper -- he is UKCI 2026
 %  Conference Co-Chair; omitting him avoids the authorship conflict.)
-\author{Michael Ajao-Olarinoye\inst{1} \and
-        Abiola Babatunde\inst{1} \and
-        AmirHosein Sadeghimanesh\inst{1}}
-\authorrunning{M. Ajao-Olarinoye et al.}
-\tocauthor{Michael Ajao-Olarinoye, Abiola Babatunde, and AmirHosein Sadeghimanesh}
+% \author{Michael Ajao-Olarinoye\inst{1} \and
+%         Abiola Babatunde\inst{1} \and
+%         AmirHosein Sadeghimanesh\inst{1} \and
+%         Fei He\inst{1}}
+% \authorrunning{M. Ajao-Olarinoye et al.}
+% \tocauthor{Michael Ajao-Olarinoye, Abiola Babatunde, AmirHosein Sadeghimanesh, and Fei He}
+%
+% \institute{Centre for Computational Sciences and Mathematical Modelling,
+%   Coventry University, Priory Street, Coventry CV1 5FB, United Kingdom \\
+%   \email{olarinoyem@coventry.ac.uk}}
 
-\institute{Centre for Computational Sciences and Mathematical Modelling,
-  Coventry University, Priory Street, Coventry CV1 5FB, United Kingdom \\
-  \email{olarinoyem@coventry.ac.uk}}
+% Anonymised placeholders so \maketitle still compiles
+\author{Anonymous Author(s)\inst{1}}
+\authorrunning{Anonymous et al.}
+\tocauthor{Anonymous Author(s)}
+\institute{Anonymised institution}
 
 \maketitle
 
 % Abstract
 \begin{abstract}
-NHS critical-care planning during epidemic waves must pre-position surge capacity and route patients across regions before demand is known. We propose a forecast-to-decision pipeline that couples a per-region physics-informed forecaster on the $SEI_aI_sHCRD$ system to a tail-risk robust linear program for bed-surge allocation. The forecaster is trained with a cost-asymmetric multi-quantile pinball loss whose $q^{(0.9)}$ branch penalises under-prediction nine-to-one, together with a learnable level-and-trend anchor and a leakage-free per-origin recalibration that removes a long-horizon over-prediction bias. On a seven-region NHS England case study (Aug~$2020$ to Aug~$2022$) it cuts $14$-day RMSE by $25\%$ over per-origin re-fitted ARIMA and by $42\%$ over a neural GRU, and is competitive across all horizons (best at $7$--$21$ days, tying ARIMA at $28$). Its quantile forecasts drive a hybrid-regional allocation solved exactly as an LP; among budget-exhausting policies with identical coverage, the tail-risk robust formulation attains the lowest patient-transfer burden (a binding-budget routing effect rather than an unmet-demand reduction). A sensitivity analysis over the forecaster, budget, tail-risk weight, and travel cap shows the budget to be the dominant control.
+NHS critical-care planning during epidemic waves must pre-position surge capacity and route patients across regions before demand is known. We propose a forecast-to-decision pipeline that couples a per-region physics-informed forecaster on the $SEI_aI_sHCRD$ system to a tail-risk robust linear program for bed-surge allocation. The forecaster is trained with a cost-asymmetric multi-quantile pinball loss whose $q^{(0.9)}$ branch penalises under-prediction nine-to-one, together with a learnable level-and-trend anchor and a leakage-free per-origin recalibration that removes a long-horizon over-prediction bias. On a seven-region NHS England case study (Aug~$2020$ to Aug~$2022$) it cuts $14$-day RMSE by $25\%$ over per-origin refitted ARIMA and by $42\%$ over a neural GRU, and is competitive across all horizons (best at $7$--$21$ days and level with refitted ARIMA at $28$, where seasonal-naive is strongest). Its quantile forecasts drive a hybrid-regional allocation solved exactly as an LP. With unconstrained transfers all budget-exhausting policies tie on coverage and the tail-risk robust formulation wins on transfer burden; once transfers are constrained the tie breaks and the proportional heuristics concede up to $60\%$ more expected unmet demand. A sensitivity analysis over the forecaster, budget, tail-risk weight, travel cap, and transfer cap shows the budget to be the dominant control.
 
 \keywords{physics-informed neural networks, cost-asymmetric forecasting,
           pinball loss, robust optimisation, linear programming,

@@ -2,52 +2,45 @@
 \section{Results and Discussion}\label{sec:results}
 % =============================================================================
 
-All results use the Omicron test split (1~Dec~2021--31~Aug~2022).
-
 \subsection{Forecasting Accuracy}\label{ssec:e1}
 
-\Cref{tab:forecast_accuracy} reports per-horizon RMSE and the
-$h{=}28$ underestimation rate against four baselines under a common
-$32$-origin rolling-origin protocol. The \emph{raw} PinnGRU point
+\Cref{tab:forecast_accuracy} reports per-horizon RMSE and MASE
+against four baselines under a common
+$32$-origin rolling-origin protocol; MASE scales the mean absolute
+error by the in-sample seasonal-naive($7$) MAE, so values below $1$
+beat that benchmark. The \emph{raw} PinnGRU point
 forecast (frozen PINN encoder of \Cref{ssec:pinn} with the GRU head of
-\Cref{ssec:temporal}) wins $h{=}7$ and $h{=}14$---paired origin-level
-tests confirm the $h{=}14$ gain over ARIMA ($-3.88$ MV beds, Wilcoxon
-$p{=}0.003$)---but degrades at long
-horizons, where a regime-shift over-prediction bias (its $h{=}28$
-underestimation rate is only $10.3\%$) leaves it behind ARIMA and
-seasonal-naive ($+5.53$ MV beds vs ARIMA at $h{=}28$, $p{=}0.006$). A
-leakage-free per-origin recalibration (\Cref{ssec:recal}) removes this
-bias and blends with persistence at long horizons: the recalibrated
-model is best at $h{=}7$, $14$ and $21$---cutting the operational
-$14$-day RMSE by $25\%$ over ARIMA and $42\%$ over the per-region
-GRU---and at $h{=}28$ ties ARIMA ($28.5$ vs $28.0$), with only
-seasonal-naive ($26.0$) still ahead. Its $h{=}28$ underestimation rate
-rises to $37\%$: the point forecast is now a well-calibrated median, not
-a systematic over-predictor.
+\Cref{ssec:temporal}) wins $h{=}7$ and $h{=}14$; a paired Wilcoxon
+signed-rank test across the $32$ origins confirms the $h{=}14$ gain
+over ARIMA ($-3.88$ MV beds, $p{=}0.003$). It degrades at long horizons, however,
+where a regime-shift over-prediction bias (an $h{=}28$ underestimation
+rate of only $10.3\%$) leaves it behind ARIMA and seasonal-naive
+($+5.53$ MV beds vs ARIMA at $h{=}28$, $p{=}0.006$). The leakage-free
+per-origin recalibration of \Cref{ssec:recal} removes this bias and
+blends with persistence at long horizons. The recalibrated model is
+best at $h{=}7$, $14$ and $21$, cutting the operational $14$-day RMSE
+by $25\%$ over ARIMA and $42\%$ over the per-region GRU, and at
+$h{=}28$ ties ARIMA ($28.5$ vs $28.0$) with only seasonal-naive
+($26.0$) still ahead. Its $h{=}28$ underestimation rate rises to
+$37\%$, so the point forecast is now a well-calibrated median rather
+than a systematic over-predictor.
 
-A second observation concerns the non-ARIMA models. XGBoost and the
-per-region GRU are lag-only learners bounded by the $28$-day window;
-unable to extrapolate into Omicron's altered case-to-hospitalisation
-regime, they degrade sharply ($h{=}28$ RMSE $58.9$ and $44.0$). ARIMA's
-per-origin refit keeps its degradation modest, and the recalibrated
-PinnGRU matches it across horizons, consistent with the ``w/o PINN
-params'' ablation isolated next.
+XGBoost and the per-region GRU, lag-only learners bounded by the
+$28$-day window, cannot extrapolate into Omicron's altered
+case-to-hospitalisation regime and degrade sharply ($h{=}28$ RMSE
+$58.9$, $44.0$); ARIMA's per-origin refit degrades modestly, and the
+recalibrated PinnGRU matches it across horizons.
 
-The bottom block of \Cref{tab:forecast_accuracy} ablates three
-load-bearing components. Replacing the pinball loss with MSE inflates
-$h{=}14$ RMSE by $29\%$; zeroing the four PINN parameter features
-inflates it almost two-fold ($14.46\!\to\!27.25$, the largest regression
-in the table); and skipping PINN pre-training inflates it by $19\%$
-($\to\!17.27$), confirming that the physics prior, not capacity, drives
-the gain over the per-region GRU.
+Three ablations against the raw PinnGRU ($h{=}14$ RMSE $14.46$, MASE
+$0.77$) isolate the load-bearing parts: replacing the pinball loss with
+MSE lifts $h{=}14$ RMSE to $18.70$ (MASE $0.97$), skipping PINN
+pre-training to $17.27$ (MASE $0.76$), and zeroing the four PINN
+parameter features to $27.25$ (MASE $1.23$), the largest regression.
+The physics prior, not capacity, drives the gain over the per-region GRU.
 
 \begin{table}[t]
-\caption{Forecast accuracy and ablations, macro-averaged over seven
-NHS regions and $32$ rolling origins. \textbf{Bold}: best;
-\underline{underline}: second best, per column (among the baselines and
-the proposed model). MASE is the horizon-averaged mean absolute scaled
-error (scaled by the in-sample seasonal-naive($7$) MAE; $<\!1$ beats
-that benchmark, lower is better).}
+\caption{Forecast accuracy (best \textbf{bold}, second
+best \underline{underlined} per column).}
 \label{tab:forecast_accuracy}
 \centering
 \renewcommand{\arraystretch}{1.02}
@@ -64,11 +57,7 @@ ARIMA per region              & 11.33 & 17.80 & 23.41 & \underline{28.02} & \und
 XGBoost (lag features)        & 12.45 & 22.90 & 36.42 & 58.88 & 0.89 \\
 GRU per region                & 14.13 & 22.92 & 33.35 & 43.97 & 0.90 \\
 PinnGRU (raw)                 & \underline{11.02} & \underline{14.46} & 24.19 & 34.63 & 0.77 \\
-\textbf{PinnGRU+recal (prop.)} & \textbf{10.56} & \textbf{13.34} & \textbf{20.79} & 28.54 & \textbf{0.56} \\
-\midrule
-\quad w/o cost-asymmetric loss & 14.79 & 18.70 & 27.09 & 41.47 & 0.97 \\
-\quad w/o PINN pre-training   & 12.26 & 17.27 & 22.56 & 34.73 & 0.76 \\
-\quad w/o PINN params         & 23.97 & 27.25 & 32.94 & 44.59 & 1.23 \\
+\textbf{PinnGRU+recal (ours)} & \textbf{10.56} & \textbf{13.34} & \textbf{20.79} & 28.54 & \textbf{0.56} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -79,97 +68,106 @@ PinnGRU (raw)                 & \underline{11.02} & \underline{14.46} & 24.19 & 
 \Cref{tab:allocation} compares the allocation policies on the
 seven-region problem with $B = 213$~beds ($20\%$ of total baseline), four-hour
 mutual-aid cap, and PinnGRU $q^{(0.1)}\!/q^{(0.5)}\!/q^{(0.9)}$
-forecasts at the first Omicron-period origin. Every policy's chosen
-allocation is re-scored by the common LP re-evaluation over the full
-three-scenario set so $E[u]$ and $u^{\text{worst}}$ are reported on
-equal footing.
+forecasts at the first Omicron-period origin; every allocation is
+re-scored by the common LP re-evaluation over the full three-scenario
+set, so $E[u]$ and $u^{\text{worst}}$ are on equal footing.
 
-\textbf{(i)} The \emph{robust LP} achieves the lowest transfer
-burden in the table ($672$~bed-km, $4.6\times$ below
-population-proportional and $1.7\times$ below greedy shortage-first),
-but this is a tie-break among policies with identical rounded $E[u]$
-and $u^{\text{worst}}$, not a coverage improvement. \textbf{(ii)} The
-\emph{deterministic LP} spends only $51$ of the $213$ available beds
-and pays $\sim\!3\times$ higher $E[u]$ and $u^{\text{worst}}$,
-quantifying the value of $\pi_s$-weighted expectation over median-only
-optimisation. \textbf{(iii)} The robust LP therefore wins on
-\emph{routing} rather than coverage. Once the budget binds, every
-budget-exhausting policy ties on $E[u]$ and $u^{\text{worst}}$ and
-differs only on transfer burden.
+The \emph{robust LP} achieves the lowest transfer burden
+($672$~patient-km, $4.6\times$ below population-proportional and
+$1.7\times$ below greedy), but at $\kappa{=}\infty$ this is a tie-break
+among policies with identical rounded $E[u]$ and $u^{\text{worst}}$,
+not a coverage gain. The \emph{deterministic LP} spends only $51$ of
+the $213$ beds and pays $\sim\!3\times$ higher $E[u]$ and
+$u^{\text{worst}}$, quantifying the value of $\pi_s$-weighted
+expectation over median-only optimisation. The $\kappa{=}10$ column
+previews \Cref{ssec:e5_e6}, where a capped transfer service breaks the
+tie.
 
 \begin{table}[t]
 \caption{Allocation comparison under $B = 213$~beds, $\tau = 240$~min,
-and three PinnGRU scenarios.}
+and three PinnGRU scenarios; the $\kappa{=}10$ column re-scores each
+policy under a capped transfer service.}
 \label{tab:allocation}
 \centering
 \renewcommand{\arraystretch}{1.02}
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{lrrrrr}
+\begin{tabular}{lrrrrrr}
 \toprule
-\textbf{Policy} & \textbf{Beds} & \textbf{$E[u]$}
-                & \textbf{$u^{\mathrm{worst}}$} & \textbf{Transfer}
-                & \textbf{Time}\\
-                & & & & \textbf{(bed\,km)} & \textbf{(s)}\\
+\textbf{Policy} & \textbf{Beds}
+                & \multicolumn{2}{c}{\boldmath$\kappa{=}\infty$}
+                & \boldmath$\kappa{=}10$
+                & \textbf{Transfer} & \textbf{Time}\\
+\cmidrule(lr){3-4}\cmidrule(lr){5-5}
+                & & $E[u]$ & $u^{\mathrm{worst}}$ & $E[u]$
+                & \textbf{(patient\,km)} & \textbf{(s)}\\
 \midrule
-Population-proportional    & 212.7 & 29.0  & 144.8 & 3119.8  & 0.00 \\
-Demand-proportional        & 212.7 & 29.0  & 144.8 & 2615.3  & 0.00 \\
-Greedy shortage-first      & 212.7 & 29.0  & 144.8 & 1140.0  & 9.98 \\
-Deterministic LP           &  51.4 & 83.3  & 416.4 & 1175.1  & 0.03 \\
+Population-proportional    & 212.7 & 29.0  & 144.8 & 48.8 & 3119.8  & 0.00 \\
+Demand-proportional        & 212.7 & 29.0  & 144.8 & 51.4 & 2615.3  & 0.00 \\
+Greedy shortage-first      & 212.7 & 29.0  & 144.8 & \textbf{32.3} & 1140.0  & 9.98 \\
+Deterministic LP           &  51.4 & 83.3  & 416.4 & 84.4 & 1175.1  & 0.03 \\
 \textbf{Robust LP ($\lambda_3{=}1$)}
-                           & 212.7 & 29.0  & 144.8 & \textbf{671.7} & 0.04 \\
+                           & 212.7 & 29.0  & 144.8 & \textbf{32.3} & \textbf{671.7} & 0.04 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Inspecting the regional structure behind \Cref{tab:allocation}
-(\Cref{fig:alloc_budget}a), the deterministic LP surges only Midlands
-and South East (where median demand exceeds baseline); budget-exhausting
-policies all cover those two and differ on the rest, the robust LP
-finding a compromise with non-trivial North~West and London surge.
+The per-region allocations underlying \Cref{tab:allocation}
+(\Cref{fig:alloc_budget}a) show the deterministic LP surging only
+Midlands and South East (where median demand exceeds baseline), whereas
+budget-exhausting policies cover those two and differ on the rest, the
+robust LP compromising with non-trivial North~West and London surge.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\textwidth]{fig_alloc_budget.png}
-\caption{(a)~Per-region peak surge allocation (beds) by policy at the
-first Omicron origin. (b)~Exact robust-LP cost--shortage frontier
-showing how expected and worst-case unmet demand fall as the surge
-budget $B/\sum_r C_r$ grows. This is the decision-relevant trade-off a
-planner navigates.}
+\caption{Allocation structure and robust-LP budget frontier: (a)~per-region
+surge beds by policy at the first Omicron origin; (b)~expected and worst-case
+unmet demand as the surge budget grows.}
 \label{fig:alloc_budget}
 \end{figure}
 
 \subsection{Forecast-Quality and Parameter Sensitivity}
 \label{ssec:e5_e6}
 
-\paragraph{Forecast-quality robustness.}
 Substituting each forecaster into the robust LP at the $29$~Dec~$2021$
 origin, the $q^{(0.9)}$ peak sums (PinnGRU $1421$, XGBoost $1105$, GRU
 $973$, ARIMA $875$, seasonal-naive $745$~beds) all exceed the realised
 peak ($797$) except seasonal-naive. Realised unmet is zero throughout,
-including the oracle, so this origin cannot separate policies on
-realised coverage: forecast quality buys \emph{efficiency} at the
-$q^{(0.9)}$ margin, not coverage, in this mild Omicron instance.
+so forecast quality buys \emph{efficiency} at the $q^{(0.9)}$ margin
+rather than coverage in this mild Omicron instance.
 
-Across all $32$ Omicron origins the pattern holds: robust LP,
+Across all $32$ Omicron origins the pattern holds. Robust LP,
 population-proportional, and demand-proportional allocations share a
 mean expected unmet of $2.9$, but the robust LP cuts mean transfer
-burden to $76$~bed-km versus $406$ and $337$~bed-km. The proportional
+burden to $76$~patient-km versus $406$ and $337$. The proportional
 baselines fill the full $212.7$-bed budget at every origin, whereas the
-robust LP scales surge to local demand (mean total surge $35.4$~beds,
-hitting the cap only at peaks), so the routing-efficiency gain holds
-across the full demand distribution.
+robust LP scales surge to local demand (mean $35.4$~beds), so the
+routing-efficiency gain holds across the full demand distribution.
 
-\paragraph{Parameter sensitivity.}
-A one-at-a-time sweep isolates each control. The budget $B$ dominates
-(\Cref{fig:alloc_budget}b): $B/\sum_r C_r$ from $0.20$ to $0.10$ doubles
-$E[u]$ and triples $u^{\text{worst}}$, while $0.30$ cuts $E[u]$ to
-$\sim\!1/4$. $\lambda_3$ is \emph{non-binding} at $B=0.20$ (the
+Turning to the planning parameters, a one-at-a-time sweep isolates
+each control. The budget $B$ dominates
+(\Cref{fig:alloc_budget}b). Cutting $B/\sum_r \Gamma_r$ from $0.20$ to
+$0.10$ doubles $E[u]$ and triples $u^{\text{worst}}$, while $0.30$
+cuts $E[u]$ to $\sim\!1/4$. $\lambda_3$ is \emph{non-binding} at $B=0.20$ (the
 expectation-minimising solution already clears the high tail); only a
-tighter budget ($\leq\!15\%$) re-engages it. The travel cap
-$\tau\!=\!120$~min cuts transfer burden by $34\%$ at a $3\%$ rise in
-$E[u]$; $\tau\!\geq\!240$~min is slack.
+tighter budget ($\leq\!15\%$) re-engages it.
 
-% Table 3 (one-at-a-time sensitivity sweep) removed for the 12-page UKCI
-% limit: the budget/tail-penalty/travel-cap effects are reported in the prose
-% above and the exact budget frontier is Fig.~4(b). The full sweep CSVs
-% (e6_*.csv) remain in the repository for the journal extension.
+The transfer controls $\tau$ and $\kappa$ determine when placement
+itself matters. With uncapped recourse on the $12$-link network the
+\Cref{tab:allocation} coverage tie persists at budgets of
+$10$--$20\%$ because coverage depends only on \emph{total} surge;
+placement is fungible and optimisation buys routing alone. Constraining
+recourse breaks the tie. Pruning the network to five links
+($\tau{=}120$~min) puts the robust LP ahead of every heuristic on
+expected and worst-case unmet ($29.9$ vs $32.3$--$34.9$ at
+$B{=}20\%$), and capping the transfer service at $\kappa{=}10$ produces
+the same separation (the $\kappa{=}10$ column of \Cref{tab:allocation}),
+where greedy matches the LP only by
+issuing $213$ calls to the same LP oracle at $1.4\times$ its transfer
+burden. Placement earns its keep when transfers are scarce, the
+operating regime of a real surge.
+
+% Sensitivity-sweep table removed for the 12-page UKCI limit: the
+% budget/tail-penalty/travel-cap/transfer-cap effects are in the prose above
+% and the exact budget frontier is Fig.~3(b). The full sweep CSVs
+% (e6_*.csv, e9/e10) remain in the repository for the journal extension.
