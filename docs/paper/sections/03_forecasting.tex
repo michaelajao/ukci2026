@@ -6,8 +6,10 @@
 
 For each region $r \in \R$ with population $N_r$ we model the local
 epidemic with an eight-compartment $SEI_aI_sHCRD$ system whose states
-are susceptible, exposed, asymptomatic/symptomatic infectious,
-hospitalised, critical-care, recovered, and deceased. \Cref{fig:seird}
+are the susceptible $S_r$, exposed $E_r$, asymptomatic and symptomatic
+infectious $I_{a,r}$ and $I_{s,r}$, hospitalised $H_r$, critical-care
+$C_r$, recovered $R_r$, and deceased $D_r$ populations of region $r$,
+each a count of people and together summing to $N_r$. \Cref{fig:seird}
 shows the flow topology, in which the distinct probabilities $\omega$
 ($I_s\!\to\!H$) and $\phi$ ($H\!\to\!C$) disambiguate the two clinical
 thresholds. The system evolves as
@@ -24,27 +26,36 @@ thresholds. The system evolves as
 \dot{D}_r     &= \mu H_r + \delta_{c,r} C_r,
 \end{aligned}
 \end{equation}
-subject to $S_r + E_r + I_{a,r} + I_{s,r} + H_r + C_r + R_r + D_r = N_r$. Here
-$\alpha, d_s, d_a, d_H, \rho, \omega, \mu, \phi$ are fixed clinical
-constants (values from~\cite{ajao2025hybrid}, Table~1) and
-$\beta_r,\gamma_{c,r},\delta_{c,r},\eta_r$ are time-varying
-region-specific parameters (transmission, critical-care
-recovery and death, and immunity waning) learned from data.
+subject to the conservation constraint
+$S_r + E_r + I_{a,r} + I_{s,r} + H_r + C_r + R_r + D_r = N_r$, where a
+dot denotes a time derivative ($\dot S_r = \mathrm{d}S_r/\mathrm{d}t$).
+The eight fixed clinical constants (values from~\cite{ajao2025hybrid},
+Table~1) are the latent-to-infectious (incubation) rate $\alpha$, the
+symptomatic fraction $\rho\in[0,1]$, the symptomatic and asymptomatic
+infectious-removal rates $d_s$ and $d_a$, the hospital-outflow rate
+$d_H$, the symptomatic hospitalisation probability $\omega\in[0,1]$
+($I_s\!\to\!H$), the in-hospital mortality rate $\mu$ ($H\!\to\!D$), and
+the critical-care escalation probability $\phi\in[0,1]$ ($H\!\to\!C$);
+all rates have units of $\text{day}^{-1}$. The four time-varying,
+region-specific parameters learned from data are the transmission rate
+$\beta_r$, the critical-care recovery rate $\gamma_{c,r}$ ($C\!\to\!R$),
+the critical-care death rate $\delta_{c,r}$ ($C\!\to\!D$), and the
+immunity-waning rate $\eta_r$ ($R\!\to\!S$).
 
 % Figure 2: SEIRD compartment graph
 \begin{figure}[!hb]
 \centering
-\resizebox{0.82\columnwidth}{!}{%
+\resizebox{0.96\columnwidth}{!}{%
 \begin{tikzpicture}[
-  font=\footnotesize,
+  font=\small,
   >={Stealth[length=1.7mm,width=1.25mm]},
   x=16mm, y=15mm,
   comp/.style={draw, circle, minimum size=8.5mm, inner sep=0pt,
-               line width=0.45pt, font=\small\bfseries},
+               line width=0.45pt, font=\normalsize\bfseries},
   observed/.style={fill=NavyBlue!10},
   terminal/.style={fill=black!8},
   edge/.style={->, line width=0.55pt, shorten >=1pt, shorten <=1pt},
-  elabel/.style={font=\scriptsize, fill=white, inner sep=1pt,
+  elabel/.style={font=\footnotesize, fill=white, inner sep=1pt,
                  fill opacity=0.94, text opacity=1},
 ]
 \path[use as bounding box] (-2.05,-2.75) rectangle (6.25,1.35);
@@ -91,14 +102,15 @@ physics-informed forecaster.}
 
 \subsection{Per-Region PINN-SEIRD}\label{ssec:pinn}
 
-The PINN consists of two MLPs following~\cite{ajao2025hybrid}: a state
+The PINN consists of two multilayer perceptrons (MLPs)
+following~\cite{ajao2025hybrid}: a state
 network $U^r_{NN}$ (five hidden layers of $20$ units) and a parameter
 network $X^r_{NN}$ for $(\beta_r,\gamma_{c,r},\delta_{c,r},\eta_r)$
 (three hidden layers of $20$ units), with tanh hidden activations and
 sigmoid outputs. The loss combines a data fit on the two observable
 compartments with an ODE residual against \Cref{eq:seird}. The observed
 compartments are $H$ (daily general-and-acute hospital bed occupancy)
-and $C$ (mechanical-ventilation, i.e.\ critical-care, bed occupancy),
+and $C$ (mechanical-ventilation [MV], i.e.\ critical-care, bed occupancy),
 the only states with daily regional NHS counts; $C$ is the quantity the
 temporal head forecasts and the allocation consumes as demand $\xi$:
 \begin{equation}\label{eq:pinn_loss}
@@ -118,14 +130,14 @@ population-normalised. We pre-train each region's PINN for $1500$ Adam steps wit
 $\lambda_{ode}=0.1$, $\text{lr}=5\!\times\!10^{-3}$; both terms converge
 to the $2\text{--}8\times 10^{-6}$ range across regions.
 
-With only $H$ and $C$ observed regionally, the four learnable parameters
+With only $H$ and $C$ observed, the four learnable parameters
 $(\beta_r, \gamma_{c,r}, \delta_{c,r}, \eta_r)$ are not jointly
 identifiable ($\gamma_{c,r}$ and $\delta_{c,r}$ appear additively in
-$\dot C_r$), so we make no interpretability claim for individual
-trajectories: the four-channel output is consumed as a learned feature
-vector by the GRU, whose signal the ``w/o PINN params'' ablation
-confirms (\Cref{ssec:e1}; $h{=}14$ RMSE $14.46\!\to\!27.25$).
-Structural identifiability under $\{H,C\}$ observation is future work.
+$\dot C_r$), so we make no per-trajectory interpretability claim: the
+four-channel output is consumed as a learned feature vector by the GRU,
+whose signal the ``w/o PINN params'' ablation confirms (\Cref{ssec:e1};
+$h{=}14$ RMSE $14.46\!\to\!27.25$). Structural identifiability under
+$\{H,C\}$ observation is future work.
 
 \subsection{Temporal Head with Level-and-Trend Anchor}\label{ssec:temporal}
 
@@ -139,13 +151,13 @@ $L=28$ ending at origin $t$, the augmented feature sequence is
 $\mathbf{f}_{r,i} = [U^r_{NN}(i)\,\|\,X^r_{NN}(i)\,\|\,
 \tilde y_{r,i}] \in \mathbb{R}^{13}$, $i \in \{t-L+1,\dots,t\}$.
 Here $U^r_{NN}(i)$ contributes all eight compartments (including the
-latent $S,E,I_a,I_s,R,D$ that are never directly observed), so the
-head receives the full physics-inferred state rather than the two
-fitted channels alone, and $\tilde y_{r,i}$ is the observed target
-z-scored with training-period statistics only (no test-set leakage).
+never-observed latent $S,E,I_a,I_s,R,D$), so the head receives the full
+physics-inferred state, and $\tilde y_{r,i}$ is the target z-scored with
+training-period statistics only.
 A two-layer
 GRU (hidden $128$, dropout $0.15$) decodes the final hidden state via a
-per-horizon two-layer MLP (width $64$, GELU) into standardised quantile
+per-horizon two-layer MLP (width $64$, Gaussian-error-linear-unit
+[GELU] activations) into standardised quantile
 deltas $\Delta_{r,t}^{h,q}$ for $h\in\Hset=\{7,14,21,28\}$ and
 $q\in\Qset=\{0.1,0.5,0.9\}$.
 
@@ -199,15 +211,14 @@ $\Delta t = 7$-day rolling origins, yielding $32$ origin dates.
 Applied frozen across a regime shift (high-demand Alpha/Delta training,
 mild Omicron test), the point forecast inherits a systematic
 over-prediction that grows with horizon. We correct it with two
-leakage-free steps. The first recalibrates the bias, subtracting at
+steps. The first recalibrates the bias, subtracting at
 each rolling origin $t$ and horizon $h$ the mean of the model's last
 $K{=}3$ $h$-step errors whose target date is already observed ($<t$),
 the adaptation that a per-origin refit gives for free. The second blends
-with persistence, mixing the recalibrated point forecast with
+with persistence, mixing the recalibrated forecast with
 seasonal-naive($7$) under a per-horizon weight
-$\alpha\in\{0,0.1,\dots,1\}$ chosen on an expanding window of realised
-past origins (fitted once at least seven origin--region pairs are
-realised; until then $\alpha{=}1$, pure model), so long horizons lean on
-persistence. Both use only information available at $t$, and the
-$80\%$ interval is left as produced by the quantile heads, so the
-downstream allocation is unchanged.
+$\alpha\in\{0,0.1,\dots,1\}$ fitted on an expanding window of realised
+origins (pure model, $\alpha{=}1$, until seven origin--region pairs are
+realised), so long horizons lean on persistence. Both use only
+information available at $t$; the $80\%$ interval is left as the
+quantile heads produce it, so the downstream allocation is unchanged.

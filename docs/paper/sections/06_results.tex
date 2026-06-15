@@ -4,18 +4,20 @@
 
 \subsection{Forecasting Accuracy}\label{ssec:e1}
 
-\Cref{tab:forecast_accuracy} reports per-horizon RMSE and MASE
+\Cref{tab:forecast_accuracy} reports per-horizon RMSE and mean absolute
+scaled error (MASE)
 against four baselines under a common
 $32$-origin rolling-origin protocol; MASE scales the mean absolute
-error by the in-sample seasonal-naive($7$) MAE, so values below $1$
+error (MAE) by the in-sample seasonal-naive($7$) MAE, so values below $1$
 beat that benchmark. The \emph{raw} PinnGRU point
 forecast (frozen PINN encoder of \Cref{ssec:pinn} with the GRU head of
-\Cref{ssec:temporal}) wins $h{=}7$ and $h{=}14$; a paired Wilcoxon
+\Cref{ssec:temporal}) beats all four baselines at $h{=}7$ and $h{=}14$;
+a paired Wilcoxon
 signed-rank test across the $32$ origins confirms the $h{=}14$ gain
 over ARIMA ($-3.88$ MV beds, $p{=}0.003$). It degrades at long horizons, however,
 where a regime-shift over-prediction bias (an $h{=}28$ underestimation
 rate of only $10.3\%$) leaves it behind ARIMA and seasonal-naive
-($+5.53$ MV beds vs ARIMA at $h{=}28$, $p{=}0.006$). The leakage-free
+($+5.53$ MV beds vs ARIMA at $h{=}28$, $p{=}0.006$). The
 per-origin recalibration of \Cref{ssec:recal} removes this bias and
 blends with persistence at long horizons. The recalibrated model is
 best at $h{=}7$, $14$ and $21$, cutting the operational $14$-day RMSE
@@ -28,12 +30,11 @@ than a systematic over-predictor.
 XGBoost and the per-region GRU, lag-only learners bounded by the
 $28$-day window, cannot extrapolate into Omicron's altered
 case-to-hospitalisation regime and degrade sharply ($h{=}28$ RMSE
-$58.9$, $44.0$); ARIMA's per-origin refit degrades modestly, and the
-recalibrated PinnGRU matches it across horizons.
+$58.9$, $44.0$), whereas ARIMA's per-origin refit degrades only modestly.
 
 Three ablations against the raw PinnGRU ($h{=}14$ RMSE $14.46$, MASE
-$0.77$) isolate the load-bearing parts: replacing the pinball loss with
-MSE lifts $h{=}14$ RMSE to $18.70$ (MASE $0.97$), skipping PINN
+$0.77$) isolate the load-bearing parts: replacing the pinball loss with a
+mean-squared-error (MSE) loss lifts $h{=}14$ RMSE to $18.70$ (MASE $0.97$), skipping PINN
 pre-training to $17.27$ (MASE $0.76$), and zeroing the four PINN
 parameter features to $27.25$ (MASE $1.23$), the largest regression.
 The physics prior, not capacity, drives the gain over the per-region GRU.
@@ -153,19 +154,18 @@ expectation-minimising solution already clears the high tail); only a
 tighter budget ($\leq\!15\%$) re-engages it.
 
 The transfer controls $\tau$ and $\kappa$ determine when placement
-itself matters. With uncapped recourse on the $12$-link network the
-\Cref{tab:allocation} coverage tie persists at budgets of
-$10$--$20\%$ because coverage depends only on \emph{total} surge;
-placement is fungible and optimisation buys routing alone. Constraining
-recourse breaks the tie. Pruning the network to five links
-($\tau{=}120$~min) puts the robust LP ahead of every heuristic on
-expected and worst-case unmet ($29.9$ vs $32.3$--$34.9$ at
-$B{=}20\%$), and capping the transfer service at $\kappa{=}10$ produces
-the same separation (the $\kappa{=}10$ column of \Cref{tab:allocation}),
-where greedy matches the LP only by
-issuing $213$ calls to the same LP oracle at $1.4\times$ its transfer
-burden. Placement earns its keep when transfers are scarce, the
-operating regime of a real surge.
+matters. With uncapped recourse on the $12$-link network the
+\Cref{tab:allocation} coverage tie persists at $10$--$20\%$ budgets:
+coverage depends only on \emph{total} surge, so placement is fungible
+and optimisation buys routing alone. Constraining recourse breaks the
+tie. Pruning the network to five links ($\tau{=}120$~min) puts the
+robust LP ahead of every heuristic on expected and worst-case unmet
+($29.9$ vs $32.3$--$34.9$ at $B{=}20\%$), and capping the transfer
+service at $\kappa{=}10$ gives the same separation (the $\kappa{=}10$
+column of \Cref{tab:allocation}), where greedy matches the LP only by
+issuing $213$ oracle calls at $1.4\times$ its transfer burden.
+Placement earns its keep when transfers are scarce---the operating
+regime of a real surge.
 
 % Sensitivity-sweep table removed for the 12-page UKCI limit: the
 % budget/tail-penalty/travel-cap/transfer-cap effects are in the prose above

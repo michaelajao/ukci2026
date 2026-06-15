@@ -364,7 +364,7 @@ def _figure_alloc_budget() -> "Path":
             v = values[i, j]
             axh.text(j, i, f"{v:.0f}", ha="center", va="center", fontsize=9,
                      color="white" if v > values.max() * 0.55 else "black")
-    axh.set_title("(a) Peak surge beds by policy", fontsize=11, pad=3)
+    axh.set_title("Peak surge beds by policy", fontsize=11, pad=3)
 
     axb.plot(xb, sweep["expected_unmet"], marker="o", ms=4.2, color="#0072B2",
              label=r"$E[u]$")
@@ -373,7 +373,7 @@ def _figure_alloc_budget() -> "Path":
     axb.axvline(20.0, color="0.65", linewidth=0.8, linestyle=":")
     axb.set_xlabel("Surge budget (% of baseline)", fontsize=10, labelpad=2)
     axb.set_ylabel("Unmet (beds)", fontsize=10)
-    axb.set_title("(b) Cost-shortage frontier", fontsize=11, pad=3)
+    axb.set_title("Cost-shortage frontier", fontsize=11, pad=3)
     axb.legend(frameon=False, fontsize=9, ncol=2, loc="upper right")
     axb.grid(True, alpha=0.25)
     axb.tick_params(labelsize=9)

@@ -78,28 +78,23 @@
 % AmirHosein Sadeghimanesh ORCID: 0000-0002-6945-3118
 % (Vasile Palade removed from this conference paper -- he is UKCI 2026
 %  Conference Co-Chair; omitting him avoids the authorship conflict.)
-% \author{Michael Ajao-Olarinoye\inst{1} \and
-%         Abiola Babatunde\inst{1} \and
-%         AmirHosein Sadeghimanesh\inst{1} \and
-%         Fei He\inst{1}}
-% \authorrunning{M. Ajao-Olarinoye et al.}
-% \tocauthor{Michael Ajao-Olarinoye, Abiola Babatunde, AmirHosein Sadeghimanesh, and Fei He}
-%
-% \institute{Centre for Computational Sciences and Mathematical Modelling,
-%   Coventry University, Priory Street, Coventry CV1 5FB, United Kingdom \\
-%   \email{olarinoyem@coventry.ac.uk}}
+\author{Michael Ajao-Olarinoye\inst{1} \and
+        Abiola Babatunde\inst{1} \and
+        AmirHosein Sadeghimanesh\inst{1} \and
+        Fei He\inst{1} \and
+        Matthew England\inst{1}}
+\authorrunning{M. Ajao-Olarinoye et al.}
+\tocauthor{Michael Ajao-Olarinoye, Abiola Babatunde, AmirHosein Sadeghimanesh, Fei He, and Matthew England}
 
-% Anonymised placeholders so \maketitle still compiles
-\author{Anonymous Author(s)\inst{1}}
-\authorrunning{Anonymous et al.}
-\tocauthor{Anonymous Author(s)}
-\institute{Anonymised institution}
+\institute{Centre for Computational Sciences and Mathematical Modelling,
+  Coventry University, Priory Street, Coventry CV1 5FB, United Kingdom \\
+  \email{olarinoyem@coventry.ac.uk}}
 
 \maketitle
 
 % Abstract
 \begin{abstract}
-NHS critical-care planning during epidemic waves must pre-position surge capacity and route patients across regions before demand is known. We propose a forecast-to-decision pipeline that couples a per-region physics-informed forecaster on the $SEI_aI_sHCRD$ system to a tail-risk robust linear program for bed-surge allocation. The forecaster is trained with a cost-asymmetric multi-quantile pinball loss whose $q^{(0.9)}$ branch penalises under-prediction nine-to-one, together with a learnable level-and-trend anchor and a leakage-free per-origin recalibration that removes a long-horizon over-prediction bias. On a seven-region NHS England case study (Aug~$2020$ to Aug~$2022$) it cuts $14$-day RMSE by $25\%$ over per-origin refitted ARIMA and by $42\%$ over a neural GRU, and is competitive across all horizons (best at $7$--$21$ days and level with refitted ARIMA at $28$, where seasonal-naive is strongest). Its quantile forecasts drive a hybrid-regional allocation solved exactly as an LP. With unconstrained transfers all budget-exhausting policies tie on coverage and the tail-risk robust formulation wins on transfer burden; once transfers are constrained the tie breaks and the proportional heuristics concede up to $60\%$ more expected unmet demand. A sensitivity analysis over the forecaster, budget, tail-risk weight, travel cap, and transfer cap shows the budget to be the dominant control.
+NHS critical-care planning during epidemic waves must pre-position surge capacity and route patients across regions before demand is known. We propose a forecast-to-decision pipeline that couples a per-region physics-informed forecaster on the $SEI_aI_sHCRD$ system to a tail-risk robust linear program (LP) for bed-surge allocation. The forecaster is trained with a cost-asymmetric multi-quantile pinball loss whose $q^{(0.9)}$ branch penalises under-prediction nine-to-one, together with a learnable level-and-trend anchor and a per-origin recalibration that draws on past errors alone to remove a long-horizon over-prediction bias. On a seven-region NHS England case study (Aug~$2020$ to Aug~$2022$) it cuts $14$-day root-mean-square error (RMSE) by $25\%$ over per-origin refitted autoregressive integrated moving average (ARIMA) and by $42\%$ over a neural gated recurrent unit (GRU), and is competitive across all horizons (best at $7$--$21$ days and level with refitted ARIMA at $28$, where seasonal-naive is strongest). Its quantile forecasts drive a hybrid-regional allocation solved exactly as an LP. With unconstrained transfers all budget-exhausting policies tie on coverage and the tail-risk robust formulation wins on transfer burden; once transfers are constrained the tie breaks and the proportional heuristics concede up to $60\%$ more expected unmet demand. A sensitivity analysis over the forecaster, budget, tail-risk weight, travel cap, and transfer cap shows the budget to be the dominant control.
 
 \keywords{physics-informed neural networks, cost-asymmetric forecasting,
           pinball loss, robust optimisation, linear programming,

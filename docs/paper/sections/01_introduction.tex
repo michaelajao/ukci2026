@@ -22,10 +22,11 @@ mechanical-ventilation capacity, making this a coupled forecasting and
 allocation problem under regime shift. Existing forecasting work spans
 statistical and recurrent baselines~\cite{ajao2024deep}, graph-based
 epidemic and hospital-demand models~\cite{gao2021stan,gao2023hoist},
-and physics-informed neural networks~\cite{raissi2019physics,ajao2025hybrid,qian2025physics};
+and physics-informed neural networks (PINNs)~\cite{raissi2019physics,ajao2025hybrid,qian2025physics};
 interval and quantile evaluation is also standard in epidemic forecast
-hubs~\cite{bracher2021evaluating}. The closest ICU-occupancy comparator,
-a bidirectional LSTM with lagged mobility features and MC-dropout
+hubs~\cite{bracher2021evaluating}. The closest intensive-care-unit
+(ICU) occupancy comparator, a bidirectional long short-term memory
+(LSTM) network with lagged mobility features and Monte-Carlo-dropout
 intervals on Lazio data~\cite{valente2022forecasting}, like most such
 work targets a single health system rather than multi-region planning.
 These forecasters are usually
@@ -34,13 +35,15 @@ planning has an asymmetric error cost: under-prediction risks stranded
 patients, whereas over-prediction wastes prepared capacity.
 
 On the allocation side, robust facility-location and health-resource
-models handle demand uncertainty with MILP, two-stage optimisation, and
-metaheuristics~\cite{eriskin2022robust,wan2023two,shamseddin2025optimization,deb2002fast}.
+models handle demand uncertainty with mixed-integer linear programming
+(MILP), two-stage optimisation, and
+metaheuristics~\cite{eriskin2022robust,wan2023two}.
 Bertsimas et al.~\cite{bertsimas2022where} couple DELPHI dynamics to a
-bilinear MIP for vaccination-site location, while Luo and
-Stellato~\cite{luo2024equitable} embed neural-ODE compartmental dynamics
-inside a McCormick-relaxed facility-location model. Our setting differs
-from Smart Predict-then-Optimize~\cite{elmachtoub2022smart}. The
+bilinear mixed-integer program (MIP) for vaccination-site location,
+while Luo and Stellato~\cite{luo2024equitable} embed neural-ODE
+compartmental dynamics inside a McCormick-relaxed facility-location
+model. Our setting differs from
+Smart Predict-then-Optimize~\cite{elmachtoub2022smart}. The
 forecaster is not trained through allocation regret, but its
 multi-quantile pinball objective is cost-asymmetric and feeds a robust
 optimisation layer. To our knowledge, no prior work combines
@@ -50,15 +53,17 @@ allocation across the seven NHS England regions.
 
 This paper presents a forecast-to-decision pipeline
 (\Cref{fig:pipeline}) in four phases. \emph{Phase~A} pre-trains a
-per-region PINN on the $SEI_aI_sHCRD$ ODE system; its twelve outputs
+per-region PINN on the $SEI_aI_sHCRD$ ordinary-differential-equation
+(ODE) system; its twelve outputs
 (eight compartmental states, four transmission and clinical parameters)
-are frozen and passed to a temporal GRU head that emits the horizon-wise
+are frozen and passed to a temporal GRU head
+that emits the horizon-wise
 quantiles $q^{(0.1)}$, $q^{(0.5)}$, $q^{(0.9)}$ under a multi-quantile
 pinball loss whose $q^{(0.9)}$ branch penalises under-prediction
 nine-to-one, with a level-and-trend anchor. \emph{Phase~B}
 discretises these quantiles into three scenarios with weights
 $\pi=(0.2,0.6,0.2)$. \emph{Phase~C} solves the allocation exactly as a
-linear program (deterministic and tail-risk-robust) via PuLP$+$CBC
+linear program (deterministic and tail-risk-robust) via PuLP
 against three heuristic baselines on a shared LP-slave oracle.
 \emph{Phase~D} reports operational metrics and a sensitivity analysis
 over the forecaster, budget $B$, tail-risk weight $\lambda_3$, travel
@@ -66,8 +71,9 @@ cap $\tau$, and transfer cap $\kappa$.
 
 The main contributions are as follows:
 (1)~\textbf{Cost-asymmetric forecaster.} A multi-quantile pinball loss,
-a level-and-trend anchor, and a leakage-free per-origin recalibration
-reduce $h{=}14$ RMSE by $25\%$ relative to refitted ARIMA and $42\%$
+a level-and-trend anchor, and a per-origin recalibration
+reduce $h{=}14$ RMSE by $25\%$ relative to a
+refitted ARIMA model and $42\%$
 relative to a per-region GRU, and make the model competitive across all
 horizons (best at $h{=}7$--$21$ and level with refitted ARIMA at
 $h{=}28$, where seasonal-naive leads).
