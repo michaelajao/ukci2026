@@ -38,30 +38,29 @@ docs/paper/
 |-- remreset.sty             # Springer support file copied from docs/ukci_springer_template
 |-- spmpsci.bst              # Springer bibliography style copied from docs/ukci_springer_template
 |-- sections/
-|   |-- 01_introduction.tex
-|   |-- 02_related_work.tex
+|   |-- 01_introduction.tex   # related work is folded in here
+|   |-- 02_related_work.tex    # NOT \input by main.tex (kept for the journal version)
 |   |-- 03_forecasting.tex
 |   |-- 04_optimisation.tex
 |   |-- 05_case_study.tex
-|   |-- 06_results.tex
-|   |-- 07_discussion.tex
+|   |-- 06_results.tex         # discussion is folded in here
 |   `-- 08_conclusion.tex
 `-- figures/
 ```
 
 ## Status
 
-Drafted: introduction, related work, forecasting methodology, optimisation
-formulation, case study, discussion, and conclusion.
+Complete draft at 12 pages: introduction (with folded related work),
+forecasting methodology, optimisation formulation, case study, results (with
+folded discussion), and conclusion. All result tables/figures are populated
+from the pipeline outputs; no `\todo` markers or placeholders remain.
 
 Still required before final CMT upload:
 
-- Fill all result placeholders in E1-E6.
-- Replace all `\todo{...}` markers and dummy values.
-- Add real figures for the Pareto front, sensitivity heatmap, and NHS map.
 - Confirm coauthor emails in `authors.txt`.
-- Confirm page count is at most 12 pages including references, figures, and
-  tables.
+- Decide whether an in-paper conflict-of-interest statement is needed (the
+  block in `main.tex` is currently commented out).
+- Re-confirm the page count is at most 12 pages after any late edits.
 
 ## Final Submission Shape
 

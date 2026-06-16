@@ -8,9 +8,7 @@ For each region $r \in \R$ with population $N_r$ we model the local
 epidemic with an eight-compartment $SEI_aI_sHCRD$ system whose states
 are susceptible, exposed, asymptomatic/symptomatic infectious,
 hospitalised, critical-care, recovered, and deceased. \Cref{fig:seird}
-shows the flow topology, in which the distinct probabilities $\omega$
-($I_s\!\to\!H$) and $\phi$ ($H\!\to\!C$) disambiguate the two clinical
-thresholds. The system evolves as
+shows the flow topology. The system evolves as
 \begin{equation}\label{eq:seird}
 \begin{aligned}
 \dot{S}_r     &= -\beta_r S_r (I_{s,r}+I_{a,r})/N_r + \eta_r R_r, \quad
@@ -27,10 +25,7 @@ thresholds. The system evolves as
 subject to $S_r + E_r + I_{a,r} + I_{s,r} + H_r + C_r + R_r + D_r = N_r$. Here
 $\alpha, d_s, d_a, d_H, \rho, \omega, \mu, \phi$ are fixed clinical
 constants and $\beta_r,\gamma_{c,r},\delta_{c,r},\eta_r$ are
-time-varying region-specific parameters learned from data. The earlier
-formulation in~\cite{ajao2025hybrid} overloaded $\omega$ to play both
-roles; the present split makes the hospitalisation and critical-care
-escalation thresholds independently identifiable.
+time-varying region-specific parameters learned from data.
 
 % Figure 2: SEIRD compartment graph
 \begin{figure}[!hb]
@@ -192,8 +187,8 @@ mild Omicron test), the point forecast inherits a systematic
 over-prediction that grows with horizon. We correct it with two
 leakage-free steps. \emph{(i)~Bias recalibration:} at each rolling origin
 $t$ and horizon $h$, subtract the mean of the model's last $K{=}3$
-$h$-step errors whose target date is already observed ($<t$)---the
-adaptation a per-origin refit gives for free. \emph{(ii)~Persistence
+$h$-step errors whose target date is already observed ($<t$), the
+adaptation that a per-origin refit gives for free. \emph{(ii)~Persistence
 blend:} blend the recalibrated point forecast with seasonal-naive($7$)
 using a per-horizon weight chosen by an expanding window over realised
 past origins, so long horizons lean on persistence. Both use only

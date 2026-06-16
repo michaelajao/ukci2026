@@ -24,14 +24,19 @@ statistical and recurrent baselines~\cite{ajao2024deep}, graph-based
 epidemic and hospital-demand models~\cite{gao2021stan,gao2023hoist},
 and physics-informed neural networks~\cite{raissi2019physics,ajao2025hybrid,qian2025physics};
 interval and quantile evaluation is also standard in epidemic forecast
-hubs~\cite{bracher2021evaluating}. These forecasters are usually
+hubs~\cite{bracher2021evaluating}. Closest to our target, Valente et al.~\cite{valente2022forecasting}
+forecast regional ICU-bed occupancy with a bidirectional LSTM and
+MC-dropout intervals (MAE${\approx}7$ beds, weekly). NHS-specific work is
+sparse: prior studies forecast \emph{national} ventilation
+demand~\cite{ajao2024deep,ajao2025hybrid} and trust-level ICU series are
+single-site, leaving multi-region regional planning as the gap this paper targets. These forecasters are usually
 optimised for symmetric statistical accuracy, although ICU planning has
 an asymmetric error cost: under-prediction risks stranded patients,
 whereas over-prediction wastes prepared capacity.
 
 On the allocation side, robust facility-location and health-resource
 models handle demand uncertainty with MILP, two-stage optimisation, and
-metaheuristics~\cite{eriskin2022robust,wan2023two,shamseddin2025optimization,deb2002fast}.
+metaheuristics~\cite{eriskin2022robust,wan2023two,shamseddin2025optimization}.
 Bertsimas et al.~\cite{bertsimas2022where} couple DELPHI dynamics to a
 bilinear MIP for vaccination-site location, while Luo and
 Stellato~\cite{luo2024equitable} embed neural-ODE compartmental dynamics
@@ -47,12 +52,10 @@ across the seven NHS England regions.
 This paper presents a forecast-to-decision pipeline
 (\Cref{fig:pipeline}) in four phases. \emph{Phase~A} pre-trains a
 per-region PINN on the $SEI_aI_sHCRD$ ODE system; its twelve outputs
-(eight compartmental states, four transmission and clinical parameters)
-are frozen and passed to a temporal GRU head that emits the horizon-wise
-quantiles $q^{(0.1)}$, $q^{(0.5)}$, $q^{(0.9)}$ under a multi-quantile
-pinball loss whose $q^{(0.9)}$ branch penalises under-prediction
-nine-to-one, with a level-and-trend anchor skip-connecting the most
-recent observation and weekly slope to every prediction. \emph{Phase~B}
+are frozen and feed a temporal GRU head with a level-and-trend anchor.
+The head emits the horizon-wise quantiles $q^{(0.1)}$, $q^{(0.5)}$,
+$q^{(0.9)}$ under a multi-quantile pinball loss whose $q^{(0.9)}$ branch
+penalises under-prediction nine-to-one. \emph{Phase~B}
 discretises these quantiles into three scenarios with weights
 $\pi=(0.2,0.6,0.2)$. \emph{Phase~C} solves the allocation exactly as a
 linear program (deterministic and tail-risk-robust) via PuLP$+$CBC
@@ -67,12 +70,7 @@ a level-and-trend anchor, and a leakage-free per-origin recalibration
 reduce $h{=}14$ RMSE by $25\%$ relative to refitted ARIMA and $42\%$
 relative to a per-region GRU, and make the model competitive across all
 horizons (best at $h{=}7$--$21$, tying ARIMA at $h{=}28$).
-(2)~\textbf{Robust LP allocation.} A hybrid-regional formulation
-attains the lowest transfer burden among budget-exhausting policies at
-the reported operating point, $4.6\times$ below the population-
-proportional baseline under tied coverage; this is interpreted as a
-binding-budget routing effect rather than an unmet-demand reduction.
-(3)~\textbf{$SEI_aI_sHCRD$ clinical split.} The proposed model
-separates the hospitalisation ratio $\omega$ ($I_s\to H$) from the
-critical-care escalation rate $\phi$ ($H\to C$), correcting the
-overloaded $\omega$ used in~\cite{ajao2025hybrid}.
+(2)~\textbf{Robust LP allocation.} A hybrid-regional formulation reaches
+the proportional baselines' coverage with roughly one-sixth of the surge
+budget and one-fifth of the patient transfer across $32$ origins, well
+beyond the binding-budget routing tie that holds at peak demand.

@@ -7,10 +7,10 @@ surge planning that couples a per-region physics-informed forecaster to
 a tail-risk robust allocation linear program. With a leakage-free
 per-origin recalibration, PinnGRU is competitive across the horizons
 that drive surge decisions, cutting $14$-day RMSE by $25\%$ over
-re-fitted ARIMA and $42\%$ over a neural GRU. On the decision side the
-gain is structural: once the budget binds, every budget-exhausting
-policy ties on coverage and the robust formulation wins by routing the
-same surge with the least patient transfer. Principal caveats are
+re-fitted ARIMA and $42\%$ over a neural GRU. On the decision side,
+across the $32$ origins the robust formulation matches the baselines'
+coverage with about one-sixth of the surge budget and one-fifth of the
+transfer; at peak demand it ties on coverage and wins only on routing. Principal caveats are
 detour-scaled travel times, well-mixed populations, scaled cost units,
 and a single realised origin. A deeper limitation couples the modules:
 the per-region forecaster and co-monotone scenarios over-state the joint

@@ -34,7 +34,7 @@ $T_{r r'}=60\,\ell_{r r'}/80$~min; mutual-aid cap $\tau=240$~min.
 Decision variables fall in two layers. The \emph{first-stage}
 (here-and-now) capacity decision is the surge allocation
 $b_{r,h}\!\in\![0,K_r]$ with peak auxiliary $\bar b_r\!\geq\!0$, shared
-across scenarios---this is the planner's only true control. The
+across scenarios; it is the planner's only true control. The
 per-scenario \emph{second-stage} recourse is the flow
 $z_{r r',h}^s\!\geq\!0$ (defined for $T_{r r'}\!\leq\!\tau$), whose
 self-loop $z_{r r,h}^s$ is demand served \emph{locally} at zero distance
@@ -78,8 +78,8 @@ b_{r,h},\bar b_r,z_{r r',h}^{m},u_{r,h}^{m} &\geq 0.
 \Cref{eq:demand} is a demand balance: each region's forecast demand is
 served locally ($z_{r r,h}^{m}$), transferred to a reachable region
 ($z_{r r',h}^{m}$, $r'\!\neq\!r$), or left unmet ($u_{r,h}^{m}$).
-\Cref{eq:capacity} caps the beds a region uses---its own local patients
-plus those transferred in---at baseline plus surge.
+\Cref{eq:capacity} caps the beds a region uses (its own local patients
+plus those transferred in) at baseline plus surge.
 \Cref{eq:expansion_peak,eq:budget} charge each region for its
 peak-horizon allocation (the same physical beds serve every horizon up
 to the peak); \Cref{eq:travel} suppresses transfers beyond the

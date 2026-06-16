@@ -149,8 +149,7 @@ pytest -m "not slow"                # skip slow integration tests
 
 ## License
 
-To be decided before submission. Apache 2.0 or MIT recommended for the paper's
-reproducibility statement.
+Released under the MIT License (see [`LICENSE`](LICENSE)).
 
 ## Citation
 

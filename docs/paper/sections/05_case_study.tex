@@ -26,7 +26,7 @@ For the allocation problem, baseline capacity $C_r$ is \emph{measured}
 as each region's Delta-wave peak MV-bed occupancy $\times 1.05$, whereas
 the per-region surge cap $K_r=0.5\,C_r$, total budget
 $B=0.20\sum_r C_r=213$~beds, and mutual-aid travel cap $\tau=240$~min are
-planning assumptions. The surge $b_r$ is the model's decision---the
+planning assumptions. The surge $b_r$ is the model's decision, the
 extra MV beds a region stands up above its measured baseline. The transfer tie-break weight
 is $\theta=10^{-3}$, so one bed of snapshot unmet demand outweighs
 $1000$~bed-km of transfer. Scenario weights are $\pi=(0.2,0.6,0.2)$ and
@@ -37,4 +37,4 @@ the seven regions and the $32$ rolling-origin evaluations spanning the
 Omicron test period; the full solver comparison is reported at the first
 Omicron decision origin ($29$~Dec~$2021$), with an exact/closed-form
 all-origin check in \Cref{ssec:e5_e6}. Code, configurations, and the
-cleaned dataset are available in the project repository.
+cleaned dataset are available at \url{https://github.com/michaelajao/ukci2026}.
