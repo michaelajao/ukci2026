@@ -134,8 +134,8 @@ With only $H$ and $C$ observed, the four learnable parameters
 $(\beta_r, \gamma_{c,r}, \delta_{c,r}, \eta_r)$ are not jointly
 identifiable ($\gamma_{c,r}$ and $\delta_{c,r}$ appear additively in
 $\dot C_r$), so we make no per-trajectory interpretability claim. The
-four-channel output is consumed as a learned feature vector by the GRU,
-whose signal the ``w/o PINN params'' ablation confirms (\Cref{ssec:e1};
+four-channel output is consumed as a learned feature vector by the GRU;
+the ``w/o PINN params'' ablation confirms it carries signal (\Cref{ssec:e1};
 $h{=}14$ RMSE $14.46\!\to\!27.25$). Structural identifiability under
 $\{H,C\}$ observation is future work.
 

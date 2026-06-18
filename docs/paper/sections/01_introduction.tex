@@ -9,8 +9,8 @@
 \centering
 \includegraphics[width=\textwidth]{figure1.png}
 \caption{Pipeline for NHS critical-care surge planning, from
-regional data and physics-informed forecasting to scenario-based robust
-allocation and evaluation.}
+regional data and physics-informed forecasting to scenario-based
+risk-averse allocation and evaluation.}
 \label{fig:pipeline}
 \end{figure*}
 
@@ -27,7 +27,7 @@ interval and quantile evaluation is also standard in epidemic forecast
 hubs~\cite{bracher2021evaluating}. The closest intensive-care-unit
 (ICU) occupancy comparator, a bidirectional long short-term memory
 (LSTM) network on Lazio data~\cite{valente2022forecasting}, like most such
-work targets a single health system rather than multi-region planning.
+work, targets a single health system rather than multi-region planning.
 These forecasters are usually
 optimised for symmetric statistical accuracy, although critical-care
 planning has an asymmetric error cost. Under-prediction risks stranded
@@ -64,7 +64,7 @@ shared LP-slave oracle. We then report operational metrics and a
 sensitivity analysis over the forecaster, budget $B$, tail weight
 $\lambda_3$, travel cap $\tau$, and transfer cap $\kappa$.
 
-We make three main contributions.
+We make two main contributions.
 (1)~\textbf{Cost-asymmetric forecaster.} A multi-quantile pinball loss
 and a level-and-trend anchor cut $h{=}14$ RMSE by $19\%$ over a
 refitted ARIMA model and $37\%$ over a per-region GRU, the
@@ -72,10 +72,10 @@ architecture's clearest edge; a model-agnostic per-origin recalibration
 then extends competitiveness to $h{=}7$--$21$ over the unrecalibrated
 baselines (level with refitted ARIMA at $h{=}28$, where seasonal-naive
 leads).
-(2)~\textbf{Robust LP allocation.} With unconstrained transfers the
-hybrid-regional robust LP ties every budget-exhausting policy on
-coverage and wins on transfer burden ($4.6\times$ below
-population-proportional); constraining transfers (sparser network or
-capped transfer service) breaks the tie, the proportional rules
-concede up to $60\%$ more expected unmet demand, and the robust LP is
-never beaten on coverage.
+(2)~\textbf{Risk-averse LP allocation.} With unconstrained transfers the
+hybrid-regional risk-averse LP ties every budget-exhausting policy on
+coverage and wins on transfer burden ($4.6\times$ lower than
+population-proportional); constraining transfers (a sparser network or a
+capped transfer service) breaks the tie, leaving the proportional rules
+to concede up to $60\%$ more expected unmet demand while it is never
+beaten on coverage.
