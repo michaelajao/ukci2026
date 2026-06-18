@@ -43,29 +43,26 @@ Stellato~\cite{luo2024equitable} embed neural-ODE dynamics in a
 facility-location model. Our setting differs from
 Smart Predict-then-Optimize~\cite{elmachtoub2022smart}. The
 forecaster is not trained through allocation regret, but its
-multi-quantile pinball objective is cost-asymmetric and feeds a robust
+multi-quantile pinball objective is cost-asymmetric and feeds a risk-averse
 optimisation layer. To our knowledge, no prior work combines
 physics-informed forecasting of NHS regional critical-care demand with
-cost-asymmetric quantile training and an exact robust linear-programming
+cost-asymmetric quantile training and an exact risk-averse linear-programming
 allocation across the seven NHS England regions.
 
 This paper presents a forecast-to-decision pipeline
-(\Cref{fig:pipeline}) in four phases. \emph{Phase~A} pre-trains a
-per-region PINN on the $SEI_aI_sHCRD$ ordinary-differential-equation
-(ODE) system; its twelve outputs
-(eight compartmental states, four transmission and clinical parameters)
-are frozen and passed to a temporal GRU head
-that emits the horizon-wise
-quantiles $q^{(0.1)}$, $q^{(0.5)}$, $q^{(0.9)}$ under a multi-quantile
-pinball loss whose $q^{(0.9)}$ branch penalises under-prediction
-nine-to-one, with a level-and-trend anchor. \emph{Phase~B}
-discretises these quantiles into three scenarios with weights
-$\pi=(0.2,0.6,0.2)$. \emph{Phase~C} solves the allocation exactly as a
-linear program (deterministic and tail-risk-robust) via PuLP
-against three heuristic baselines on a shared LP-slave oracle.
-\emph{Phase~D} reports operational metrics and a sensitivity analysis
-over the forecaster, budget $B$, tail-risk weight $\lambda_3$, travel
-cap $\tau$, and transfer cap $\kappa$.
+(\Cref{fig:pipeline}). A per-region PINN on the $SEI_aI_sHCRD$
+ordinary-differential-equation (ODE) system is pre-trained, and its
+twelve outputs (eight compartmental states, four transmission and
+clinical parameters) are frozen and passed to a temporal GRU head that
+emits the horizon-wise quantiles $q^{(0.1)}$, $q^{(0.5)}$, $q^{(0.9)}$
+under a multi-quantile pinball loss whose $q^{(0.9)}$ branch penalises
+under-prediction nine-to-one, with a level-and-trend anchor. These
+quantiles are discretised into three scenarios with weights
+$\pi=(0.2,0.6,0.2)$, which deterministic and risk-averse linear
+programs solve exactly via PuLP against three heuristic baselines on a
+shared LP-slave oracle. We then report operational metrics and a
+sensitivity analysis over the forecaster, budget $B$, tail weight
+$\lambda_3$, travel cap $\tau$, and transfer cap $\kappa$.
 
 We make three main contributions.
 (1)~\textbf{Cost-asymmetric forecaster.} A multi-quantile pinball loss

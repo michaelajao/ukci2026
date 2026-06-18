@@ -5,7 +5,7 @@
 The allocation module decides how many surge beds to place in each NHS
 region and how to route excess demand through inter-regional patient
 transfers, given the quantile forecasts of \Cref{sec:forecasting}. We
-present a deterministic linear program, a tail-risk robust extension,
+present a deterministic linear program, a risk-averse (tail-weighted) extension,
 and closed-form heuristic baselines.
 
 \subsection{Sets, Parameters, and Decision Variables}\label{ssec:notation}
@@ -86,28 +86,30 @@ minimised, \Cref{eq:demand} holds it at the residual shortfall
 $\max(0,\, \xi_{r,h}^{m}-\sum_{r'} z_{r r',h}^{m})$, a derived quantity
 rather than a free decision.
 
-\subsection{Tail-Risk Robust Objective}\label{ssec:robust}
+\subsection{Risk-Averse Tail-Weighted Objective}\label{ssec:robust}
 
-To hedge against the high-demand scenario the robust model imposes
+To hedge against the high-demand scenario the risk-averse model imposes
 \Cref{eq:demand,eq:capacity,eq:transfercap} for every $s\in\Sset$,
-retains \Cref{eq:budget,eq:travel}, and
-adds the tail-risk term $\lambda_3 W$ where
-$W\geq\sum_{r,h} u_{r,h}^s$ for
-$s\in\Sset_{\text{tail}}=\{\text{high}\}$:
+retains \Cref{eq:budget,eq:travel}, and adds a tail term $\lambda_3 W$
+($W\geq\sum_{r,h} u_{r,h}^s$ for $s\in\Sset_{\text{tail}}=\{\text{high}\}$),
+giving the objective
 \begin{equation}\label{eq:robust_objective}
 \min\;
 \sum_{s\in\Sset}\!\pi_s\!\Big(
 \textstyle\sum_{r,h} u_{r,h}^s + \theta \sum_{r\neq r',h} \ell_{r r'} z_{r r',h}^s
 \Big)\;+\;\lambda_3\, W.
 \end{equation}
-$\lambda_3{=}0$ recovers the three-scenario risk-neutral objective;
-$\lambda_3\!\to\!\infty$ yields a worst-case policy on the high
-scenario. We report $\lambda_3{=}1$ throughout. With a single tail
+This is a \emph{scenario-weighted} LP that up-weights the high-demand
+tail, not robust optimisation in the formal sense. With a single tail
 scenario, minimisation drives $W=\sum_{r,h}u_{r,h}^{\text{high}}$, so
 $\lambda_3 W$ is a linear penalty on the worst-scenario shortfall
 (equivalently, extra weight on the high scenario) rather than a
 Rockafellar--Uryasev conditional value-at-risk (CVaR); the auxiliary
-form generalises unchanged to multiple tail scenarios. Imposing
+form generalises unchanged to multiple tail scenarios. We call it the
+\emph{robust LP} for brevity and report $\lambda_3{=}1$ throughout
+($\lambda_3{=}0$ recovers the risk-neutral objective and
+$\lambda_3\!\to\!\infty$ a worst-case policy on the high scenario); the
+tail term binds only under tight budgets (\Cref{ssec:e5_e6}). Imposing
 $q^{(0.9)}$ jointly across regions and horizons makes the construction
 co-monotone, its tail over-conservative relative to the true joint
 distribution; we treat this as an explicit stress-test choice and
