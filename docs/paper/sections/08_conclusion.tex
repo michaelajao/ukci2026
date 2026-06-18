@@ -4,7 +4,7 @@
 
 We presented a forecast-to-decision pipeline for NHS critical-care
 surge planning that couples a per-region physics-informed forecaster to
-a risk-averse allocation linear program. Before recalibration
+a risk-averse allocation linear program. Before recalibration,
 PinnGRU leads at the two-week horizon ($19\%$ over refitted ARIMA, $37\%$
 over a neural GRU); a model-agnostic recalibration then extends its
 competitiveness across the surge-relevant horizons. On the
@@ -12,7 +12,8 @@ decision side the gain is structural under scarce transfers, where the
 robust LP is never beaten on coverage. The main caveats are
 detour-scaled travel times, well-mixed populations, scaled cost units,
 and a single realised origin; more deeply, the per-region forecaster
-and co-monotone scenarios over-state the joint tail and understate
+and co-monotone scenarios overstate the joint tail and understate
 transfers, which pay off most under \emph{asynchronous} regional
 peaks. Correlated demand scenarios and a trust-level instance where
-exact solution warrants metaheuristics are the natural next steps.
+exact solution is expensive enough to warrant metaheuristics are the
+natural next steps.

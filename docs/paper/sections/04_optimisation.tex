@@ -36,7 +36,7 @@ decision, the planner's only true control, is the surge allocation
 $b_{r}\!\in\![0,K_r]$, shared across scenarios and horizons. The
 per-scenario \emph{second-stage} recourse is the flow
 $z_{r r',h}^s\!\geq\!0$ (defined for $T_{r r'}\!\leq\!\tau$); its
-self-loop $z_{r r,h}^s$ is demand served \emph{locally} and its
+self-loop $z_{r r,h}^s$ is demand served \emph{locally}, and its
 off-diagonal ($r'\!\neq\!r$) entries are inter-regional transfers, with
 unmet demand $u_{r,h}^s\!\geq\!0$ and a tail auxiliary $W\!\geq\!0$ for
 the risk-averse variant. Of the $42$ ordered region pairs, $24$ satisfy
@@ -51,7 +51,7 @@ For the median scenario $m$ ($q^{(0.5)}$), the deterministic model solves
 \textstyle\sum_{r,h} u_{r,h}^{m}
 \;+\;\theta\sum_{r\neq r',h} \ell_{r r'}\, z_{r r',h}^{m},
 \end{equation}
-with $\theta=10^{-3}$ a transfer tie-break weight (one bed of weekly
+with $\theta=10^{-3}$, a transfer tie-break weight (one bed of weekly
 snapshot unmet outweighs $1000$~patient-km of transfer). The objective
 minimises \emph{unmet demand}; the second term only breaks ties between
 equal-coverage plans by preferring less patient transport, so the surge
@@ -137,4 +137,4 @@ Finally, three closed-form heuristics give a no-optimisation floor.
 Population-proportional uses ONS region populations,
 demand-proportional uses expected peak demand, and greedy
 shortage-first adds single-bed increments to the most-unmet
-region. Each fixes $\mathbf{b}^\star$, completed by the same LP step.
+region. Each fixes $\mathbf{b}^\star$ and is then completed by the same LP step.

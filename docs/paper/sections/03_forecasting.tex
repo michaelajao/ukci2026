@@ -126,7 +126,7 @@ temporal head forecasts and the allocation consumes as demand $\xi$.
 where $\mathcal{N}$ is the right-hand side of \Cref{eq:seird},
 derivatives use PyTorch autograd at $256$ collocation points sampled
 uniformly in $\T_{\text{coll}}$, and observations are
-population-normalised. We pre-train each region's PINN for $1500$ Adam steps with
+population-normalised. We pre-train each region's PINN for $1{,}500$ Adam steps with
 $\lambda_{ode}=0.1$, $\text{lr}=5\!\times\!10^{-3}$; both terms converge
 to the $2\text{--}8\times 10^{-6}$ range across regions.
 
@@ -211,10 +211,10 @@ $\Delta t = 7$-day rolling origins, yielding $32$ origin dates.
 Applied frozen across a regime shift (high-demand Alpha/Delta training,
 mild Omicron test), the point forecast inherits a systematic
 over-prediction that grows with horizon. We correct it with two
-steps. The first recalibrates the bias, subtracting at
+steps. The first corrects the bias, subtracting at
 each rolling origin $t$ and horizon $h$ the mean of the model's last
 $K{=}3$ $h$-step errors whose target date is already observed ($<t$),
-a model-agnostic post-hoc correction, the per-origin adaptation a refit
+a model-agnostic post-hoc correction supplying the per-origin adaptation a refit
 gives ARIMA for free. The second blends
 with persistence, mixing the recalibrated forecast with
 seasonal-naive($7$) under a per-horizon weight
