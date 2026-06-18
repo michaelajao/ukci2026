@@ -26,12 +26,11 @@ and physics-informed neural networks (PINNs)~\cite{raissi2019physics,ajao2025hyb
 interval and quantile evaluation is also standard in epidemic forecast
 hubs~\cite{bracher2021evaluating}. The closest intensive-care-unit
 (ICU) occupancy comparator, a bidirectional long short-term memory
-(LSTM) network with lagged mobility features and Monte-Carlo-dropout
-intervals on Lazio data~\cite{valente2022forecasting}, like most such
+(LSTM) network on Lazio data~\cite{valente2022forecasting}, like most such
 work targets a single health system rather than multi-region planning.
 These forecasters are usually
 optimised for symmetric statistical accuracy, although critical-care
-planning has an asymmetric error cost: under-prediction risks stranded
+planning has an asymmetric error cost. Under-prediction risks stranded
 patients, whereas over-prediction wastes prepared capacity.
 
 On the allocation side, robust facility-location and health-resource
@@ -39,10 +38,9 @@ models handle demand uncertainty with mixed-integer linear programming
 (MILP), two-stage optimisation, and
 metaheuristics~\cite{eriskin2022robust,wan2023two}.
 Bertsimas et al.~\cite{bertsimas2022where} couple DELPHI dynamics to a
-bilinear mixed-integer program (MIP) for vaccination-site location,
-while Luo and Stellato~\cite{luo2024equitable} embed neural-ODE
-compartmental dynamics inside a McCormick-relaxed facility-location
-model. Our setting differs from
+mixed-integer program for vaccination-site location, while Luo and
+Stellato~\cite{luo2024equitable} embed neural-ODE dynamics in a
+facility-location model. Our setting differs from
 Smart Predict-then-Optimize~\cite{elmachtoub2022smart}. The
 forecaster is not trained through allocation regret, but its
 multi-quantile pinball objective is cost-asymmetric and feeds a robust
@@ -69,14 +67,14 @@ against three heuristic baselines on a shared LP-slave oracle.
 over the forecaster, budget $B$, tail-risk weight $\lambda_3$, travel
 cap $\tau$, and transfer cap $\kappa$.
 
-The main contributions are as follows:
-(1)~\textbf{Cost-asymmetric forecaster.} A multi-quantile pinball loss,
-a level-and-trend anchor, and a per-origin recalibration
-reduce $h{=}14$ RMSE by $25\%$ relative to a
-refitted ARIMA model and $42\%$
-relative to a per-region GRU, and make the model competitive across all
-horizons (best at $h{=}7$--$21$ and level with refitted ARIMA at
-$h{=}28$, where seasonal-naive leads).
+We make three main contributions.
+(1)~\textbf{Cost-asymmetric forecaster.} A multi-quantile pinball loss
+and a level-and-trend anchor cut $h{=}14$ RMSE by $19\%$ over a
+refitted ARIMA model and $37\%$ over a per-region GRU, the
+architecture's clearest edge; a model-agnostic per-origin recalibration
+then extends competitiveness to $h{=}7$--$21$ over the unrecalibrated
+baselines (level with refitted ARIMA at $h{=}28$, where seasonal-naive
+leads).
 (2)~\textbf{Robust LP allocation.} With unconstrained transfers the
 hybrid-regional robust LP ties every budget-exhausting policy on
 coverage and wins on transfer burden ($4.6\times$ below

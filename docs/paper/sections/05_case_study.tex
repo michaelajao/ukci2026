@@ -3,7 +3,7 @@
 % =============================================================================
 
 The case study uses two public sources covering $1$~Aug~$2020$ --
-$31$~Aug~$2022$ (the period of daily NHS regional publication):
+$31$~Aug~$2022$ (the period of daily NHS regional publication). These are
 NHS~England COVID-19~Hospital~Activity~\cite{nhs_covid_activity}, which
 provides daily hospital and mechanical-ventilation bed occupancy at NHS
 regional resolution; and ONS Mid-Year
@@ -11,7 +11,7 @@ Population Estimates~\cite{ons_mye_2021} on 2021 geography, used as the
 per-region PINN normaliser and the population-proportional baseline
 denominator. All experiments use the seven NHS England commissioning
 regions. The series is split chronologically by epidemic wave so the
-most clinically distinct wave is held out: training on $1$~Aug~$2020$ --
+most clinically distinct wave is held out, with training on $1$~Aug~$2020$ --
 $31$~May~$2021$ (Alpha and early vaccination), validation on
 $1$~Jun -- $30$~Nov~$2021$ (Delta) for hyper-parameter selection and
 early stopping, and testing on $1$~Dec~$2021$ -- $31$~Aug~$2022$

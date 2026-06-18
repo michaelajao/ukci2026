@@ -103,7 +103,7 @@ physics-informed forecaster.}
 \subsection{Per-Region PINN-SEIRD}\label{ssec:pinn}
 
 The PINN consists of two multilayer perceptrons (MLPs)
-following~\cite{ajao2025hybrid}: a state
+following~\cite{ajao2025hybrid}, a state
 network $U^r_{NN}$ (five hidden layers of $20$ units) and a parameter
 network $X^r_{NN}$ for $(\beta_r,\gamma_{c,r},\delta_{c,r},\eta_r)$
 (three hidden layers of $20$ units), with tanh hidden activations and
@@ -112,7 +112,7 @@ compartments with an ODE residual against \Cref{eq:seird}. The observed
 compartments are $H$ (daily general-and-acute hospital bed occupancy)
 and $C$ (mechanical-ventilation [MV], i.e.\ critical-care, bed occupancy),
 the only states with daily regional NHS counts; $C$ is the quantity the
-temporal head forecasts and the allocation consumes as demand $\xi$:
+temporal head forecasts and the allocation consumes as demand $\xi$.
 \begin{equation}\label{eq:pinn_loss}
 \begin{aligned}
 \mathcal{L}^{PINN}_r
@@ -133,7 +133,7 @@ to the $2\text{--}8\times 10^{-6}$ range across regions.
 With only $H$ and $C$ observed, the four learnable parameters
 $(\beta_r, \gamma_{c,r}, \delta_{c,r}, \eta_r)$ are not jointly
 identifiable ($\gamma_{c,r}$ and $\delta_{c,r}$ appear additively in
-$\dot C_r$), so we make no per-trajectory interpretability claim: the
+$\dot C_r$), so we make no per-trajectory interpretability claim. The
 four-channel output is consumed as a learned feature vector by the GRU,
 whose signal the ``w/o PINN params'' ablation confirms (\Cref{ssec:e1};
 $h{=}14$ RMSE $14.46\!\to\!27.25$). Structural identifiability under
@@ -141,7 +141,7 @@ $\{H,C\}$ observation is future work.
 
 \subsection{Temporal Head with Level-and-Trend Anchor}\label{ssec:temporal}
 
-Once pre-trained the PINN is \emph{frozen}: at every origin, including
+Once pre-trained the PINN is \emph{frozen}. At every origin, including
 those in the Omicron test period, its networks are \emph{evaluated}
 (never refit) to supply features, so any temporal extrapolation of the
 state network beyond its Alpha/Delta fit is absorbed and corrected
@@ -161,7 +161,7 @@ per-horizon two-layer MLP (width $64$, Gaussian-error-linear-unit
 deltas $\Delta_{r,t}^{h,q}$ for $h\in\Hset=\{7,14,21,28\}$ and
 $q\in\Qset=\{0.1,0.5,0.9\}$.
 
-A \emph{level-and-trend anchor} makes the GRU's job residual:
+A \emph{level-and-trend anchor} makes the GRU's job residual. The anchored forecast is
 \begin{equation}\label{eq:anchor}
 \hat\zeta_{r,t}^{h,q} \;=\; \Delta_{r,t}^{h,q}
   \;+\; a^{h,q}\, \tilde y_{r,t}
@@ -180,7 +180,7 @@ the original scale follow by inverting standardisation.
 \subsection{Pinball Loss for Cost-Asymmetric Quantiles}\label{ssec:loss}
 
 The forecaster minimises the multi-quantile pinball
-loss~\cite{koenker1978regression}:
+loss~\cite{koenker1978regression},
 \begin{equation}\label{eq:pinball}
 \mathcal{L}_{\text{pinball}} = \frac{1}{|\Qset|}\sum_{q\in\Qset}
   \mathbb{E}_{(t,h)}\!\big[\max\!\big(
@@ -214,7 +214,8 @@ over-prediction that grows with horizon. We correct it with two
 steps. The first recalibrates the bias, subtracting at
 each rolling origin $t$ and horizon $h$ the mean of the model's last
 $K{=}3$ $h$-step errors whose target date is already observed ($<t$),
-the adaptation that a per-origin refit gives for free. The second blends
+a model-agnostic post-hoc correction, the per-origin adaptation a refit
+gives ARIMA for free. The second blends
 with persistence, mixing the recalibrated forecast with
 seasonal-naive($7$) under a per-horizon weight
 $\alpha\in\{0,0.1,\dots,1\}$ fitted on an expanding window of realised

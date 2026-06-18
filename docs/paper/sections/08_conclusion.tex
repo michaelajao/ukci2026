@@ -4,13 +4,11 @@
 
 We presented a forecast-to-decision pipeline for NHS critical-care
 surge planning that couples a per-region physics-informed forecaster to
-a tail-risk robust allocation linear program. With a per-origin
-recalibration, PinnGRU is competitive across the horizons
-that drive surge decisions, cutting $14$-day RMSE by $25\%$ over
-refitted ARIMA and $42\%$ over a neural GRU. On the decision side the
-gain is structural. With unconstrained transfers every
-budget-exhausting policy ties on coverage and the robust formulation
-wins on routing; once transfers are scarce the tie breaks and the
+a tail-risk robust allocation linear program. Before recalibration
+PinnGRU leads at the two-week horizon ($19\%$ over refitted ARIMA, $37\%$
+over a neural GRU); a model-agnostic recalibration then extends its
+competitiveness across the surge-relevant horizons. On the
+decision side the gain is structural under scarce transfers, where the
 robust LP is never beaten on coverage. The main caveats are
 detour-scaled travel times, well-mixed populations, scaled cost units,
 and a single realised origin; more deeply, the per-region forecaster

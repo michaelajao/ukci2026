@@ -19,13 +19,14 @@ where a regime-shift over-prediction bias (an $h{=}28$ underestimation
 rate of only $10.3\%$) leaves it behind ARIMA and seasonal-naive
 ($+5.53$ MV beds vs ARIMA at $h{=}28$, $p{=}0.006$). The
 per-origin recalibration of \Cref{ssec:recal} removes this bias and
-blends with persistence at long horizons. The recalibrated model is
-best at $h{=}7$, $14$ and $21$, cutting the operational $14$-day RMSE
-by $25\%$ over ARIMA and $42\%$ over the per-region GRU, and at
-$h{=}28$ ties ARIMA ($28.5$ vs $28.0$) with only seasonal-naive
-($26.0$) still ahead. Its $h{=}28$ underestimation rate rises to
-$37\%$, so the point forecast is now a well-calibrated median rather
-than a systematic over-predictor.
+blends with persistence at long horizons. Against the unrecalibrated
+baselines the recalibrated model leads at $h{=}7$--$21$ and ties ARIMA
+at $h{=}28$ ($28.5$ vs $28.0$). Recalibration is model-agnostic, so
+under uniform recalibration the physics-informed edge concentrates at
+$h{=}14$--$21$, while the cost-asymmetric quantiles, which a recalibrated
+point forecaster cannot supply, carry the decision value. Its $h{=}28$
+underestimation rate rises to $37\%$, so the point forecast is a
+well-calibrated median, not a systematic over-predictor.
 
 XGBoost and the per-region GRU, lag-only learners bounded by the
 $28$-day window, cannot extrapolate into Omicron's altered
@@ -33,10 +34,10 @@ case-to-hospitalisation regime and degrade sharply ($h{=}28$ RMSE
 $58.9$, $44.0$), whereas ARIMA's per-origin refit degrades only modestly.
 
 Three ablations against the raw PinnGRU ($h{=}14$ RMSE $14.46$, MASE
-$0.77$) isolate the load-bearing parts: replacing the pinball loss with a
-mean-squared-error (MSE) loss lifts $h{=}14$ RMSE to $18.70$ (MASE $0.97$), skipping PINN
-pre-training to $17.27$ (MASE $0.76$), and zeroing the four PINN
-parameter features to $27.25$ (MASE $1.23$), the largest regression.
+$0.77$) isolate the load-bearing parts. Replacing the pinball loss with a
+mean-squared-error (MSE) loss lifts $h{=}14$ RMSE to $18.70$, skipping
+PINN pre-training to $17.27$, and zeroing the four PINN parameter
+features to $27.25$, the largest regression.
 The physics prior, not capacity, drives the gain over the per-region GRU.
 
 \begin{table}[t]
@@ -121,7 +122,7 @@ robust LP compromising with non-trivial North~West and London surge.
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\textwidth]{fig_alloc_budget.png}
-\caption{Allocation structure and robust-LP budget frontier: (a)~per-region
+\caption{Allocation structure and robust-LP budget frontier. (a)~per-region
 surge beds by policy at the first Omicron origin; (b)~expected and worst-case
 unmet demand as the surge budget grows.}
 \label{fig:alloc_budget}
@@ -131,9 +132,8 @@ unmet demand as the surge budget grows.}
 \label{ssec:e5_e6}
 
 Substituting each forecaster into the robust LP at the $29$~Dec~$2021$
-origin, the $q^{(0.9)}$ peak sums (PinnGRU $1421$, XGBoost $1105$, GRU
-$973$, ARIMA $875$, seasonal-naive $745$~beds) all exceed the realised
-peak ($797$) except seasonal-naive. Realised unmet is zero throughout,
+origin, the $q^{(0.9)}$ peak sums all exceed the realised peak ($797$~beds)
+except seasonal-naive. Realised unmet is zero throughout,
 so forecast quality buys \emph{efficiency} at the $q^{(0.9)}$ margin
 rather than coverage in this mild Omicron instance.
 
@@ -155,8 +155,7 @@ tighter budget ($\leq\!15\%$) re-engages it.
 
 The transfer controls $\tau$ and $\kappa$ determine when placement
 matters. With uncapped recourse on the $12$-link network the
-\Cref{tab:allocation} coverage tie persists at $10$--$20\%$ budgets:
-coverage depends only on \emph{total} surge, so placement is fungible
+\Cref{tab:allocation} coverage tie persists at $10$--$20\%$ budgets. Coverage depends only on \emph{total} surge, so placement is fungible
 and optimisation buys routing alone. Constraining recourse breaks the
 tie. Pruning the network to five links ($\tau{=}120$~min) puts the
 robust LP ahead of every heuristic on expected and worst-case unmet
