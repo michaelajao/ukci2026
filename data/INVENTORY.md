@@ -5,7 +5,6 @@ This file documents the contents of `data/` and the rationale for each file. The
 1. Raw NHS England XLSX archives in `data/raw/` (downloaded by `ukci-download-nhs-data`).
 2. Tidy NHS regional CSV in `data/processed/` (produced by `ukci-build-regional-dataset`).
 3. UK supporting datasets in `data/raw/supporting/` (ONS Mid-Year Population Estimates only), downloaded by `ukci-download-supporting-data`.
-4. Legacy material in `data/legacy/` that was used by prior MSAGAT-Net work but is **not** consumed by the UKCI 2026 pipeline. Retained for reproducibility / stretch experiments only.
 
 Last updated: 2026-05-12.
 
@@ -51,40 +50,10 @@ Fetched by `ukci-download-supporting-data`. SHA-256 hashes recorded in [data/raw
 
 ---
 
-## `data/legacy/` — material not used by the UKCI 2026 paper
-
-### `data/legacy/msagat_net/` — MSAGAT-Net inputs
-
-These files were the inputs to the prior MSAGAT-Net submission (AIIM, under review). They are **not** used in the UKCI 2026 pipeline. Retained to (a) keep the previous experiment reproducible, (b) preserve the LTLA-level case data as a candidate future covariate.
-
-| File | Description | Why excluded from UKCI 2026 |
-|---|---|---|
-| `nhs_timeseries.txt` | 895 days × 7 regions, MV-bed occupancy, 7-day rolling-averaged. | **Redundant.** Same series as `data/processed/regional_daily.csv::mv_beds`, but at coarser smoothing and missing the three covariate columns (`admissions`, `hospital_cases`, `occupied_beds`) we now use. |
-| `nhs-adj.txt` | 7×7 NHS region binary adjacency. | Our MILP uses continuous travel-time costs, not binary adjacency. |
-| `ltla_timeseries.txt` | 839 days × 372 LTLAs, daily COVID-positive counts. | Plausibly useful as an additional leading indicator (LTLA cases lead hospitalisations by 7–14 days). Held for future inclusion if the PINN-GRU under-performs and a stronger covariate is needed. |
-| `ltla-adj.txt` | 372×372 LTLA adjacency. | Graph-structural input; explicitly out of scope for the per-region UKCI 2026 positioning vs MSAGAT-Net. |
-| `nhs_region_adj.txt` | Canonical copy of `nhs-adj.txt` previously placed under `data/graphs/`. | Same reasoning as `nhs-adj.txt`. |
-| `graphs_README.md` | Earlier README that documented the adjacency provenance. | Superseded by this inventory. |
-
-### `data/legacy/international/` — non-UK epidemic benchmarks
-
-Carried over from MSAGAT-Net's multi-country benchmarks. **Not used** in the UKCI 2026 NHS analysis. Retained only as material for a stretch "international forecast generalisation" appendix should E1–E4 finish ahead of schedule.
-
-| File set | Country / scope |
-|---|---|
-| `australia-covid.txt`, `australia-adj.txt` | Australia COVID-19, 8 states |
-| `japan.txt`, `japan-adj.txt` | Japan prefecture-level influenza, 47 prefectures |
-| `spain-covid.txt`, `spain-adj.txt`, `spain-label.csv` | Spain COVID-19 |
-| `region785.txt`, `region-adj.txt` | US regional, 10 regions |
-| `state360.txt`, `state-adj-49.txt`, `state-adj-50.txt` | US state-level |
-
----
-
 ## `.gitignore` policy
 
 - `data/raw/*.xlsx` — gitignored. Public NHS source; we link to the portal rather than redistribute the bytes.
 - `data/processed/*.csv` and `data/processed/*.md` — gitignored. Derived artefacts; reproducible from `data/raw/` via `build_regional_dataset.py`.
-- `data/legacy/` — **not** gitignored. Small files committed for reproducibility of prior work.
 - `data/INVENTORY.md` (this file) — committed.
 
 ---

@@ -39,7 +39,6 @@ docs/paper/
 |-- spmpsci.bst              # Springer bibliography style copied from docs/ukci_springer_template
 |-- sections/
 |   |-- 01_introduction.tex   # related work is folded in here
-|   |-- 02_related_work.tex    # NOT \input by main.tex (kept for the journal version)
 |   |-- 03_forecasting.tex
 |   |-- 04_optimisation.tex
 |   |-- 05_case_study.tex

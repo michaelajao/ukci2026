@@ -84,9 +84,7 @@ available after the editable install.
 | Document | Purpose |
 |---|---|
 | [`docs/paper/`](docs/paper/) | UKCI conference manuscript source (build with `make`; PDF in `docs/paper/out/`) |
-| [`docs/journal/`](docs/journal/) | Journal-extension skeleton (Health Care Management Science target); PDF in `docs/journal/out/` |
 | [`docs/ukci_springer_template/`](docs/ukci_springer_template/) | Original UKCI/Springer SVProc template bundle from the conference website |
-| [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) | Running status notes and gate decisions |
 | [`presentation.md`](presentation.md) | Marp slide deck for the talk (renders to `presentation.pdf`) |
 
 ## Repository layout
@@ -99,7 +97,7 @@ bulky raw NHS data and LaTeX build artifacts are gitignored.
 
 ```text
 ukci2026/
-|-- docs/                          # Manuscripts, journal extension, status notes
+|-- docs/                          # Conference manuscript + Springer template
 |-- data/
 |   |-- raw/                       # NHS XLSX archives (gitignored, downloaded)
 |   |-- processed/                 # Tidy regional CSV
