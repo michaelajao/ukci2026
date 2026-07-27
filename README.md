@@ -1,11 +1,11 @@
 # UKCI 2026 - Critical-Care Surge Capacity Planning
 
-**Working title:** Physics-Informed ICU Bed Forecasting with Cost-Asymmetric
-Quantile Loss and Robust Optimisation for NHS Critical-Care Surge Capacity
-Under Demand Uncertainty
+**Title:** Physics-Informed Multi-Quantile Forecasting for Risk-Averse NHS
+Critical-Care Surge Allocation
 
-**Authors:** Michael Ajao-Olarinoye, Abiola Babatunde, AmirHosein Sadeghimanesh
-(Centre for Computational Sciences and Mathematical Modelling, Coventry University)
+**Authors:** Michael Ajao-Olarinoye, Abiola Babatunde, AmirHosein Sadeghimanesh,
+Fei He, and Matthew England (Centre for Computational Sciences and Mathematical
+Modelling, Coventry University)
 
 **Conference:** UKCI 2026, Coventry, 9-11 September 2026
 
@@ -17,9 +17,10 @@ robust optimisation for NHS England critical-care surge capacity planning.
 
 ```bash
 # 1. Clone and set up environment
-git clone <repo-url> ukci2026
+git clone https://github.com/michaelajao/ukci2026.git
 cd ukci2026
-conda activate pyt_env
+python -m venv .venv
+source .venv/bin/activate            # Windows PowerShell: .venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"
 
 # 2. Download NHS data (one-off, ~50 MB total)
@@ -49,14 +50,16 @@ ukci-forecast-evaluation sources   # list CSVs used as paper source tables
 ukci-forecast-evaluation all       # rebuild metrics, Table 1, and forecast figure
 ```
 
-For the main paper, use `results/forecasting/table1_paper.csv` for the
-forecasting table and `results/allocation/table2_allocation.csv` for the
-allocation table. Detailed regional metrics can stay in the appendix.
+For the main paper, the point-forecast table is sourced from
+`results/forecasting/table1_paper.csv`, the quantile table from
+`results/forecasting/table_quantile_metrics.csv`, and the allocation table from
+`results/allocation/table2_allocation.csv`. Detailed regional metrics remain
+available for supplementary analysis.
 
 When running checks without activating the environment first, use:
 
 ```bash
-conda run -n pyt_env python -m compileall -q src
+python -m compileall -q src
 ```
 
 ## Command reference
@@ -83,9 +86,8 @@ available after the editable install.
 
 | Document | Purpose |
 |---|---|
-| [`docs/paper/`](docs/paper/) | UKCI conference manuscript source (build with `make`; PDF in `docs/paper/out/`) |
-| [`docs/ukci_springer_template/`](docs/ukci_springer_template/) | Original UKCI/Springer SVProc template bundle from the conference website |
-| [`presentation.md`](presentation.md) | Marp slide deck for the talk (renders to `presentation.pdf`) |
+| [`docs/paper/`](docs/paper/) | UKCI conference manuscript and bundled Springer SVProc files (build with `make`; PDF at `output/pdf/ukci2026_camera_ready.pdf`) |
+| [`docs/presentation.md`](docs/presentation.md) | Marp slide deck for the talk (renders to `presentation.pdf`) |
 
 ## Repository layout
 
@@ -104,16 +106,13 @@ ukci2026/
 |   `-- graphs/                    # NHS region adjacency, distance, correlation
 |-- src/                           # Python packages and command entry points
 |   |-- data/                      # NHS ingestion, splits, scenarios
-|   |-- forecasting/               # PINN-SEIRD, cost-asymmetric loss, baselines
+|   |-- forecasting/               # PINN-SEIRD, multi-quantile loss, baselines
 |   |-- optimization/              # LP, robust LP, heuristics, sensitivity sweeps
 |   |-- evaluation/                # Forecast and allocation metrics, EDA
 |   `-- utils.py                   # Shared infrastructure helpers
-|-- configs/                       # YAML experiment configs
-|-- notebooks/                     # EDA and analysis notebooks
-|-- tests/                         # pytest unit tests
 |-- results/                       # Output tables and metrics (committed)
 |-- figures/                       # Output figures (committed)
-|-- presentation.md                # Marp slide deck
+|-- docs/presentation.md           # Marp slide deck
 |-- pyproject.toml
 `-- README.md
 ```
@@ -135,14 +134,13 @@ Conventional Commits format:
 - `feat(forecast): add PINN-SEIRD per-region module`
 - `fix(data): handle NHS region renaming in 2022-08 archive`
 - `experiment(opt): NSGA-II on London trust subset`
-- `docs(method): expand cost-asymmetric loss derivation`
+- `docs(method): expand multi-quantile loss derivation`
 
-### Tests
+### Checks
 
 ```bash
-pytest tests/                       # all
-pytest tests/test_data.py           # data harmonisation
-pytest -m "not slow"                # skip slow integration tests
+python -m compileall -q src
+ruff check src
 ```
 
 ## License
@@ -151,16 +149,14 @@ Released under the MIT License (see [`LICENSE`](LICENSE)).
 
 ## Citation
 
-If this work is useful, please cite (placeholder until acceptance):
+If this work is useful, please cite:
 
 ```bibtex
-@inproceedings{ajao-olarinoye2026physics,
-  title  = {Physics-Informed {ICU} Bed Forecasting with
-            Cost-Asymmetric Quantile Loss and Robust Optimisation
-            for {NHS} Critical-Care Surge Capacity Under
-            Demand Uncertainty},
+@inproceedings{ajao-olarinoye2026multi,
+  title  = {Physics-Informed Multi-Quantile Forecasting for
+            Risk-Averse {NHS} Critical-Care Surge Allocation},
   author = {Ajao-Olarinoye, Michael and Babatunde, Abiola and
-            Sadeghimanesh, AmirHosein},
+            Sadeghimanesh, AmirHosein and He, Fei and England, Matthew},
   booktitle = {Proceedings of the 25th UK Workshop on
                Computational Intelligence (UKCI 2026)},
   year   = {2026},

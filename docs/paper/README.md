@@ -11,28 +11,22 @@ that template: `svproc.cls`, `aliascnt.sty`, `remreset.sty`, and `spmpsci.bst`.
 ## Build
 
 ```bash
-make            # produces out/main.pdf
+make            # produces ../../output/pdf/ukci2026_camera_ready.pdf
 make clean      # remove auxiliary files
 make distclean  # remove auxiliary files and PDF
 make watch      # rebuild on every save (latexmk -pvc)
 make wordcount  # rough word count via texcount
 ```
 
-Or compile manually:
-
-```bash
-latexmk -pdf -outdir=out main.tex
-```
+Use `make` so the required Springer/BibTeX assets are staged and the
+intermediate files are removed automatically.
 
 ## File Structure
 
 ```text
 docs/paper/
 |-- main.tex                 # Top-level paper source
-|-- out/                     # Generated LaTeX artifacts and PDF
 |-- references.bib           # Bibliography
-|-- title.txt                # UKCI CMT metadata
-|-- authors.txt              # UKCI CMT metadata
 |-- svproc.cls               # Springer proceedings class copied from docs/ukci_springer_template
 |-- aliascnt.sty             # Springer support file copied from docs/ukci_springer_template
 |-- remreset.sty             # Springer support file copied from docs/ukci_springer_template
@@ -44,7 +38,7 @@ docs/paper/
 |   |-- 05_case_study.tex
 |   |-- 06_results.tex         # discussion is folded in here
 |   `-- 08_conclusion.tex
-`-- figures/
+`-- ../../output/pdf/ukci2026_camera_ready.pdf
 ```
 
 ## Status
@@ -63,7 +57,6 @@ Still required before final CMT upload:
 
 ## Final Submission Shape
 
-The UKCI upload should be a ZIP containing this paper source, the final PDF
-from `out/`, `title.txt`, `authors.txt`, and the copied Springer files needed
-to compile the paper. Do not upload `docs/files_paper.zip` or the nested
-`ukci2026_project.tar.gz`.
+The UKCI upload should include the paper source, the final PDF at
+`output/pdf/ukci2026_camera_ready.pdf`, and the copied Springer files needed
+to compile the paper.

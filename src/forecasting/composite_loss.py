@@ -9,13 +9,14 @@ This module is the load-bearing methodological contribution of the paper:
    networks into the quantile head, producing forecasts at horizons
    ``h ∈ {7, 14, 21, 28}`` and quantiles ``q ∈ {0.1, 0.5, 0.9}``.
 3. ``pinball_loss_multiq`` — strictly proper multi-quantile pinball loss
-   (Koenker & Bassett 1978; Gneiting & Raftery 2007). The asymmetry at
-   ``q = 0.9`` carries the decision-aware "avoid under-prediction" mass.
+   (Koenker & Bassett 1978; Gneiting & Raftery 2007). Its equally
+   weighted lower and upper branches have opposite asymmetries; only the
+   ``q = 0.9`` branch has the shortage-relevant under-prediction penalty.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import torch
 from torch import Tensor, nn
@@ -40,8 +41,8 @@ LOOKBACK_DEFAULT: int = 28
 #
 # Each horizon prediction is ``mlp_h(last_hidden) + alpha_h * y_last_observed
 # + beta_h * slope * (h / trend_lag) ** phi_h^q`` so the GRU only learns the
-# *delta* from current level. The quantile-specific damping ``phi_h^q``
-# carries the decision-aware "avoid under-prediction" mass at q = 0.9.
+# *delta* from current level. Quantile-specific damping ``phi_h^q`` lets
+# each output learn a different trend response.
 
 
 @dataclass

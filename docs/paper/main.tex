@@ -1,11 +1,11 @@
 % =============================================================================
-%  Cost-Asymmetric Physics-Informed Forecasting for Risk-Averse NHS
+%  Physics-Informed Multi-Quantile Forecasting for Risk-Averse NHS
 %  Critical-Care Surge Allocation
 %
 %  Submission to UKCI 2026 (Coventry, 9-11 September 2026)
 %  Springer proceedings (SVProc), 12-page full paper
 %
-%  Compile with: latexmk -pdf -outdir=out main.tex
+%  Compile with: make
 % =============================================================================
 
 \documentclass{svproc}
@@ -26,7 +26,7 @@
 % Graphics, tables
 \usepackage{graphicx}
 % Figures live in repo-root figures/. Support both direct builds from
-% docs/paper/ and builds that place output under docs/paper/out/.
+% docs/paper/ and builds that place output under output/pdf/.
 \graphicspath{{../../figures/}{../../../figures/}{../figures/}{figures/}}
 \usepackage{booktabs}
 \usepackage{multirow}
@@ -71,8 +71,8 @@
 \begin{document}
 
 % Title
-\title{Cost-Asymmetric Physics-Informed Forecasting for Risk-Averse NHS Critical-Care Surge Allocation}
-\titlerunning{Cost-Asymmetric Forecasting for NHS Surge Allocation}
+\title{Physics-Informed Multi-Quantile Forecasting for Risk-Averse NHS Critical-Care Surge Allocation}
+\titlerunning{Multi-Quantile Forecasting for NHS Surge Allocation}
 
 % Authors
 % AmirHosein Sadeghimanesh ORCID: 0000-0002-6945-3118
@@ -94,10 +94,28 @@
 
 % Abstract
 \begin{abstract}
-NHS critical-care planning during epidemic waves must pre-position surge capacity and route patients across regions before demand is known. We propose a forecast-to-decision pipeline that couples a per-region physics-informed forecaster on the $SEI_aI_sHCRD$ system to a risk-averse, scenario-weighted linear program (LP) for bed-surge allocation. The forecaster is trained with a cost-asymmetric multi-quantile pinball loss whose $q^{(0.9)}$ branch penalises under-prediction nine-to-one, together with a level-and-trend anchor and a per-origin recalibration that removes a long-horizon over-prediction bias. On a seven-region NHS England case study (Aug~$2020$ to Aug~$2022$), before recalibration the forecaster cuts $14$-day root-mean-square error (RMSE) by $19\%$ over per-origin refitted autoregressive integrated moving average (ARIMA) and by $37\%$ over a neural gated recurrent unit (GRU); the model-agnostic recalibration then extends competitiveness to $7$--$21$ days over the unrecalibrated baselines, level with ARIMA at $28$ days (where seasonal-naive is strongest). Its quantile forecasts drive a hybrid-regional allocation solved exactly as an LP. With unconstrained transfers all budget-exhausting policies tie on coverage and the risk-averse formulation wins on transfer burden; once transfers are constrained the proportional heuristics concede up to $60\%$ more unmet demand.
+NHS critical-care planning during epidemic waves must pre-position surge
+capacity and route patients across regions before demand is known. We propose
+a forecast-to-decision pipeline that couples a per-region physics-informed
+forecaster on the $SEI_aI_sHCRD$ system to a risk-averse, scenario-weighted
+linear program (LP) for bed-surge allocation. The forecaster uses an equally
+weighted multi-quantile pinball loss, including a cost-relevant $q^{(0.9)}$
+branch that penalises under-prediction nine-to-one, together with a
+level-and-trend anchor. On a seven-region NHS England case study
+(Aug~$2020$ to Aug~$2022$), before point recalibration the forecaster cuts
+$14$-day root-mean-square error (RMSE) by $19\%$ over per-origin refitted
+autoregressive integrated moving average (ARIMA) and by $37\%$ over a neural
+gated recurrent unit (GRU). Raw $80\%$ interval coverage declines from $94\%$
+at $7$ days to $64\%$ at $28$ days, so the three quantiles drive the LP as
+explicit stress scenarios rather than calibrated probability bins. With
+unconstrained transfers all budget-exhausting policies tie on coverage and the
+risk-averse formulation wins on transfer burden; once transfers are
+constrained the proportional heuristics concede up to $60\%$ more
+scenario-weighted unmet demand.
 
-\keywords{physics-informed neural networks, cost-asymmetric forecasting,
-          pinball loss, risk-averse optimisation, linear programming,
+\keywords{physics-informed neural networks, quantile forecasting,
+          pinball loss, probabilistic forecasting, risk-averse optimisation,
+          linear programming,
           NHS England}
 \end{abstract}
 

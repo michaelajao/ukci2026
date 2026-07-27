@@ -28,7 +28,7 @@ transfer cost proportional to centroid distance.
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
@@ -198,8 +198,8 @@ def build_scenarios_at_origin(
             y_hat = float(row["y_hat"].iloc[0])
             q_lo = float(row["q_lo"].iloc[0]) if pd.notna(row["q_lo"].iloc[0]) else y_hat
             q_hi = float(row["q_hi"].iloc[0]) if pd.notna(row["q_hi"].iloc[0]) else y_hat
-            # MV-bed demand is non-negative; clip quantile crossings into [0, .]
-            # so the LP demand RHS is never negative regardless of forecaster.
+            # MV-bed demand is non-negative; clip each raw head at zero so the
+            # LP demand RHS is never negative. This does not reorder crossings.
             demand[r_idx, h_idx, 0] = max(0.0, q_lo)
             demand[r_idx, h_idx, 1] = max(0.0, y_hat)
             demand[r_idx, h_idx, 2] = max(0.0, q_hi)

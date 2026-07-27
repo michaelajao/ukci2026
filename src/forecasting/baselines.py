@@ -8,11 +8,8 @@ Model               Tier   Purpose
 SeasonalNaive(7)    1      Rule floor (:math:`\\hat y_{t+h} = y_{t+h-7}`).
 ARIMAPerRegion      1      Non-DL statistical floor via ``statsmodels.SARIMAX``.
 GRUPerRegion        1      Non-physics deep-learning control for the PINN ablation.
+XGBoostPerRegion    1      Non-linear lag-feature baseline.
 ==================  =====  =======================================================
-
-Tier 3 wrappers (N-BEATS, TFT, DeepAR) live in separate modules to be added
-in the D9 implementation pass and are registered into ``REGISTRY`` from
-those modules at import time.
 
 All implementations share the ``BaselineModel`` ABC. Each ``fit(history)``
 on a ``pandas.DataFrame`` indexed by ``(region, date)``; ``predict(horizons)``
@@ -24,7 +21,7 @@ from __future__ import annotations
 
 import warnings
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Iterable
 
 import numpy as np
@@ -469,11 +466,6 @@ class XGBoostPerRegion(BaselineModel):
 # Registry & convenience
 # ---------------------------------------------------------------------------
 #
-# Tier 3 wrappers (N-BEATS via ``neuralforecast``, TFT and DeepAR via
-# ``pytorch-forecasting``) are implemented in separate modules to be added
-# in the D9 implementation pass. They are registered here when their
-# wrapper modules import successfully.
-
 REGISTRY: dict[str, type[BaselineModel]] = {
     "seasonal_naive": SeasonalNaive,
     "arima_per_region": ARIMAPerRegion,

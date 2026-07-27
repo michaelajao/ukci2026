@@ -8,8 +8,8 @@ at fixed rolling-origin dates within the Omicron test period (2021-12-01 to
   - ARIMAPerRegion          per-region SARIMAX, AIC-selected order, refit per origin
   - GRUPerRegion            univariate GRU baseline, fit on train+val, slide on test
   - PinnGRU                 PINN feature extractor + GRU head trained with the
-                            decision-aware composite loss (per-region), MC Dropout
-                            quantiles at inference
+                            multi-quantile pinball loss (per-region), with
+                            direct quantiles at inference
 
 Outputs:
   results/forecasting/forecasts.parquet   long-form: model, origin, region, horizon,
@@ -70,7 +70,7 @@ TARGET = "mv_beds"
 # predict high MV beds even though Omicron was mild.  Occupied_beds is
 # excluded for the same reason.  The PINN time-embedding features and the
 # autoregressive mv_beds signal are sufficient for the paper's contribution
-# (decision-aware composite loss ablation).
+# (multi-quantile-loss ablation).
 COVARS: tuple[str, ...] = ("mv_beds",)
 SEED = 0
 MC_K = 100
@@ -87,7 +87,7 @@ ABLATIONS = [
     {"tag": "no_params", "label": "No PINN parameter features (state-only)", "kwargs": {"mask_param_features": True}},
     {
         "tag": "no_decision_aware",
-        "label": "No decision-aware loss (MSE on q50 only)",
+        "label": "No quantile loss (MSE on q50 only)",
         "kwargs": {"use_mse_loss": True},
     },
 ]
@@ -303,8 +303,9 @@ def train_pinn_gru_region(
            stop on validation pinball.
 
     Output head produces ``(q10, q50, q90)`` per horizon directly via the
-    ``QuantileForecastingHead``. The decision-aware emphasis comes from
-    pinball-q90 being part of the loss — no separate asymmetric hinge.
+    ``QuantileForecastingHead``. The upper-tail information comes from
+    pinball-q90 being one equally weighted branch of the loss; there is no
+    separate asymmetric hinge.
 
     Args:
         series_y: (T,) target values (mv_beds) on the original scale.

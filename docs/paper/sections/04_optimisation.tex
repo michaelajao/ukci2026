@@ -10,38 +10,28 @@ and closed-form heuristic baselines.
 
 \subsection{Sets, Parameters, and Decision Variables}\label{ssec:notation}
 
-The scope is \emph{hybrid regional}, with demand nodes and capacity sites
-coinciding with the seven NHS England commissioning regions, one set
-$\R=\{r_1,\ldots,r_7\}$. Unlike facility-location models that choose
-which sites to open~\cite{bertsimas2022where}, every region already
-operates critical care, so there is no opening decision and surge cost
-is uniform per bed; the model decides only bed counts and routing. The indices are regions $r,r'\!\in\!\R$; horizons
+The seven regions are both demand nodes and capacity sites,
+$\R=\{r_1,\ldots,r_7\}$. Each already operates critical care,
+so unlike facility-location models~\cite{bertsimas2022where} there is no
+opening decision; the model chooses bed counts and routing. Indices are
+$r,r'\!\in\!\R$; horizons
 $h\!\in\!\Hset=\{7,14,21,28\}$~days; scenarios
 $s\!\in\!\Sset=\{\text{low},\text{median},\text{high}\}$ from
 $q^{(0.1)},q^{(0.5)},q^{(0.9)}$ with weights
-$\pi=(0.2,0.6,0.2)$, a representative-quantile discretisation of lower,
-central, and upper demand stress (a scenario mixture, not calibrated
-probability bins).
-The parameters are forecast demand
+$\pi=(0.2,0.6,0.2)$, representative design weights for lower, central,
+and upper stress, not calibrated probability bins. Parameters are demand
 $\xi_{r,h}^s=\hat q_r^{(s)}(t_0+h)$; baseline critical-care capacity
-$\Gamma_r=1.05\times$Delta-peak;
-per-region surge cap
-$K_r=0.5\,\Gamma_r$; budget
+$\Gamma_r=1.05\times$Delta-peak; surge cap $K_r=0.5\,\Gamma_r$; budget
 $B=0.20\sum_r \Gamma_r$; great-circle inter-centroid distance $\ell_{r r'}$ in
 km ($\times 1.3$ road-detour); travel time
-$T_{r r'}=60\,\ell_{r r'}/80$~min; mutual-aid cap $\tau=240$~min; outbound transfer cap $\kappa$
-(uncapped at the headline operating point).
-Decision variables fall in two layers. The \emph{first-stage} capacity
-decision, the planner's only true control, is the surge allocation
+$T_{r r'}=60\,\ell_{r r'}/80$~min; mutual-aid cap $\tau=240$~min; and
+outbound cap $\kappa$ (headline case uncapped). The first-stage surge
 $b_{r}\!\in\![0,K_r]$, shared across scenarios and horizons. The
-per-scenario \emph{second-stage} recourse is the flow
+second-stage flow is
 $z_{r r',h}^s\!\geq\!0$ (defined for $T_{r r'}\!\leq\!\tau$); its
-self-loop $z_{r r,h}^s$ is demand served \emph{locally}, and its
-off-diagonal ($r'\!\neq\!r$) entries are inter-regional transfers, with
+self-loop serves demand locally and off-diagonal entries transfer it, with
 unmet demand $u_{r,h}^s\!\geq\!0$ and a tail auxiliary $W\!\geq\!0$ for
-the risk-averse variant. Of the $42$ ordered region pairs, $24$ satisfy
-$T_{r r'}\!\leq\!\tau$ ($12$ undirected mutual-aid links); Midlands
-reaches every region and South West only Midlands.
+the risk-averse variant. The cap admits $12$ undirected mutual-aid links.
 
 \subsection{Deterministic Median-Scenario LP}\label{ssec:milp}
 
@@ -51,14 +41,8 @@ For the median scenario $m$ ($q^{(0.5)}$), the deterministic model solves
 \textstyle\sum_{r,h} u_{r,h}^{m}
 \;+\;\theta\sum_{r\neq r',h} \ell_{r r'}\, z_{r r',h}^{m},
 \end{equation}
-with $\theta=10^{-3}$, a transfer tie-break weight (one bed of weekly
-snapshot unmet outweighs $1000$~patient-km of transfer). The objective
-minimises \emph{unmet demand}; the second term only breaks ties between
-equal-coverage plans by preferring less patient transport, so the surge
-beds $b$ are placed to reduce shortage, not to minimise transfers. Each
-$u_{r,h}^{m}$ is a snapshot of bed-shortfall at the weekly checkpoint
-$h$, so the objective is the snapshot unmet summed over the four-week
-planning horizon, not a continuous bed-day integral. The model is subject to
+where $\theta=10^{-3}$ makes transfer distance a tie-break: one weekly
+snapshot of unmet demand outweighs $1000$ patient-km. The model is subject to
 \begin{align}
 z_{r r,h}^{m}+\!\!\textstyle\sum_{r'\neq r:\,T_{r r'}\leq\tau}\! z_{r r',h}^{m} + u_{r,h}^{m}
   &= \xi_{r,h}^{m}
@@ -74,17 +58,12 @@ z_{r r',h}^{m} &= 0
   && \text{if } T_{r r'}\!>\!\tau, \label{eq:travel}\\
 b_{r},z_{r r',h}^{m},u_{r,h}^{m} &\geq 0.
 \end{align}
-\Cref{eq:demand} is a demand balance. Each region's forecast demand is
-served locally ($z_{r r,h}^{m}$), transferred to a reachable region
-($z_{r r',h}^{m}$, $r'\!\neq\!r$), or left unmet ($u_{r,h}^{m}$).
-\Cref{eq:capacity} caps the beds a region uses (local plus
-transferred-in patients) at baseline plus surge; \Cref{eq:transfercap}
-bounds outbound patients by the transfer-service capacity $\kappa$;
-\Cref{eq:budget} charges the budget once per region; \Cref{eq:travel}
-suppresses transfers beyond the mutual-aid window. As $u_{r,h}^{m}$ is
-minimised, \Cref{eq:demand} holds it at the residual shortfall
-$\max(0,\, \xi_{r,h}^{m}-\sum_{r'} z_{r r',h}^{m})$, a derived quantity
-rather than a free decision.
+\Cref{eq:demand} partitions demand into local service, reachable
+transfers, and unmet demand. \Cref{eq:capacity,eq:transfercap} enforce
+bed and outbound-service limits; \Cref{eq:budget,eq:travel} enforce
+surge and mutual-aid limits. Minimisation leaves $u_{r,h}^{m}$ at the
+residual shortfall. These are weekly snapshots summed across four weeks,
+not a bed-day integral.
 
 \subsection{Risk-Averse Tail-Weighted Objective}\label{ssec:robust}
 
@@ -99,42 +78,33 @@ giving the objective
 \textstyle\sum_{r,h} u_{r,h}^s + \theta \sum_{r\neq r',h} \ell_{r r'} z_{r r',h}^s
 \Big)\;+\;\lambda_3\, W.
 \end{equation}
-This is a \emph{scenario-weighted} LP that up-weights the high-demand
-tail, not robust optimisation in the formal sense. With a single tail
-scenario, minimisation drives $W=\sum_{r,h}u_{r,h}^{\text{high}}$, so
-$\lambda_3 W$ is a linear penalty on the worst-scenario shortfall
-(equivalently, extra weight on the high scenario) rather than a
-Rockafellar--Uryasev conditional value-at-risk (CVaR); the auxiliary
-form generalises unchanged to multiple tail scenarios. We call it the
-\emph{robust LP} for brevity and report $\lambda_3{=}1$ throughout
+This scenario-weighted LP up-weights high demand; it is not robust
+optimisation formally. With one tail scenario,
+$W=\sum_{r,h}u_{r,h}^{\text{high}}$, so $\lambda_3W$ is an extra high-tail
+penalty, not conditional value-at-risk. We call it the robust LP for
+brevity and report $\lambda_3{=}1$
 ($\lambda_3{=}0$ recovers the risk-neutral objective and
 $\lambda_3\!\to\!\infty$ a worst-case policy on the high scenario); the
 tail term binds only under tight budgets (\Cref{ssec:e5_e6}). Imposing
 $q^{(0.9)}$ jointly across regions and horizons makes the construction
-co-monotone, its tail over-conservative relative to the true joint
-distribution; we treat this as an explicit stress-test choice and
-examine its efficiency cost in \Cref{ssec:e5_e6}.
+co-monotone and over-conservative relative to a joint distribution.
+We denote the unmet component by
+$U_\pi=\sum_s\pi_s\sum_{r,h}u_{r,h}^s$ and call it \emph{scenario-weighted unmet demand}. Because $\pi$ contains design
+weights rather than estimated joint probabilities, $U_\pi$ is not an
+estimate of real-world expected shortage.
 
 \subsection{Exact LP Solution and Baselines}\label{ssec:solvers}
 
-Both models are linear programs ($7$ surge variables, $84$ self-loops,
-up to $504$ transfer flows, $84$ unmet variables, and the tail
-auxiliary, all continuous); a deployed plan rounds the per-region surge
-to integers, changing total coverage by at most a few beds at this
-budget. We solve them exactly in PuLP with the bundled COIN-OR
-Branch-and-Cut (CBC) solver; at seven-region scale each instance reaches
-global optimality in $<\!0.1$~s, so metaheuristic search is deferred to
-the trust-level extension (\Cref{sec:conclusion}).
-
-Every policy is scored on equal footing by a common LP re-evaluation.
-For a fixed surge $\mathbf{b}^\star$ ($\sum_r b^\star_r\leq B$,
-$b^\star_r\leq K_r$), the residual problem in $(z,u)$ fills in transfers
-and unmet demand across all three scenarios, giving honest $E[u]$ and
-$u^{\text{worst}}$ for the deterministic, robust, and heuristic
-allocations alike.
+Both models are continuous LPs, solved exactly in PuLP/CBC in
+$<\!0.1$~s; deployed surge counts can be rounded to integers.
+Applying metaheuristics to a larger trust-level formulation is left for
+future work
+(\Cref{sec:conclusion}). For every fixed surge $\mathbf b^\star$, a common residual LP fills in
+$(z,u)$ across all scenarios, making $U_\pi$ and $u^{\text{worst}}$
+comparable across policies.
 
 Finally, three closed-form heuristics give a no-optimisation floor.
 Population-proportional uses ONS region populations,
-demand-proportional uses expected peak demand, and greedy
+demand-proportional uses scenario-weighted peak demand, and greedy
 shortage-first adds single-bed increments to the most-unmet
 region. Each fixes $\mathbf{b}^\star$ and is then completed by the same LP step.

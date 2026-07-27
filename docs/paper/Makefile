@@ -7,42 +7,42 @@
 #   make wordcount       # rough word count on tex sources
 
 MAIN = main
-OUT = out
+JOBNAME = ukci2026_camera_ready
+OUT = ../../output/pdf
 LATEXMK = latexmk
-LATEXMKFLAGS = -pdf -outdir=$(OUT) -interaction=nonstopmode -halt-on-error
+LATEXMKFLAGS = -pdf -jobname=$(JOBNAME) -outdir=$(OUT) -interaction=nonstopmode -halt-on-error
+POWERSHELL = powershell.exe -NoProfile -NonInteractive -Command
 
 # BibTeX on MiKTeX (Windows) does not reliably honour BSTINPUTS when
-# launched inside ``out/`` by latexmk, so we copy the bibliography style,
-# class file, and any auxiliary .sty assets into ``out/`` before each
-# build. This is what fixes the historical
-# ``I couldn't open style file spmpsci.bst`` error.
+# launched inside the output directory, so stage the bibliography style,
+# class file, support styles, and bibliography beside the build products.
+# ``clean-aux`` removes those staged copies and all intermediates after a
+# successful build, leaving one canonical PDF in ``output/pdf/``.
 
-.PHONY: all clean distclean watch wordcount stage-assets
+.PHONY: all clean clean-aux distclean watch wordcount stage-assets
 
-all: $(OUT)/$(MAIN).pdf
+all: $(OUT)/$(JOBNAME).pdf
 
 stage-assets:
-	mkdir -p $(OUT)
-	cp -u *.bst $(OUT)/ 2>/dev/null || true
-	cp -u *.sty $(OUT)/ 2>/dev/null || true
-	cp -u *.cls $(OUT)/ 2>/dev/null || true
-	cp -u references.bib $(OUT)/ 2>/dev/null || true
+	$(POWERSHELL) "New-Item -ItemType Directory -Force -Path '$(OUT)' | Out-Null"
+	$(POWERSHELL) "Copy-Item -Path '*.bst','*.sty','*.cls','references.bib' -Destination '$(OUT)' -Force"
 
-$(OUT)/$(MAIN).pdf: $(MAIN).tex sections/*.tex references.bib stage-assets
+$(OUT)/$(JOBNAME).pdf: $(MAIN).tex sections/*.tex references.bib stage-assets
 	$(LATEXMK) $(LATEXMKFLAGS) $(MAIN).tex
+	$(MAKE) clean-aux
 
-clean:
-	$(LATEXMK) -c -outdir=$(OUT)
-	rm -f $(OUT)/*.aux $(OUT)/*.log $(OUT)/*.out $(OUT)/*.toc $(OUT)/*.bbl $(OUT)/*.blg
-	rm -f $(OUT)/*.synctex.gz $(OUT)/*.fdb_latexmk $(OUT)/*.fls
+clean-aux:
+	$(POWERSHELL) "Remove-Item -Path '$(OUT)/*.aux','$(OUT)/*.log','$(OUT)/*.out','$(OUT)/*.toc','$(OUT)/*.bbl','$(OUT)/*.blg' -Force -ErrorAction SilentlyContinue"
+	$(POWERSHELL) "Remove-Item -Path '$(OUT)/*.synctex.gz','$(OUT)/*.fdb_latexmk','$(OUT)/*.fls' -Force -ErrorAction SilentlyContinue"
+	$(POWERSHELL) "Remove-Item -Path '$(OUT)/*.bst','$(OUT)/*.sty','$(OUT)/*.cls','$(OUT)/references.bib' -Force -ErrorAction SilentlyContinue"
+
+clean: clean-aux
 
 distclean: clean
-	rm -f $(OUT)/$(MAIN).pdf
+	$(POWERSHELL) "Remove-Item -LiteralPath '$(OUT)/$(JOBNAME).pdf' -Force -ErrorAction SilentlyContinue"
 
-watch:
+watch: stage-assets
 	$(LATEXMK) $(LATEXMKFLAGS) -pvc $(MAIN).tex
 
 wordcount:
-	@which texcount > /dev/null 2>&1 \
-		&& texcount -inc -sum -1 $(MAIN).tex \
-		|| echo "texcount not installed; install via your TeX distribution"
+	$(POWERSHELL) "if (Get-Command texcount -ErrorAction SilentlyContinue) { texcount -inc -sum -1 '$(MAIN).tex' } else { Write-Output 'texcount not installed; install via your TeX distribution' }"

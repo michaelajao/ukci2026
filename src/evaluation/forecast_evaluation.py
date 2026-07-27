@@ -14,7 +14,6 @@ This file only assembles outputs from trained artifacts under
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
 
 from utils import configure_utf8_stdout, repo_root, results_dir
@@ -36,7 +35,7 @@ BASELINE_ROWS = [
     ("pinn_gru_cal", "PinnGRU+recal (proposed)"),
 ]
 ABLATION_ROWS = [
-    ("pinn_gru__no_decision_aware", "w/o decision-aware loss (MSE)"),
+    ("pinn_gru__no_decision_aware", "w/o quantile loss (MSE)"),
     ("pinn_gru__no_pretrain", "w/o PINN pre-training"),
     ("pinn_gru__no_params", "w/o PINN parameter features"),
     ("pinn_gru__no_level", "w/o level anchor"),
@@ -659,6 +658,7 @@ def print_paper_sources() -> int:
     """Print the CSVs that should be treated as manuscript source tables."""
     sources = [
         OUT_DIR / "table1_paper.csv",
+        OUT_DIR / "table_quantile_metrics.csv",
         OUT_DIR / "table_metrics.csv",
         OUT_DIR / "table_metrics_detail.csv",
         OUT_DIR / "table1_uncertainty.csv",

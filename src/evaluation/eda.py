@@ -12,7 +12,7 @@ Output                              Role in the paper
 ==================================  ============================================
 fig_regional_mv_beds.{pdf,png}      §5 — headline MV-bed time series (target)
 fig_metric_overview.{pdf,png}       §3 — all four observed metrics per region
-fig_regional_distributions.{pdf,p}  Appendix — per-region boxplot distribution
+fig_regional_distributions.{pdf,png} Appendix — per-region boxplot distribution
 fig_peak_alignment.{pdf,png}        §5 / discussion — cross-region peak timing
 fig_data_quality.{pdf,png}          §3 / appendix — completeness summary
 fig_wave_overlay.{pdf,png}          §5 — wave-stratified MV-bed trace
@@ -48,7 +48,6 @@ from evaluation.figures import (  # noqa: E402
     COLUMN_WIDTH_IN,
     FULL_WIDTH_IN,
     REGION_PALETTE,
-    WAVE_COLOURS,
     WAVE_PERIODS,
     apply_paper_style,
     overlay_wave_bands,

@@ -29,18 +29,13 @@ thresholds. The system evolves as
 subject to the conservation constraint
 $S_r + E_r + I_{a,r} + I_{s,r} + H_r + C_r + R_r + D_r = N_r$, where a
 dot denotes a time derivative ($\dot S_r = \mathrm{d}S_r/\mathrm{d}t$).
-The eight fixed clinical constants (values from~\cite{ajao2025hybrid},
-Table~1) are the latent-to-infectious (incubation) rate $\alpha$, the
-symptomatic fraction $\rho\in[0,1]$, the symptomatic and asymptomatic
-infectious-removal rates $d_s$ and $d_a$, the hospital-outflow rate
-$d_H$, the symptomatic hospitalisation probability $\omega\in[0,1]$
-($I_s\!\to\!H$), the in-hospital mortality rate $\mu$ ($H\!\to\!D$), and
-the critical-care escalation probability $\phi\in[0,1]$ ($H\!\to\!C$);
-all rates have units of $\text{day}^{-1}$. The four time-varying,
-region-specific parameters learned from data are the transmission rate
-$\beta_r$, the critical-care recovery rate $\gamma_{c,r}$ ($C\!\to\!R$),
-the critical-care death rate $\delta_{c,r}$ ($C\!\to\!D$), and the
-immunity-waning rate $\eta_r$ ($R\!\to\!S$).
+The fixed clinical constants
+$(\alpha,\rho,d_s,d_a,d_H,\omega,\mu,\phi)$ take the values in
+\cite[Table~1]{ajao2025hybrid}; rates have units of
+$\text{day}^{-1}$ and probabilities lie in $[0,1]$. Data determine the
+time-varying, region-specific transmission, critical-care recovery,
+death, and immunity-waning rates
+$(\beta_r,\gamma_{c,r},\delta_{c,r},\eta_r)$.
 
 % Figure 2: SEIRD compartment graph
 \begin{figure}[!hb]
@@ -75,7 +70,8 @@ immunity-waning rate $\eta_r$ ($R\!\to\!S$).
 \coordinate (Swaning) at ($(S.south)+(0,-2.10)$);
 
 \draw[edge] (S) -- node[elabel, above] {$\beta_r(I_s{+}I_a)/N_r$} (E);
-\draw[edge] (E) -- node[elabel, above, pos=0.55] {$\alpha(1-\rho)$} (Ia);
+\draw[edge] (E) --
+  node[elabel, above, pos=0.48, yshift=2pt] {$\alpha(1-\rho)$} (Ia);
 \draw[edge] (E) -- node[elabel, below, pos=0.55] {$\alpha\rho$} (Is);
 \draw[edge] (Is) -- node[elabel, above] {$d_s\omega$} (H);
 \draw[edge] (Is.south east) --
@@ -84,7 +80,7 @@ immunity-waning rate $\eta_r$ ($R\!\to\!S$).
   node[elabel, right, pos=0.48] {$d_a$} (IarecDrop) -- (R.east);
 \draw[edge] (H) -- node[elabel, above] {$\phi d_H$} (C);
 \draw[edge] (H.south east) --
-  node[elabel, above, pos=0.30] {$(1-\phi)d_H$} (R.north west);
+  node[elabel, below, pos=0.40] {$(1-\phi)d_H$} (R.north west);
 \draw[edge] (C) -- node[elabel, above] {$\delta_{c,r}$} (D);
 \draw[edge] (C.south) --
   node[elabel, right, pos=0.50] {$\gamma_{c,r}$} (R.north);
@@ -141,12 +137,9 @@ $\{H,C\}$ observation is future work.
 
 \subsection{Temporal Head with Level-and-Trend Anchor}\label{ssec:temporal}
 
-Once pre-trained the PINN is \emph{frozen}. At every origin, including
-those in the Omicron test period, its networks are \emph{evaluated}
-(never refit) to supply features, so any temporal extrapolation of the
-state network beyond its Alpha/Delta fit is absorbed and corrected
-downstream by the GRU and the anchor of \Cref{eq:anchor}. For each
-lookback window of length
+Once pre-trained the PINN is frozen and evaluated, never refit, at every
+origin. The downstream GRU and anchor absorb extrapolation beyond its
+Alpha/Delta fit. For each lookback window of length
 $L=28$ ending at origin $t$, the augmented feature sequence is
 $\mathbf{f}_{r,i} = [U^r_{NN}(i)\,\|\,X^r_{NN}(i)\,\|\,
 \tilde y_{r,i}] \in \mathbb{R}^{13}$, $i \in \{t-L+1,\dots,t\}$.
@@ -161,23 +154,20 @@ per-horizon two-layer MLP (width $64$, Gaussian-error-linear-unit
 deltas $\Delta_{r,t}^{h,q}$ for $h\in\Hset=\{7,14,21,28\}$ and
 $q\in\Qset=\{0.1,0.5,0.9\}$.
 
-A \emph{level-and-trend anchor} makes the GRU's job residual. The anchored forecast is
+A level-and-trend anchor makes the GRU's job residual:
 \begin{equation}\label{eq:anchor}
 \hat\zeta_{r,t}^{h,q} \;=\; \Delta_{r,t}^{h,q}
   \;+\; a^{h,q}\, \tilde y_{r,t}
   \;+\; g^{h,q}\, v_{r,t}^{(7)}\,
         \!\left(\tfrac{h}{7}\right)^{\!\!\psi^q},
 \end{equation}
-where $\tilde y_{r,t}$ is the most recent z-scored observation,
-$v_{r,t}^{(7)} = \tilde y_{r,t}-\tilde y_{r,t-7}$ is the one-week slope,
-and $a^{h,q},g^{h,q},\psi^q\in(0,1)$ are learnable scalars.
-The Holt-Winters-style damping exponent $\psi^q$ prevents
-slope-extrapolation overshoot at long horizons; we initialise
-$\psi^{0.5}\!\approx\!0.88$ (near-linear) and
-$\psi^{0.1}=\psi^{0.9}=0.5$ (square-root damping). Forecasts in
-the original scale follow by inverting standardisation.
+where $\tilde y_{r,t}$ is the latest z-scored observation,
+$v_{r,t}^{(7)}=\tilde y_{r,t}-\tilde y_{r,t-7}$ is its weekly slope,
+and $a^{h,q},g^{h,q},\psi^q\in(0,1)$ are learned. The damping exponent
+$\psi^q$ limits long-horizon slope overshoot (initialised at $0.88$ for
+$q{=}0.5$ and $0.5$ otherwise). We then invert standardisation.
 
-\subsection{Pinball Loss for Cost-Asymmetric Quantiles}\label{ssec:loss}
+\subsection{Multi-Quantile Pinball Loss}\label{ssec:loss}
 
 The forecaster minimises the multi-quantile pinball
 loss~\cite{koenker1978regression},
@@ -188,16 +178,17 @@ loss~\cite{koenker1978regression},
     e = \tilde y_{r,t+h-1} - \hat\zeta_{r,t}^{h,q},
 \end{equation}
 evaluated at all $(h,q)\in\Hset\!\times\!\Qset$. The $q=0.5$ pinball
-collapses to L1 (point accuracy); the $q=0.9$ pinball penalises
-under-prediction nine-to-one. Splitting the kernel into its two arms,
+collapses to L1 (point accuracy). Splitting the kernel into its two arms,
 $\max(q e,(q{-}1)e)=q\max(e,0)+(1{-}q)\max(-e,0)$, exposes it as a
-convex newsvendor surrogate of the allocation's positive-part shortage
-cost, with the $q{=}0.9$ asymmetry encoding that an under-bed risks a
-stranded patient whereas an over-bed only wastes pre-positioned
-capacity~\cite{elmachtoub2022smart}. The
-forecaster is not trained through the allocation solver. We report $\hat y^{0.5}$
-as the point forecast and $[\hat y^{0.1},\hat y^{0.9}]$ as an $80\%$
-interval.
+convex newsvendor loss. The $q{=}0.9$ branch penalises
+under-prediction nine-to-one and is therefore cost-relevant to shortage;
+the $q{=}0.1$ branch has the equal and opposite asymmetry. Because all
+three branches receive equal weight, their aggregate training objective
+is not directionally asymmetric. We therefore claim a cost-relevant
+upper quantile, not an overall cost-asymmetric loss. Training is not
+through the allocation solver~\cite{elmachtoub2022smart};
+$\hat q^{(0.5)}$ is the raw point forecast and
+$[\hat q^{(0.1)},\hat q^{(0.9)}]$ the raw $80\%$ interval.
 
 We train for up to $800$ AdamW epochs ($\text{lr}=10^{-3}$, weight decay
 $10^{-4}$, cosine annealing) on one-day-stride Alpha-wave lookback
@@ -210,16 +201,17 @@ $\Delta t = 7$-day rolling origins, yielding $32$ origin dates.
 \subsection{Per-Origin Recalibration}\label{ssec:recal}
 Applied frozen across a regime shift (high-demand Alpha/Delta training,
 mild Omicron test), the point forecast inherits a systematic
-over-prediction that grows with horizon. We correct it with two
-steps. The first corrects the bias, subtracting at
-each rolling origin $t$ and horizon $h$ the mean of the model's last
-$K{=}3$ $h$-step errors whose target date is already observed ($<t$),
-a model-agnostic post-hoc correction supplying the per-origin adaptation a refit
-gives ARIMA for free. The second blends
-with persistence, mixing the recalibrated forecast with
+over-prediction. At each origin $t$ and horizon $h$ we subtract the mean
+of the last $K{=}3$ realised $h$-step errors, then blend with
 seasonal-naive($7$) under a per-horizon weight
 $\alpha\in\{0,0.1,\dots,1\}$ fitted on an expanding window of realised
 origins (pure model, $\alpha{=}1$, until seven origin--region pairs are
-realised), so long horizons lean on persistence. Both use only
-information available at $t$; the $80\%$ interval is left as the
-quantile heads produce it, so the downstream allocation is unchanged.
+realised). Both steps use only information available at $t$.
+
+Let $\hat{\mathbf q}_{r,t}^{h}=(\hat q^{(0.1)},\hat q^{(0.5)},
+\hat q^{(0.9)})$ denote the raw heads and
+$\tilde y_{r,t}^{h,\mathrm{pt}}$ the recalibrated point forecast.
+\Cref{tab:forecast_accuracy} evaluates both point estimates; the
+calibration table and every LP instead use $\hat{\mathbf q}$ unchanged
+(apart from clipping negative demand to zero). Thus recalibrated RMSE
+gains do not enter the allocation results.

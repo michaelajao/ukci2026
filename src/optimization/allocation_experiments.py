@@ -1,7 +1,6 @@
-"""Run allocation experiments E2 (policy comparison) and E3
-(metaheuristic comparison), and build the paper figures from their outputs.
+"""Run the E2 policy comparison and build allocation figures from saved outputs.
 
-Compares all allocation policies on the same regional bed-surge problem
+The main experiment compares six policies on the same regional bed-surge problem
 (PinnGRU q10/q50/q90 forecasts, Delta-peak baseline capacity,
 inter-region transfers with great-circle distance × 1.3 cost, 20% budget):
 
@@ -11,18 +10,16 @@ inter-region transfers with great-circle distance × 1.3 cost, 20% budget):
     4. Greedy shortage-first
     5. Deterministic LP (median scenario only)
     6. Robust LP (3-scenario expectation + tail penalty on q90)
-    7. Genetic Algorithm  (E3)
-    8. NSGA-II (representative point on Pareto front) (E3)
-    9. Simulated Annealing (E3)
 
-Outputs (E2 / E3 experiments, via ``ukci-run-allocation-e2``):
+Outputs (via ``ukci-run-allocation-e2``):
     results/allocation/table2_allocation.csv      one row per policy
     results/allocation/e2_per_region_b.csv        per-region b allocations
-    results/allocation/nsga2_pareto.csv           NSGA-II Pareto front
 
 Figures (via ``ukci-build-allocation-figures``):
-    figures/fig_allocation_heatmap.png   per-region surge allocation × policy
-    figures/fig_nsga2_pareto.png         3-objective Pareto front from NSGA-II
+    figures/fig_alloc_budget.png         allocation heatmap + budget frontier
+
+Metaheuristic implementations remain in :mod:`optimization.regional_allocation`
+for extension experiments, but the seven-region paper command does not run them.
 """
 
 from __future__ import annotations
@@ -49,10 +46,7 @@ from optimization.regional_allocation import (
     population_proportional,
     realised_demand_at_origin,
     solve_deterministic,
-    solve_ga,
-    solve_nsga2,
     solve_robust,
-    solve_sa,
     status_quo,
 )
 
@@ -154,7 +148,7 @@ def main() -> int:
     print(f"Inter-region travel-time cap: {p.max_travel_min:.0f} min")
     print()
 
-    print("Running policies (E2 + E3)...\n")
+    print("Running policies (E2)...\n")
     solutions = [
         status_quo(p),
         population_proportional(p),
@@ -195,7 +189,7 @@ def main() -> int:
     df = pd.DataFrame(rows)
     alloc = pd.DataFrame(alloc_rows)
 
-    print("=== Table 2 (allocation comparison) ===")
+    print("=== Allocation comparison ===")
     print(df.drop(columns=["method_key"]).to_string(
         index=False,
         formatters={
@@ -362,17 +356,23 @@ def _figure_alloc_budget() -> "Path":
     for i in range(values.shape[0]):
         for j in range(values.shape[1]):
             v = values[i, j]
-            axh.text(j, i, f"{v:.0f}", ha="center", va="center", fontsize=9,
+            if np.isclose(v, 0.0, atol=0.05):
+                annotation = "0"
+            elif abs(v) < 1.0:
+                annotation = f"{v:.1f}"
+            else:
+                annotation = f"{v:.0f}"
+            axh.text(j, i, annotation, ha="center", va="center", fontsize=9,
                      color="white" if v > values.max() * 0.55 else "black")
-    axh.set_title("Peak surge beds by policy", fontsize=11, pad=3)
+    axh.set_title("Additional surge beds by policy", fontsize=11, pad=3)
 
     axb.plot(xb, sweep["expected_unmet"], marker="o", ms=4.2, color="#0072B2",
-             label=r"$E[u]$")
+             label=r"$U_\pi$")
     axb.plot(xb, sweep["worst_case_unmet"], marker="s", ms=4.2, linestyle="--",
              color="#D55E00", label=r"$u^{\mathrm{worst}}$")
     axb.axvline(20.0, color="0.65", linewidth=0.8, linestyle=":")
     axb.set_xlabel("Surge budget (% of baseline)", fontsize=10, labelpad=2)
-    axb.set_ylabel("Unmet (beds)", fontsize=10)
+    axb.set_ylabel("Unmet (bed-checkpoints)", fontsize=10)
     axb.set_title("Cost-shortage frontier", fontsize=11, pad=3)
     axb.legend(frameon=False, fontsize=9, ncol=2, loc="upper right")
     axb.grid(True, alpha=0.25)

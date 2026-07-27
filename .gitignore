@@ -104,9 +104,8 @@ data/processed/*.feather
 # pipeline. Do not ignore results/ or figures/ contents. (Bulky raw NHS data
 # is still ignored above; large model checkpoints are ignored via *.pt/*.pth.)
 
-# LaTeX build artefacts (when paper drafting begins)
+# LaTeX build artefacts
 docs/paper/build/
-docs/paper/out/
 *.aux
 *.bbl
 *.blg

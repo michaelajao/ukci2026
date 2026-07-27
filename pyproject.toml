@@ -5,21 +5,22 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "critical-care-surge"
 version = "0.1.0"
-description = "Forecast-driven metaheuristic surge capacity planning for NHS England critical care (UKCI 2026)"
+description = "Multi-quantile forecasting and robust surge allocation for NHS England critical care (UKCI 2026)"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "Apache-2.0" }
+license = { text = "MIT" }
 authors = [
     { name = "Michael Ajao-Olarinoye", email = "olarinoyem@coventry.ac.uk" },
     { name = "Abiola Babatunde" },
-    { name = "Vasile Palade" },
+    { name = "AmirHosein Sadeghimanesh" },
+    { name = "Fei He" },
+    { name = "Matthew England" },
 ]
 keywords = [
     "physics-informed neural networks",
-    "graph attention",
     "epidemic forecasting",
+    "quantile forecasting",
     "metaheuristics",
-    "facility location",
     "robust optimization",
     "NHS",
     "critical care",
@@ -30,7 +31,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "License :: OSI Approved :: Apache Software License",
+    "License :: OSI Approved :: MIT License",
 ]
 
 # Runtime dependencies. Pin tightly enough for reproducibility but loose
@@ -72,8 +73,8 @@ gurobi = ["gurobipy>=11.0"]
 prophet = ["prophet>=1.1"]
 
 [project.urls]
-Repository = "https://github.com/olarinoyem/ukci2026"  # placeholder, update on push
-Documentation = "https://github.com/olarinoyem/ukci2026/tree/main/docs"
+Repository = "https://github.com/michaelajao/ukci2026"
+Documentation = "https://github.com/michaelajao/ukci2026/tree/main/docs"
 
 [project.scripts]
 ukci-forecast-evaluation = "evaluation.forecast_evaluation:main"

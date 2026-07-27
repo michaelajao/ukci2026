@@ -1,7 +1,6 @@
-# Build artifacts — keep out of git and out of the paper-root directory.
-# The Makefile sends everything to docs/paper/out/. If you run latexmk
-# directly without -outdir=out, these are the files it will create here;
-# this .gitignore ensures they don't get committed.
+# Build artifacts - keep out of git and out of the paper-root directory.
+# The Makefile writes the canonical PDF to ../../output/pdf/ and removes
+# its intermediates. These patterns also cover accidental direct builds.
 
 # LaTeX run artifacts
 *.aux
@@ -14,8 +13,5 @@
 *.synctex.gz
 *.toc
 
-# Build directory
-/out/
-
-# Compiled output (the canonical PDF lives at out/main.pdf)
+# Accidental root-level compiled output
 main.pdf
