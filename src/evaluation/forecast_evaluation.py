@@ -608,7 +608,6 @@ def build_pinn_arima_ci_figure() -> Path:
     ax_rmse.set_title("RMSE with 95% origin-bootstrap CI", pad=4)
     ax_rmse.legend(frameon=False, loc="upper left")
 
-    ax_diff.axhline(0.0, color="black", linewidth=0.8, alpha=0.65)
     diff_specs = [
         ("arima_per_region", "PinnGRU - ARIMA", -0.45),
         ("gru_per_region", "PinnGRU - neural GRU", 0.45),
@@ -632,12 +631,7 @@ def build_pinn_arima_ci_figure() -> Path:
     ax_diff.set_ylabel("Paired RMSE difference (MV beds)")
     ax_diff.set_title("Paired differences across origins", pad=4)
     ax_diff.legend(frameon=False, loc="upper left")
-    ax_diff.annotate(
-        "negative favours PinnGRU",
-        xy=(0.03, 0.08), xycoords="axes fraction",
-        fontsize=7.5, color="#444444",
-        bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.72, "pad": 0.2},
-    )
+    ax_diff.grid(False, axis="y")
 
     return save_figure(fig, "fig_pinn_arima_gru_ci", close=True)
 

@@ -9,7 +9,7 @@ inter-region transfers with great-circle distance × 1.3 cost, 20% budget):
     3. Demand-proportional
     4. Greedy shortage-first
     5. Deterministic LP (median scenario only)
-    6. Robust LP (3-scenario expectation + tail penalty on q90)
+    6. Risk-averse LP (scenario-weighted objective + q90 tail penalty)
 
 Outputs (via ``ukci-run-allocation-e2``):
     results/allocation/table2_allocation.csv      one row per policy
@@ -59,7 +59,7 @@ POLICY_LABELS = {
     "demand_proportional":      "Demand-proportional",
     "greedy_shortage_first":    "Greedy shortage-first",
     "deterministic_milp":       "Deterministic LP",
-    "robust_milp_cvar1":        "Robust LP ($\\lambda_3{=}1$)",
+    "robust_milp_cvar1":        "Risk-averse LP ($\\lambda_3{=}1$)",
     "genetic_algorithm":        "Genetic Algorithm",
     "nsga2_repr_point":         "NSGA-II (repr.\\ point)",
     "simulated_annealing":      "Simulated Annealing",
@@ -90,7 +90,7 @@ def _solution_row(sol, *, origin=None, budget_fraction: float | None = None) -> 
     row = {
         "policy": POLICY_LABELS.get(sol.method, sol.method),
         "method_key": sol.method,
-        "Expected unmet": sol.expected_unmet,
+        "Scenario-weighted unmet": sol.expected_unmet,
         "Worst-case unmet": sol.worst_case_unmet,
         "Transfer burden": sol.transfer_burden,
         "Total surge beds": sol.total_surge_beds,
@@ -174,7 +174,7 @@ def main() -> int:
         rows.append({
             "policy": label,
             "method_key": sol.method,
-            "Expected unmet": sol.expected_unmet,
+            "Scenario-weighted unmet": sol.expected_unmet,
             "Worst-case unmet": sol.worst_case_unmet,
             "Transfer burden": sol.transfer_burden,
             "Total surge beds": sol.total_surge_beds,
@@ -193,7 +193,7 @@ def main() -> int:
     print(df.drop(columns=["method_key"]).to_string(
         index=False,
         formatters={
-            "Expected unmet":   "{:6.1f}".format,
+            "Scenario-weighted unmet": "{:6.1f}".format,
             "Worst-case unmet": "{:6.1f}".format,
             "Transfer burden":  "{:8.1f}".format,
             "Total surge beds": "{:5.0f}".format,
@@ -237,7 +237,7 @@ HEATMAP_POLICY_ORDER = (
     "Demand-proportional",
     "Greedy shortage-first",
     "Deterministic LP",
-    "Robust LP ($\\lambda_3{=}1$)",
+    "Risk-averse LP ($\\lambda_3{=}1$)",
     "Genetic Algorithm",
     "NSGA-II (repr.\\ point)",
     "Simulated Annealing",
@@ -252,7 +252,7 @@ PAPER_POLICY_ORDER = (
     "Demand-proportional",
     "Greedy shortage-first",
     "Deterministic LP",
-    "Robust LP ($\\lambda_3{=}1$)",
+    "Risk-averse LP ($\\lambda_3{=}1$)",
 )
 
 
@@ -302,7 +302,7 @@ def _figure_allocation_heatmap() -> "Path":
 
 def _figure_alloc_budget() -> "Path":
     """Two-panel paper figure (one float, fits the 12-page cap):
-    (a) per-region peak surge by policy; (b) exact robust-LP cost-shortage
+    (a) per-region peak surge by policy; (b) exact risk-averse-LP cost-shortage
     frontier vs the surge budget."""
     import matplotlib.pyplot as plt
     from matplotlib.gridspec import GridSpec
@@ -340,7 +340,7 @@ def _figure_alloc_budget() -> "Path":
         "Demand-proportional": "Demand",
         "Greedy shortage-first": "Greedy",
         "Deterministic MILP": "Det. LP",
-        "Robust MILP (CVaR, $\\lambda_3{=}1$)": "Robust LP",
+        "Risk-averse LP ($\\lambda_3{=}1$)": "Risk-averse LP",
     }
     region_short = {
         "East of England": "East Eng.",
@@ -411,28 +411,28 @@ def _figure_nsga2_pareto() -> "Path":
     cbar.set_label("Transfer burden (bed·km)", fontsize=8)
     cbar.ax.tick_params(labelsize=7)
     ax_l.scatter(
-        deterministic["Total surge beds"], deterministic["Expected unmet"],
+        deterministic["Total surge beds"], deterministic["Scenario-weighted unmet"],
         marker="s", s=70, color="#D55E00", edgecolor="black",
         label="Deterministic MILP", zorder=5,
     )
     ax_l.scatter(
-        robust["Total surge beds"], robust["Expected unmet"],
+        robust["Total surge beds"], robust["Scenario-weighted unmet"],
         marker="D", s=70, color="#0072B2", edgecolor="black",
-        label="Robust MILP (CVaR)", zorder=5,
+        label="Risk-averse LP", zorder=5,
     )
     ax_l.scatter(
-        ga["Total surge beds"], ga["Expected unmet"],
+        ga["Total surge beds"], ga["Scenario-weighted unmet"],
         marker="^", s=70, color="#009E73", edgecolor="black",
         label="Genetic Algorithm", zorder=5,
     )
     ax_l.scatter(
-        repr_row["Total surge beds"], repr_row["Expected unmet"],
+        repr_row["Total surge beds"], repr_row["Scenario-weighted unmet"],
         marker="*", s=160, color="#CC79A7", edgecolor="black",
         label="NSGA-II repr.\\ point", zorder=6,
     )
     ax_l.set_xlabel("Total surge beds (budget used)")
-    ax_l.set_ylabel("Expected unmet demand")
-    ax_l.set_title("Pareto front: surge vs expected unmet", fontsize=10)
+    ax_l.set_ylabel("Scenario-weighted unmet demand")
+    ax_l.set_title("Pareto front: surge vs scenario-weighted unmet", fontsize=10)
     ax_l.legend(frameon=False, fontsize=7, loc="upper right")
 
     ax_r.scatter(
@@ -446,20 +446,20 @@ def _figure_nsga2_pareto() -> "Path":
     cbar2.set_label("Total surge beds", fontsize=8)
     cbar2.ax.tick_params(labelsize=7)
     ax_r.scatter(
-        robust["Transfer burden"], robust["Expected unmet"],
+        robust["Transfer burden"], robust["Scenario-weighted unmet"],
         marker="D", s=70, color="#0072B2", edgecolor="black", zorder=5,
     )
     ax_r.scatter(
-        ga["Transfer burden"], ga["Expected unmet"],
+        ga["Transfer burden"], ga["Scenario-weighted unmet"],
         marker="^", s=70, color="#009E73", edgecolor="black", zorder=5,
     )
     ax_r.scatter(
-        repr_row["Transfer burden"], repr_row["Expected unmet"],
+        repr_row["Transfer burden"], repr_row["Scenario-weighted unmet"],
         marker="*", s=160, color="#CC79A7", edgecolor="black", zorder=6,
     )
     ax_r.set_xlabel("Transfer burden (bed·km)")
-    ax_r.set_ylabel("Expected unmet demand")
-    ax_r.set_title("Pareto front: transfer vs expected unmet", fontsize=10)
+    ax_r.set_ylabel("Scenario-weighted unmet demand")
+    ax_r.set_title("Pareto front: transfer vs scenario-weighted unmet", fontsize=10)
 
     fig.suptitle(
         "NSGA-II 3-objective Pareto front "
@@ -470,8 +470,8 @@ def _figure_nsga2_pareto() -> "Path":
 
 
 def _figure_budget_tradeoff() -> "Path":
-    """Exact cost-shortage frontier from the robust-LP budget sweep:
-    expected and worst-case unmet demand against the surge budget."""
+    """Exact cost-shortage frontier from the risk-averse-LP budget sweep:
+    scenario-weighted and worst-case unmet demand against the surge budget."""
     import matplotlib.pyplot as plt
     from evaluation.figures import (
         FULL_WIDTH_IN, apply_paper_style, save_figure,
@@ -486,7 +486,7 @@ def _figure_budget_tradeoff() -> "Path":
         figsize=(FULL_WIDTH_IN * 0.60, 3.1), layout="constrained",
     )
     ax.plot(x, sweep["expected_unmet"], marker="o", color="#0072B2",
-            label=r"Expected unmet $E[u]$")
+            label=r"Scenario-weighted unmet $U_\pi$")
     ax.plot(x, sweep["worst_case_unmet"], marker="s", linestyle="--",
             color="#D55E00", label=r"Worst-case unmet $u^{\mathrm{worst}}$")
     ax.axvline(20.0, color="0.65", linewidth=0.8, linestyle=":")
@@ -494,7 +494,7 @@ def _figure_budget_tradeoff() -> "Path":
             fontsize=7, color="0.4")
     ax.set_xlabel(r"Surge budget $B/\sum_r C_r$ (%)")
     ax.set_ylabel("Unmet demand (beds)")
-    ax.set_title("Exact cost-shortage frontier (robust LP)", fontsize=10)
+    ax.set_title("Exact cost-shortage frontier (risk-averse LP)", fontsize=10)
     ax.legend(frameon=False, fontsize=8)
     ax.grid(True, alpha=0.25)
     return save_figure(fig, "fig_budget_tradeoff", close=True)
@@ -505,7 +505,7 @@ def _pretty(label: str) -> str:
     no integer variables, so the exact methods are labelled LP, matching the
     paper."""
     return (label
-            .replace("Robust LP ($\\lambda_3{=}1$)", "Robust LP")
+            .replace("Risk-averse LP ($\\lambda_3{=}1$)", "Risk-averse LP")
             .replace("NSGA-II (repr.\\ point)", "NSGA-II")
             .replace("Genetic Algorithm", "GA")
             .replace("Simulated Annealing", "SA")
@@ -551,7 +551,7 @@ def run_allocation_sweeps_main() -> int:
 
       e5_forecast_robustness.csv    one row per forecaster
       e6_budget_sweep.csv           one row per budget fraction
-      e6_lambda_sweep.csv           one row per CVaR weight
+      e6_lambda_sweep.csv           one row per high-scenario tail weight
       e6_travel_sweep.csv           one row per travel-time cap
     """
     OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -570,7 +570,7 @@ def run_allocation_sweeps_main() -> int:
     # -------- E5: forecast-quality robustness ----------------------------
     #
     # Each forecaster's q^{0.9} (or its point prediction, for non-quantile
-    # baselines) drives the robust MILP. We report (a) the chosen surge
+    # baselines) drives the risk-averse LP. We report (a) the chosen surge
     # investment (beds), (b) the forecast peak that drove it, (c) the
     # realised peak demand at the same origin, (d) the over- or under-
     # provisioning gap, and (e) the realised unmet under the chosen
@@ -644,11 +644,11 @@ def run_allocation_sweeps_main() -> int:
             "total_surge_beds": sol.total_surge_beds,
         })
         print(f"  B/Cbase={frac:.2f} -> beds={sol.total_surge_beds:6.1f}  "
-              f"E[u]={sol.expected_unmet:6.1f}  WC={sol.worst_case_unmet:6.1f}")
+              f"U_pi={sol.expected_unmet:6.1f}  WC={sol.worst_case_unmet:6.1f}")
     pd.DataFrame(rows).to_csv(OUT_DIR / "e6_budget_sweep.csv", index=False)
 
-    # -------- E6b: CVaR-weight sweep -------------------------------------
-    print("\n=== E6b: CVaR-weight sweep ===")
+    # -------- E6b: high-scenario tail-weight sweep ------------------------
+    print("\n=== E6b: high-scenario tail-weight sweep ===")
     p = load_allocation_problem()
     rows = []
     for lam in (0.0, 0.5, 1.0, 2.0, 4.0):
@@ -661,7 +661,7 @@ def run_allocation_sweeps_main() -> int:
             "total_surge_beds": sol.total_surge_beds,
         })
         print(f"  lambda3={lam:.2f} -> beds={sol.total_surge_beds:6.1f}  "
-              f"E[u]={sol.expected_unmet:6.1f}  WC={sol.worst_case_unmet:6.1f}")
+              f"U_pi={sol.expected_unmet:6.1f}  WC={sol.worst_case_unmet:6.1f}")
     pd.DataFrame(rows).to_csv(OUT_DIR / "e6_lambda_sweep.csv", index=False)
 
     # -------- E6c: travel-time cap sweep ---------------------------------
@@ -678,7 +678,7 @@ def run_allocation_sweeps_main() -> int:
             "total_surge_beds": sol.total_surge_beds,
         })
         print(f"  tau={tau:>3d}min -> beds={sol.total_surge_beds:6.1f}  "
-              f"E[u]={sol.expected_unmet:6.1f}  WC={sol.worst_case_unmet:6.1f}  "
+              f"U_pi={sol.expected_unmet:6.1f}  WC={sol.worst_case_unmet:6.1f}  "
               f"transfer={sol.transfer_burden:8.1f}")
     pd.DataFrame(rows).to_csv(OUT_DIR / "e6_travel_sweep.csv", index=False)
 
@@ -709,9 +709,9 @@ def build_all_origin_policy_distribution() -> tuple[pd.DataFrame, pd.DataFrame]:
         detail.groupby(["policy", "method_key"])
         .agg(
             n_origins=("origin", "nunique"),
-            expected_unmet_mean=("Expected unmet", "mean"),
-            expected_unmet_p10=("Expected unmet", lambda x: x.quantile(0.10)),
-            expected_unmet_p90=("Expected unmet", lambda x: x.quantile(0.90)),
+            expected_unmet_mean=("Scenario-weighted unmet", "mean"),
+            expected_unmet_p10=("Scenario-weighted unmet", lambda x: x.quantile(0.10)),
+            expected_unmet_p90=("Scenario-weighted unmet", lambda x: x.quantile(0.90)),
             worst_case_unmet_mean=("Worst-case unmet", "mean"),
             worst_case_unmet_p90=("Worst-case unmet", lambda x: x.quantile(0.90)),
             transfer_mean=("Transfer burden", "mean"),
@@ -733,7 +733,7 @@ _TABLE2_PANEL_ORDER = (
     "Demand-proportional",
     "Greedy shortage-first",
     "Deterministic LP",
-    "Robust LP ($\\lambda_3{=}1$)",
+    "Risk-averse LP ($\\lambda_3{=}1$)",
 )
 
 
@@ -745,13 +745,13 @@ def build_two_panel_allocation_table() -> str:
 
     Reads ``table2_allocation.csv`` (peak origin; from ``ukci-run-allocation-e2``)
     and ``e7_origin_policy_summary.csv`` (all-origin means; built above). The
-    robust-LP transfer burden is bolded in each panel.
+    risk-averse-LP transfer burden is bolded in each panel.
     """
     peak = pd.read_csv(OUT_DIR / "table2_allocation.csv").set_index("policy")
     allo = pd.read_csv(OUT_DIR / "e7_origin_policy_summary.csv").set_index("policy")
 
     def _row(pol: str, beds, eu, wc, tr) -> str:
-        tr_s = f"\\textbf{{{tr:.1f}}}" if pol.startswith("Robust") else f"{tr:.1f}"
+        tr_s = f"\\textbf{{{tr:.1f}}}" if pol.startswith("Risk-averse") else f"{tr:.1f}"
         return f"{pol} & {beds:.1f} & {eu:.1f} & {wc:.1f} & {tr_s}\\\\"
 
     lines = [
@@ -759,7 +759,7 @@ def build_two_panel_allocation_table() -> str:
         "% Source-of-truth for the paper's Table 2 (docs/paper/sections/06_results.tex).",
         "\\begin{tabular}{lrrrr}",
         "\\toprule",
-        "\\textbf{Policy} & \\textbf{Beds} & \\textbf{$E[u]$} & "
+        "\\textbf{Policy} & \\textbf{Beds} & \\textbf{$U_\\pi$} & "
         "\\textbf{$u^{\\mathrm{worst}}$} & \\textbf{Transfer}\\\\",
         " & & & & \\textbf{(bed\\,km)}\\\\",
         "\\midrule",
@@ -767,7 +767,7 @@ def build_two_panel_allocation_table() -> str:
     ]
     for pol in _TABLE2_PANEL_ORDER:
         r = peak.loc[pol]
-        lines.append(_row(pol, r["Total surge beds"], r["Expected unmet"],
+        lines.append(_row(pol, r["Total surge beds"], r["Scenario-weighted unmet"],
                           r["Worst-case unmet"], r["Transfer burden"]))
     lines += ["\\midrule",
               "\\multicolumn{5}{l}{\\emph{All 32 Omicron origins (mean)}}\\\\"]

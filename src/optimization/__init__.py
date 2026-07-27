@@ -1,1 +1,1 @@
-"""Optimisation: MILP, robust MILP, GA, NSGA-II, Simulated Annealing."""
+"""Optimisation: deterministic and risk-averse LPs plus extension heuristics."""

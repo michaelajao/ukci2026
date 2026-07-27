@@ -3,10 +3,8 @@
 This directory contains the working LaTeX source for the UKCI 2026
 submission. It is the manuscript we edit, build, and eventually submit.
 
-`docs/ukci_springer_template/` is different: it is the original UKCI/Springer
-SVProc template bundle downloaded from the UKCI 2026 website. Keep that folder
-as the reference copy. This manuscript folder uses a minimal copied subset of
-that template: `svproc.cls`, `aliascnt.sty`, `remreset.sty`, and `spmpsci.bst`.
+The manuscript folder includes the Springer SVProc class, bibliography style,
+and support files required to compile the paper.
 
 ## Build
 
@@ -27,10 +25,12 @@ intermediate files are removed automatically.
 docs/paper/
 |-- main.tex                 # Top-level paper source
 |-- references.bib           # Bibliography
-|-- svproc.cls               # Springer proceedings class copied from docs/ukci_springer_template
-|-- aliascnt.sty             # Springer support file copied from docs/ukci_springer_template
-|-- remreset.sty             # Springer support file copied from docs/ukci_springer_template
-|-- spmpsci.bst              # Springer bibliography style copied from docs/ukci_springer_template
+|-- svproc.cls               # Springer proceedings class
+|-- aliascnt.sty             # Springer support file
+|-- remreset.sty             # Springer support file
+|-- spmpsci.bst              # Springer bibliography style
+|-- figures/
+|   `-- fig_pipeline_architecture.png
 |-- sections/
 |   |-- 01_introduction.tex   # related work is folded in here
 |   |-- 03_forecasting.tex
@@ -50,13 +50,14 @@ from the pipeline outputs; no `\todo` markers or placeholders remain.
 
 Still required before final CMT upload:
 
-- Confirm coauthor emails in `authors.txt`.
+- Confirm the author names, affiliations, and emails in `main.tex`.
 - Decide whether an in-paper conflict-of-interest statement is needed (the
   block in `main.tex` is currently commented out).
 - Re-confirm the page count is at most 12 pages after any late edits.
 
 ## Final Submission Shape
 
-The UKCI upload should include the paper source, the final PDF at
-`output/pdf/ukci2026_camera_ready.pdf`, and the copied Springer files needed
-to compile the paper.
+The UKCI upload should include the paper source, figures, bibliography, the
+final PDF at `output/pdf/ukci2026_camera_ready.pdf`, and the Springer files
+needed to compile the paper. The title entered in CMT must match `main.tex`
+and the PDF exactly.

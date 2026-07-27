@@ -10,7 +10,7 @@ UKCI 2026 pipeline. Section markers below split the responsibilities:
       q10/q50/q90 forecasts. The ``AllocationProblem`` dataclass packages
       everything every method downstream needs.
 
-  §2. Deterministic and CVaR-robust MILPs via PuLP + bundled CBC.
+  §2. Deterministic and tail-weighted risk-averse LPs via PuLP + CBC.
 
   §3. Naive baseline policies (status quo, population-proportional,
       demand-proportional, greedy-shortage-first) sharing an LP slave
@@ -405,7 +405,7 @@ def _wrap_solution(p, method, b_peak, runtime_s,
 
 
 # ===========================================================================
-# §3. MILP (deterministic + CVaR-robust)
+# §3. LP formulation (deterministic + tail-weighted risk-averse)
 # ===========================================================================
 
 def _build_milp(
@@ -555,9 +555,11 @@ def solve_robust(
     facility_opening: bool = False,
     open_cost: float = 0.0,
 ) -> AllocationSolution:
-    """3-scenario expectation + CVaR on the upper-quantile worst-case set
-    (default {high}). With ``facility_opening`` the surge placement becomes a
-    MILP (binary open/closed per node, fixed ``open_cost`` in bed-equivalents)."""
+    """Scenario-weighted objective plus a tail penalty on the upper-quantile
+    scenario set (default ``{high}``). With one tail scenario this is not
+    CVaR; the ``cvar_*`` argument names are retained for backward compatibility.
+    With ``facility_opening`` the surge placement becomes a MILP (binary
+    open/closed per node, fixed ``open_cost`` in bed-equivalents)."""
     S_used = list(range(p.n_scenarios))
     if cvar_scenarios is None:
         cvar_idx = [p.scenarios.index("high")]
@@ -690,7 +692,8 @@ def solve_ga(
     cvar_weight: float = 0.5,
     seed: int = 0,
 ) -> AllocationSolution:
-    """Single-objective GA on scalarised ``E[unmet] + α·transfer + β·CVaR``."""
+    """Single-objective GA on scalarised
+    ``U_pi + alpha*transfer + beta*u_worst``."""
     from pymoo.algorithms.soo.nonconvex.ga import GA
     from pymoo.core.problem import ElementwiseProblem
     from pymoo.operators.crossover.sbx import SBX
@@ -821,13 +824,13 @@ if __name__ == "__main__":
     ]
     for name, fn in funcs:
         sol = fn()
-        print(f"{name:25s}  E[u]={sol.expected_unmet:6.1f}  "
+        print(f"{name:25s}  U_pi={sol.expected_unmet:6.1f}  "
               f"worst={sol.worst_case_unmet:6.1f}  "
               f"transfer={sol.transfer_burden:8.1f}  "
               f"surge={sol.total_surge_beds:5.0f}  "
               f"runtime={sol.runtime_s:.2f}s")
     sol_n, F, X = solve_nsga2(p, pop_size=40, n_gen=30)
-    print(f"{'nsga2 (repr)':25s}  E[u]={sol_n.expected_unmet:6.1f}  "
+    print(f"{'nsga2 (repr)':25s}  U_pi={sol_n.expected_unmet:6.1f}  "
           f"worst={sol_n.worst_case_unmet:6.1f}  "
           f"transfer={sol_n.transfer_burden:8.1f}  "
           f"surge={sol_n.total_surge_beds:5.0f}  "

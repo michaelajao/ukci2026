@@ -78,14 +78,15 @@ giving the objective
 \textstyle\sum_{r,h} u_{r,h}^s + \theta \sum_{r\neq r',h} \ell_{r r'} z_{r r',h}^s
 \Big)\;+\;\lambda_3\, W.
 \end{equation}
-This scenario-weighted LP up-weights high demand; it is not robust
-optimisation formally. With one tail scenario,
+This tail-weighted scenario LP places additional weight on high demand.
+It is risk-averse but is neither a formal robust-optimisation model nor
+a conditional-value-at-risk model. With one tail scenario,
 $W=\sum_{r,h}u_{r,h}^{\text{high}}$, so $\lambda_3W$ is an extra high-tail
-penalty, not conditional value-at-risk. We call it the robust LP for
-brevity and report $\lambda_3{=}1$
+penalty. We report $\lambda_3{=}1$
 ($\lambda_3{=}0$ recovers the risk-neutral objective and
-$\lambda_3\!\to\!\infty$ a worst-case policy on the high scenario); the
-tail term binds only under tight budgets (\Cref{ssec:e5_e6}). Imposing
+$\lambda_3\!\to\!\infty$ approaches a high-scenario policy). At the
+headline budget, the added tail weight does not change the reported
+allocation metrics (\Cref{ssec:e5_e6}). Imposing
 $q^{(0.9)}$ jointly across regions and horizons makes the construction
 co-monotone and over-conservative relative to a joint distribution.
 We denote the unmet component by

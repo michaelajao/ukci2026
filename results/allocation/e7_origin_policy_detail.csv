@@ -1,193 +1,193 @@
-policy,method_key,Expected unmet,Worst-case unmet,Transfer burden,Total surge beds,Runtime (s),origin
+﻿policy,method_key,Scenario-weighted unmet,Worst-case unmet,Transfer burden,Total surge beds,Runtime (s),origin
 Status quo (no surge),status_quo,103.8216334,519.108167,10197.483305739805,0.0,0.0,2021-12-29
 Population-proportional,population_proportional,28.96224658,144.8112329,3119.8043249524853,212.73000000000002,0.0,2021-12-29
 Demand-proportional,demand_proportional,28.96224636,144.8112318,2615.273789660607,212.73000000000005,0.0,2021-12-29
 Greedy shortage-first,greedy_shortage_first,28.962246600000004,144.81123300000002,1140.0033655579496,212.73000000000002,8.974653720855713,2021-12-29
 Deterministic LP,deterministic_milp,83.2811618,416.40580900000003,1175.0726207595987,51.35117963,0.03197765350341797,2021-12-29
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,28.96224662,144.81123309999998,671.6830134678275,212.73000000000002,0.04607987403869629,2021-12-29
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,28.96224662,144.81123309999998,671.6830134678275,212.73000000000002,0.04607987403869629,2021-12-29
 Status quo (no surge),status_quo,162.2703504,811.351752,14741.242112615259,0.0,0.0,2022-01-05
 Population-proportional,population_proportional,63.891032540000005,319.4551627,3742.648224300595,212.73000000000002,0.0,2022-01-05
 Demand-proportional,demand_proportional,63.89103270000001,319.4551635,2599.797702203339,212.73000000000008,0.0,2022-01-05
 Greedy shortage-first,greedy_shortage_first,63.891032499999994,319.4551625,1252.77872333121,212.73000000000002,9.42948865890503,2022-01-05
 Deterministic LP,deterministic_milp,114.93485740000001,574.674287,2212.096883954278,85.120437,0.03056955337524414,2022-01-05
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,63.8910328,319.45516399999997,820.2978295450629,212.73,0.022634029388427734,2022-01-05
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,63.8910328,319.45516399999997,820.2978295450629,212.73,0.022634029388427734,2022-01-05
 Status quo (no surge),status_quo,42.79153504,213.95767519999998,3639.1289295044417,0.0,0.0,2022-01-12
 Population-proportional,population_proportional,0.0,0.0,4075.0965268887985,212.73000000000002,0.0,2022-01-12
 Demand-proportional,demand_proportional,0.0,0.0,3854.5945179266773,212.73000000000002,0.0,2022-01-12
 Greedy shortage-first,greedy_shortage_first,1.33906352,6.6953176,1050.5557743943386,202.925,8.892010927200317,2022-01-12
 Deterministic LP,deterministic_milp,42.79153504,213.95767519999998,3639.1289295044417,0.0,0.03202939033508301,2022-01-12
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,935.6565866504013,212.73,0.034523725509643555,2022-01-12
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,935.6565866504013,212.73,0.034523725509643555,2022-01-12
 Status quo (no surge),status_quo,15.6109324,78.054662,3484.840825358281,0.0,0.0,2022-01-19
 Population-proportional,population_proportional,0.0,0.0,1533.5004226985557,212.73000000000002,0.0,2022-01-19
 Demand-proportional,demand_proportional,0.0,0.0,1399.7371619829635,212.73000000000002,0.0,2022-01-19
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,2737.8444927418723,79.0,3.4976022243499756,2022-01-19
 Deterministic LP,deterministic_milp,15.6109324,78.054662,3484.840825358281,0.0,0.029021024703979492,2022-01-19
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,151.8388591,0.02266836166381836,2022-01-19
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,151.8388591,0.02266836166381836,2022-01-19
 Status quo (no surge),status_quo,0.0,0.0,3987.332644064465,0.0,0.0,2022-01-26
 Population-proportional,population_proportional,0.0,0.0,457.1444335830581,212.73000000000002,0.0,2022-01-26
 Demand-proportional,demand_proportional,0.0,0.0,291.88684306510436,212.73000000000002,0.0,2022-01-26
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,3987.332644064465,0.0,0.04168844223022461,2022-01-26
 Deterministic LP,deterministic_milp,0.0,0.0,3987.332644064465,0.0,0.03591632843017578,2022-01-26
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,103.23093970000001,0.03250265121459961,2022-01-26
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,103.23093970000001,0.03250265121459961,2022-01-26
 Status quo (no surge),status_quo,0.0,0.0,953.0626195481508,0.0,0.0,2022-02-02
 Population-proportional,population_proportional,0.0,0.0,38.619898860330416,212.73000000000002,0.0,2022-02-02
 Demand-proportional,demand_proportional,0.0,0.0,15.011004549982736,212.73000000000005,0.0,2022-02-02
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,953.0626195481508,0.0,0.043201446533203125,2022-02-02
 Deterministic LP,deterministic_milp,0.0,0.0,953.0626195481508,0.0,0.021542787551879883,2022-02-02
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,34.4550173,0.033799171447753906,2022-02-02
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,34.4550173,0.033799171447753906,2022-02-02
 Status quo (no surge),status_quo,0.0,0.0,383.0793775135962,0.0,0.0,2022-02-09
 Population-proportional,population_proportional,0.0,0.0,24.578027672056976,212.73000000000002,0.0,2022-02-09
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-02-09
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,383.0793775135962,0.0,0.043070077896118164,2022-02-09
 Deterministic LP,deterministic_milp,0.0,0.0,383.0793775135962,0.0,0.026958227157592773,2022-02-09
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,30.052152,0.032984256744384766,2022-02-09
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,30.052152,0.032984256744384766,2022-02-09
 Status quo (no surge),status_quo,0.0,0.0,257.07612619286647,0.0,0.0,2022-02-16
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-02-16
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-02-16
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,257.07612619286647,0.0,0.03900504112243652,2022-02-16
 Deterministic LP,deterministic_milp,0.0,0.0,257.07612619286647,0.0,0.02756500244140625,2022-02-16
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,22.21856,0.03375983238220215,2022-02-16
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,22.21856,0.03375983238220215,2022-02-16
 Status quo (no surge),status_quo,0.0,0.0,202.76128307478425,0.0,0.0,2022-02-23
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-02-23
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73,0.0,2022-02-23
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,202.76128307478425,0.0,0.03934764862060547,2022-02-23
 Deterministic LP,deterministic_milp,0.0,0.0,202.76128307478425,0.0,0.02704596519470215,2022-02-23
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,17.52424,0.02543497085571289,2022-02-23
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,17.52424,0.02543497085571289,2022-02-23
 Status quo (no surge),status_quo,0.0,0.0,0.0,0.0,0.0,2022-03-02
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-03-02
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-03-02
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,0.0,0.0,0.04012417793273926,2022-03-02
 Deterministic LP,deterministic_milp,0.0,0.0,0.0,0.0,0.027575969696044922,2022-03-02
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,0.0,0.03219032287597656,2022-03-02
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,0.0,0.03219032287597656,2022-03-02
 Status quo (no surge),status_quo,0.0,0.0,72.85807578940864,0.0,0.0,2022-03-09
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-03-09
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.72999999999996,0.0,2022-03-09
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,72.85807578940864,0.0,0.038664817810058594,2022-03-09
 Deterministic LP,deterministic_milp,0.0,0.0,72.85807578940864,0.0,0.027857303619384766,2022-03-09
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,6.2969734,0.03238797187805176,2022-03-09
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,6.2969734,0.03238797187805176,2022-03-09
 Status quo (no surge),status_quo,0.0,0.0,24.870204021642525,0.0,0.0,2022-03-16
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-03-16
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-03-16
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,24.870204021642525,0.0,0.03882479667663574,2022-03-16
 Deterministic LP,deterministic_milp,0.0,0.0,24.870204021642525,0.0,0.027031421661376953,2022-03-16
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,2.1494805,0.03451681137084961,2022-03-16
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,2.1494805,0.03451681137084961,2022-03-16
 Status quo (no surge),status_quo,0.0,0.0,57.97567895592382,0.0,0.0,2022-03-23
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-03-23
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-03-23
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,57.97567895592382,0.0,0.03887748718261719,2022-03-23
 Deterministic LP,deterministic_milp,0.0,0.0,57.97567895592382,0.0,0.027989625930786133,2022-03-23
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,5.0107185,0.03173208236694336,2022-03-23
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,5.0107185,0.03173208236694336,2022-03-23
 Status quo (no surge),status_quo,0.0,0.0,131.26243672035957,0.0,0.0,2022-03-30
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-03-30
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-03-30
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,131.26243672035957,0.0,0.041996002197265625,2022-03-30
 Deterministic LP,deterministic_milp,0.0,0.0,131.26243672035957,0.0,0.02738785743713379,2022-03-30
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,11.344742,0.03136610984802246,2022-03-30
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,11.344742,0.03136610984802246,2022-03-30
 Status quo (no surge),status_quo,0.0,0.0,204.8367693131578,0.0,0.0,2022-04-06
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-04-06
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-04-06
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,204.8367693131578,0.0,0.03847002983093262,2022-04-06
 Deterministic LP,deterministic_milp,0.0,0.0,204.8367693131578,0.0,0.028302669525146484,2022-04-06
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,17.70362,0.029844999313354492,2022-04-06
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,17.70362,0.029844999313354492,2022-04-06
 Status quo (no surge),status_quo,0.0,0.0,132.9245728312613,0.0,0.0,2022-04-13
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-04-13
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73,0.0,2022-04-13
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,132.9245728312613,0.0,0.03776860237121582,2022-04-13
 Deterministic LP,deterministic_milp,0.0,0.0,132.9245728312613,0.0,0.029029130935668945,2022-04-13
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,11.488397,0.03142881393432617,2022-04-13
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,11.488397,0.03142881393432617,2022-04-13
 Status quo (no surge),status_quo,0.0,0.0,166.03989411847408,0.0,0.0,2022-04-20
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-04-20
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-04-20
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,166.03989411847408,0.0,0.037995338439941406,2022-04-20
 Deterministic LP,deterministic_milp,0.0,0.0,166.03989411847408,0.0,0.0313265323638916,2022-04-20
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,14.350486,0.040346622467041016,2022-04-20
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,14.350486,0.040346622467041016,2022-04-20
 Status quo (no surge),status_quo,0.0,0.0,50.429185307059605,0.0,0.0,2022-04-27
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-04-27
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-04-27
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,50.429185307059605,0.0,0.038388967514038086,2022-04-27
 Deterministic LP,deterministic_milp,0.0,0.0,50.429185307059605,0.0,0.027524471282958984,2022-04-27
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,4.3584906,0.032572269439697266,2022-04-27
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,4.3584906,0.032572269439697266,2022-04-27
 Status quo (no surge),status_quo,0.0,0.0,36.47406731460901,0.0,0.0,2022-05-04
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-05-04
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-05-04
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,36.47406731460901,0.0,0.03385591506958008,2022-05-04
 Deterministic LP,deterministic_milp,0.0,0.0,36.47406731460901,0.0,0.027082204818725586,2022-05-04
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,3.1523785,0.04230499267578125,2022-05-04
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,3.1523785,0.04230499267578125,2022-05-04
 Status quo (no surge),status_quo,0.0,0.0,0.0,0.0,0.0,2022-05-11
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-05-11
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-05-11
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,0.0,0.0,0.03377890586853027,2022-05-11
 Deterministic LP,deterministic_milp,0.0,0.0,0.0,0.0,0.028799057006835938,2022-05-11
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,0.0,0.03426313400268555,2022-05-11
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,0.0,0.03426313400268555,2022-05-11
 Status quo (no surge),status_quo,0.0,0.0,0.0,0.0,0.0,2022-05-18
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-05-18
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000005,0.0,2022-05-18
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,0.0,0.0,0.03847646713256836,2022-05-18
 Deterministic LP,deterministic_milp,0.0,0.0,0.0,0.0,0.026615142822265625,2022-05-18
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,0.0,0.03150582313537598,2022-05-18
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,0.0,0.03150582313537598,2022-05-18
 Status quo (no surge),status_quo,0.0,0.0,0.0,0.0,0.0,2022-05-25
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-05-25
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000005,0.0,2022-05-25
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,0.0,0.0,0.03999185562133789,2022-05-25
 Deterministic LP,deterministic_milp,0.0,0.0,0.0,0.0,0.027416706085205078,2022-05-25
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,0.0,0.031496286392211914,2022-05-25
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,0.0,0.031496286392211914,2022-05-25
 Status quo (no surge),status_quo,0.0,0.0,0.0,0.0,0.0,2022-06-01
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-06-01
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-06-01
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,0.0,0.0,0.029480695724487305,2022-06-01
 Deterministic LP,deterministic_milp,0.0,0.0,0.0,0.0,0.028415679931640625,2022-06-01
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,0.0,0.032485246658325195,2022-06-01
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,0.0,0.032485246658325195,2022-06-01
 Status quo (no surge),status_quo,0.0,0.0,0.0,0.0,0.0,2022-06-08
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-06-08
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-06-08
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,0.0,0.0,0.03862428665161133,2022-06-08
 Deterministic LP,deterministic_milp,0.0,0.0,0.0,0.0,0.02797675132751465,2022-06-08
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,0.0,0.031996726989746094,2022-06-08
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,0.0,0.031996726989746094,2022-06-08
 Status quo (no surge),status_quo,0.0,0.0,0.0,0.0,0.0,2022-06-15
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-06-15
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-06-15
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,0.0,0.0,0.03717494010925293,2022-06-15
 Deterministic LP,deterministic_milp,0.0,0.0,0.0,0.0,0.027434110641479492,2022-06-15
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,0.0,0.01911783218383789,2022-06-15
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,0.0,0.01911783218383789,2022-06-15
 Status quo (no surge),status_quo,0.0,0.0,0.0,0.0,0.0,2022-06-22
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-06-22
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-06-22
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,0.0,0.0,0.040266990661621094,2022-06-22
 Deterministic LP,deterministic_milp,0.0,0.0,0.0,0.0,0.01884627342224121,2022-06-22
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,0.0,0.03975677490234375,2022-06-22
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,0.0,0.03975677490234375,2022-06-22
 Status quo (no surge),status_quo,0.0,0.0,28.050862962768385,0.0,0.0,2022-06-29
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-06-29
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000008,0.0,2022-06-29
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,28.050862962768385,0.0,0.04179239273071289,2022-06-29
 Deterministic LP,deterministic_milp,0.0,0.0,28.050862962768385,0.0,0.030193805694580078,2022-06-29
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,2.4243783,0.032286643981933594,2022-06-29
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,2.4243783,0.032286643981933594,2022-06-29
 Status quo (no surge),status_quo,0.0,0.0,71.29229625027945,0.0,0.0,2022-07-06
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-07-06
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73,0.0,2022-07-06
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,71.29229625027945,0.0,0.03916621208190918,2022-07-06
 Deterministic LP,deterministic_milp,0.0,0.0,71.29229625027945,0.0,0.029613256454467773,2022-07-06
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,6.1616463,0.03299379348754883,2022-07-06
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,6.1616463,0.03299379348754883,2022-07-06
 Status quo (no surge),status_quo,0.0,0.0,0.0,0.0,0.0,2022-07-13
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-07-13
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-07-13
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,0.0,0.0,0.03909921646118164,2022-07-13
 Deterministic LP,deterministic_milp,0.0,0.0,0.0,0.0,0.024300575256347656,2022-07-13
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,0.0,0.03245830535888672,2022-07-13
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,0.0,0.03245830535888672,2022-07-13
 Status quo (no surge),status_quo,0.0,0.0,195.02777573820208,0.0,0.0,2022-07-20
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-07-20
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000005,0.0,2022-07-20
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,195.02777573820208,0.0,0.03464388847351074,2022-07-20
 Deterministic LP,deterministic_milp,0.0,0.0,195.02777573820208,0.0,0.028755664825439453,2022-07-20
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,17.4823499,0.04202127456665039,2022-07-20
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,17.4823499,0.04202127456665039,2022-07-20
 Status quo (no surge),status_quo,0.0,0.0,269.1362424061016,0.0,0.0,2022-07-27
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-07-27
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-07-27
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,269.1362424061016,0.0,0.0499422550201416,2022-07-27
 Deterministic LP,deterministic_milp,0.0,0.0,269.1362424061016,0.0,0.033674001693725586,2022-07-27
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,23.260891,0.031280517578125,2022-07-27
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,23.260891,0.031280517578125,2022-07-27
 Status quo (no surge),status_quo,0.0,0.0,102.98111934656404,0.0,0.0,2022-08-03
 Population-proportional,population_proportional,0.0,0.0,0.0,212.73000000000002,0.0,2022-08-03
 Demand-proportional,demand_proportional,0.0,0.0,0.0,212.72999999999996,0.0,2022-08-03
 Greedy shortage-first,greedy_shortage_first,0.0,0.0,102.98111934656404,0.0,0.04638314247131348,2022-08-03
 Deterministic LP,deterministic_milp,0.0,0.0,102.98111934656404,0.0,0.04923272132873535,2022-08-03
-Robust LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,8.900446,0.035875797271728516,2022-08-03
+Risk-averse LP ($\lambda_3{=}1$),robust_milp_cvar1,0.0,0.0,0.0,8.900446,0.035875797271728516,2022-08-03

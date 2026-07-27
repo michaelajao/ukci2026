@@ -7,10 +7,10 @@
 % flushbottom to stretch the Introduction paragraphs.
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=\textwidth]{figure1.png}
-\caption{Pipeline for NHS critical-care surge planning, from
-regional data and physics-informed forecasting to scenario-based
-risk-averse allocation and evaluation.}
+\includegraphics[width=\textwidth]{figures/fig_pipeline_architecture.png}
+\caption{Forecast-to-allocation pipeline. Frozen PINN features feed raw
+multi-quantile forecasts; the low, median and high heads supply the LP
+unchanged, whereas recalibration is restricted to point evaluation.}
 \label{fig:pipeline}
 \end{figure*}
 
@@ -67,8 +67,8 @@ $\lambda_3$, travel cap $\tau$, and transfer cap $\kappa$, together with
 direct calibration and sharpness metrics for the raw quantile scenarios.
 
 We make two main contributions.
-(1)~\textbf{Multi-quantile forecaster.} A multi-quantile pinball loss
-and a level-and-trend anchor cut $h{=}14$ RMSE by $19\%$ over a
+(1)~\textbf{Multi-quantile forecaster.} The resulting PinnGRU
+forecaster cuts $h{=}14$ RMSE by $19\%$ over a
 refitted ARIMA model and $37\%$ over a per-region GRU, the
 architecture's clearest edge; a model-agnostic per-origin recalibration
 then extends competitiveness to $h{=}7$--$21$ over the unrecalibrated
@@ -79,5 +79,6 @@ results from the unrecalibrated scenarios consumed by the LP.
 hybrid-regional risk-averse LP ties every budget-exhausting policy on
 coverage and wins on transfer burden; constraining transfers (a sparser network or a
 capped transfer service) breaks the tie, leaving the proportional rules
-to concede up to $60\%$ more scenario-weighted unmet demand while the LP is never
-beaten on coverage.
+to concede up to $60\%$ more scenario-weighted unmet demand. In the
+reported transfer-constrained settings, the risk-averse LP has the
+lowest or tied-lowest scenario-weighted unmet demand.

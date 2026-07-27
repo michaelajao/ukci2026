@@ -1,7 +1,6 @@
 # UKCI 2026 - Critical-Care Surge Capacity Planning
 
-**Title:** Physics-Informed Multi-Quantile Forecasting for Risk-Averse NHS
-Critical-Care Surge Allocation
+**Title:** Physics-Informed Multi-Quantile Forecasting for Risk-Averse NHS Critical-Care Surge Allocation
 
 **Authors:** Michael Ajao-Olarinoye, Abiola Babatunde, AmirHosein Sadeghimanesh,
 Fei He, and Matthew England (Centre for Computational Sciences and Mathematical
@@ -77,7 +76,7 @@ available after the editable install.
 | `ukci-run-pinn-ablations` | Run the PINN ablation study |
 | `ukci-forecast-evaluation` | Rebuild forecast metrics, Table 1, and figures |
 | `ukci-run-eda` | Generate exploratory-data-analysis figures |
-| `ukci-run-allocation-e2` | Run the core allocation experiment (deterministic + robust LP + baselines) |
+| `ukci-run-allocation-e2` | Run the core allocation experiment (deterministic + risk-averse LP + baselines) |
 | `ukci-run-allocation-sweeps` | Budget / travel-cap / tail-weight sensitivity sweeps |
 | `ukci-run-allocation-revision` | Revision-pass allocation re-runs |
 | `ukci-build-allocation-figures` | Build allocation figures from saved results |
@@ -107,7 +106,7 @@ ukci2026/
 |-- src/                           # Python packages and command entry points
 |   |-- data/                      # NHS ingestion, splits, scenarios
 |   |-- forecasting/               # PINN-SEIRD, multi-quantile loss, baselines
-|   |-- optimization/              # LP, robust LP, heuristics, sensitivity sweeps
+|   |-- optimization/              # LP, risk-averse LP, heuristics, sensitivity sweeps
 |   |-- evaluation/                # Forecast and allocation metrics, EDA
 |   `-- utils.py                   # Shared infrastructure helpers
 |-- results/                       # Output tables and metrics (committed)
