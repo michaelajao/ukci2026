@@ -2,22 +2,9 @@
 \section{NHS England Case Study}\label{sec:case_study}
 % =============================================================================
 
-The case study uses two public sources covering $1$~Aug~$2020$ --
-$31$~Aug~$2022$ (the period of daily NHS regional publication). These are
-NHS~England COVID-19~Hospital~Activity~\cite{nhs_covid_activity}, which
-provides daily hospital and mechanical-ventilation bed occupancy at NHS
-regional resolution; and ONS Mid-Year
-Population Estimates~\cite{ons_mye_2021} on 2021 geography, used as the
-per-region PINN normaliser and the population-proportional baseline
-denominator. All experiments use the seven NHS England commissioning
-regions. The series is split chronologically by epidemic wave so the
-most clinically distinct wave is held out, with training on $1$~Aug~$2020$ --
-$31$~May~$2021$ (Alpha and early vaccination), validation on
-$1$~Jun -- $30$~Nov~$2021$ (Delta) for hyper-parameter selection and
-early stopping, and testing on $1$~Dec~$2021$ -- $31$~Aug~$2022$
-(Omicron and post-Omicron). Omicron's case-to-hospitalisation and
-hospitalisation-to-critical-care ratios differ markedly from those of earlier
-waves, providing a regime-shift stress test.
+The case study uses two public sources covering $1$~Aug~$2020$ -- $31$~Aug~$2022$ (the period of daily NHS regional publication). These are NHS~England COVID-19~Hospital~Activity~\cite{nhs_covid_activity}, which provides daily hospital and mechanical-ventilation bed occupancy at NHS regional resolution; and ONS Mid-Year Population Estimates~\cite{ons_mye_2021} on 2021 geography, used as the per-region PINN normaliser and the population-proportional baseline denominator. All experiments use the seven NHS England commissioning regions. The series is split chronologically by epidemic wave, so the most clinically distinct wave is held out, with training on $1$~Aug~$2020$ -- $31$~May~$2021$ (Alpha and early vaccination), validation on $1$~Jun~$30$ -- $2021$~Nov~$2021$ (Delta) for hyper-parameter selection and
+early stopping, and testing on $1$~Dec~$2021$ -- $31$~Aug~$2022$ (Omicron and post-Omicron). Omicron's case-to-hospitalisation and
+hospitalisation-to-critical-care ratios differ markedly from those of earlier waves, providing a regime-shift stress test.
 
 For the allocation problem, baseline capacity $\Gamma_r$ is \emph{measured}
 as each region's Delta-wave peak MV-bed occupancy $\times 1.05$, whereas
@@ -26,7 +13,7 @@ $B=0.20\sum_r \Gamma_r\approx213$~beds (the surge headroom above the
 $\sum_r\Gamma_r\approx1065$-bed measured baseline, not existing beds),
 mutual-aid travel cap $\tau=240$~min, and
 uncapped outbound transfers ($\kappa=\infty$) are
-planning assumptions. The surge $b_r$ is the model's decision, the
+planning assumptions. The surge $b_r$ is the model's decision, with the
 extra MV beds a region stands up above its measured baseline. The
 forecaster, budget $B$, tail weight $\lambda_3$, travel cap $\tau$, and
 transfer cap $\kappa$ are each swept in \Cref{ssec:e5_e6}. Forecast

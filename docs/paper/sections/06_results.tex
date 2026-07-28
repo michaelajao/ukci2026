@@ -15,7 +15,10 @@ baselines at $h{=}7$--$21$ and nearly ties ARIMA at $h{=}28$
 ($28.5$ vs $28.0$), with underestimation rising to $37\%$. Its gains are
 point-only; the raw LP stress scenarios are evaluated below. Lag-only
 XGBoost and GRU degrade most under Omicron's altered severity, whereas
-per-origin ARIMA refitting is steadier.
+per-origin ARIMA refitting is steadier. ARIMA and XGBoost are refit at
+every origin, whereas PinnGRU and the GRU stay frozen after validation,
+so the ARIMA comparison is conservative and part of the $h{=}28$ gap
+reflects that adaptation asymmetry.
 
 Three ablations against the raw PinnGRU ($h{=}14$ RMSE $14.46$, MASE
 $0.77$) isolate the load-bearing parts. Replacing the pinball loss with a
@@ -190,7 +193,4 @@ its $U_\pi$ only by
 issuing $213$ oracle calls at $1.7\times$ its transfer burden.
 Thus placement matters when transfers are scarce.
 
-% Sensitivity-sweep table removed for the 12-page UKCI limit: the
-% budget/tail-penalty/travel-cap/transfer-cap effects are in the prose above
-% and the exact budget frontier is Fig.~3(b). The full sweep CSVs
-% (e6_*.csv, e9/e10) remain in the repository for the journal extension.
+

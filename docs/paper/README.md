@@ -10,14 +10,27 @@ and support files required to compile the paper.
 
 ```bash
 make            # produces ../../output/pdf/ukci2026_camera_ready.pdf
-make clean      # remove auxiliary files
-make distclean  # remove auxiliary files and PDF
-make watch      # rebuild on every save (latexmk -pvc)
-make wordcount  # rough word count via texcount
+make clean         # remove auxiliary files
+make distclean     # remove auxiliary files and PDF
+make watch         # rebuild on every save (latexmk -pvc)
+make wordcount     # rough word count via texcount
+make sync-figures  # refresh figures/ from the repo-root figures/ directory
 ```
 
 Use `make` so the required Springer/BibTeX assets are staged and the
 intermediate files are removed automatically.
+
+## Overleaf
+
+This directory is self-contained: every figure, style, class, and
+bibliography file the paper needs lives inside it, and all
+`\includegraphics` calls use bare filenames resolved through
+`\graphicspath{{figures/}...}`. Upload the folder as-is (or zip it) and
+Overleaf will compile `main.tex` without further edits.
+
+Figures are vendored copies of the repo-root `figures/` outputs. After
+regenerating any of them from the pipeline, run `make sync-figures` before
+re-uploading, otherwise Overleaf will keep building the older image.
 
 ## File Structure
 
@@ -29,8 +42,10 @@ docs/paper/
 |-- aliascnt.sty             # Springer support file
 |-- remreset.sty             # Springer support file
 |-- spmpsci.bst              # Springer bibliography style
-|-- figures/
-|   `-- fig_pipeline_architecture.png
+|-- figures/                 # all figures cited by the paper (vendored)
+|   |-- fig_pipeline_architecture.png
+|   |-- fig_pinn_arima_gru_ci.png
+|   `-- fig_alloc_budget.png
 |-- sections/
 |   |-- 01_introduction.tex   # related work is folded in here
 |   |-- 03_forecasting.tex

@@ -59,15 +59,15 @@ z_{r r',h}^{m} &= 0
 b_{r},z_{r r',h}^{m},u_{r,h}^{m} &\geq 0.
 \end{align}
 \Cref{eq:demand} partitions demand into local service, reachable
-transfers, and unmet demand. \Cref{eq:capacity,eq:transfercap} enforce
-bed and outbound-service limits; \Cref{eq:budget,eq:travel} enforce
+transfers, and unmet demand. \Cref{eq:capacity,eq:transfercap} enforces
+bed and outbound-service limits; \Cref{eq:budget,eq:travel} enforces
 surge and mutual-aid limits. Minimisation leaves $u_{r,h}^{m}$ at the
 residual shortfall. These are weekly snapshots summed across four weeks,
 not a bed-day integral.
 
 \subsection{Risk-Averse Tail-Weighted Objective}\label{ssec:robust}
 
-To hedge against the high-demand scenario the risk-averse model imposes
+To hedge against the high-demand scenario, the risk-averse model imposes
 \Cref{eq:demand,eq:capacity,eq:transfercap} for every $s\in\Sset$,
 retains \Cref{eq:budget,eq:travel}, and adds a tail term $\lambda_3 W$
 ($W\geq\sum_{r,h} u_{r,h}^s$ for $s\in\Sset_{\text{tail}}=\{\text{high}\}$),
@@ -104,7 +104,7 @@ future work
 $(z,u)$ across all scenarios, making $U_\pi$ and $u^{\text{worst}}$
 comparable across policies.
 
-Finally, three closed-form heuristics give a no-optimisation floor.
+Finally, three closed-form heuristics provide a no-optimisation floor.
 Population-proportional uses ONS region populations,
 demand-proportional uses scenario-weighted peak demand, and greedy
 shortage-first adds single-bed increments to the most-unmet

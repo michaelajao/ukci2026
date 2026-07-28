@@ -4,13 +4,13 @@
 
 \subsection{SEIRD Compartmental Model}\label{ssec:seird}
 
-For each region $r \in \R$ with population $N_r$ we model the local
+For each region $r \in \R$ with a population $N_r$, we model the local
 epidemic with an eight-compartment $SEI_aI_sHCRD$ system whose states
 are the susceptible $S_r$, exposed $E_r$, asymptomatic and symptomatic
 infectious $I_{a,r}$ and $I_{s,r}$, hospitalised $H_r$, critical-care
 $C_r$, recovered $R_r$, and deceased $D_r$ populations of region $r$,
 each a count of people and together summing to $N_r$. \Cref{fig:seird}
-shows the flow topology, in which the distinct probabilities $\omega$
+shows the flow topology in which the distinct probabilities $\omega$
 ($I_s\!\to\!H$) and $\phi$ ($H\!\to\!C$) disambiguate the two clinical
 thresholds. The system evolves as
 \begin{equation}\label{eq:seird}
@@ -29,9 +29,9 @@ thresholds. The system evolves as
 subject to the conservation constraint
 $S_r + E_r + I_{a,r} + I_{s,r} + H_r + C_r + R_r + D_r = N_r$, where a
 dot denotes a time derivative ($\dot S_r = \mathrm{d}S_r/\mathrm{d}t$).
-The fixed clinical constants
-$(\alpha,\rho,d_s,d_a,d_H,\omega,\mu,\phi)$ take the values in
-\cite[Table~1]{ajao2025hybrid}; rates have units of
+The fixed clinical constants $(\alpha,\rho,d_s,d_a,d_H)$ take the values
+in \cite[Table~1]{ajao2025hybrid}, whereas $\omega$, $\mu$ and $\phi$ are
+calibrated here; rates have units of
 $\text{day}^{-1}$ and probabilities lie in $[0,1]$. Data determine the
 time-varying, region-specific transmission, critical-care recovery,
 death, and immunity-waning rates
@@ -137,16 +137,16 @@ $\{H,C\}$ observation is future work.
 
 \subsection{Temporal Head with Level-and-Trend Anchor}\label{ssec:temporal}
 
-Once pre-trained the PINN is frozen and evaluated, never refit, at every
+Once pre-trained, the PINN is frozen and evaluated, never to be refit, at every
 origin. The downstream GRU and anchor absorb extrapolation beyond its
 Alpha/Delta fit. For each lookback window of length
 $L=28$ ending at origin $t$, the augmented feature sequence is
 $\mathbf{f}_{r,i} = [U^r_{NN}(i)\,\|\,X^r_{NN}(i)\,\|\,
 \tilde y_{r,i}] \in \mathbb{R}^{13}$, $i \in \{t-L+1,\dots,t\}$.
-Here $U^r_{NN}(i)$ contributes all eight compartments (including the
+Here, $U^r_{NN}(i)$ contributes all eight compartments (including the
 never-observed latent $S,E,I_a,I_s,R,D$), so the head receives the full
 physics-inferred state, and $\tilde y_{r,i}$ is the target z-scored with
-training-period statistics only.
+training and validation statistics only.
 A two-layer
 GRU (hidden $128$, dropout $0.15$) decodes the final hidden state via a
 per-horizon two-layer MLP (width $64$, Gaussian-error-linear-unit
@@ -201,11 +201,11 @@ $\Delta t = 7$-day rolling origins, yielding $32$ origin dates.
 \subsection{Per-Origin Recalibration}\label{ssec:recal}
 Applied frozen across a regime shift (high-demand Alpha/Delta training,
 mild Omicron test), the point forecast inherits a systematic
-over-prediction. At each origin $t$ and horizon $h$ we subtract the mean
+over-prediction. At each origin $t$ and horizon $h$, we subtract the mean
 of the last $K{=}3$ realised $h$-step errors, then blend with
 seasonal-naive($7$) under a per-horizon weight
 $\alpha\in\{0,0.1,\dots,1\}$ fitted on an expanding window of realised
-origins (pure model, $\alpha{=}1$, until seven origin--region pairs are
+origins (pure model, $\alpha{=}1$, until seven origin–region pairs are
 realised). Both steps use only information available at $t$.
 
 Let $\hat{\mathbf q}_{r,t}^{h}=(\hat q^{(0.1)},\hat q^{(0.5)},
@@ -213,5 +213,5 @@ Let $\hat{\mathbf q}_{r,t}^{h}=(\hat q^{(0.1)},\hat q^{(0.5)},
 $\tilde y_{r,t}^{h,\mathrm{pt}}$ the recalibrated point forecast.
 \Cref{tab:forecast_accuracy} evaluates both point estimates; the
 calibration table and every LP instead use $\hat{\mathbf q}$ unchanged
-(apart from clipping negative demand to zero). Thus recalibrated RMSE
+(apart from clipping negative demand to zero). Thus, recalibrated RMSE
 gains do not enter the allocation results.

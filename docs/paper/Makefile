@@ -19,9 +19,20 @@ POWERSHELL = powershell.exe -NoProfile -NonInteractive -Command
 # ``clean-aux`` removes those staged copies and all intermediates after a
 # successful build, leaving one canonical PDF in ``output/pdf/``.
 
-.PHONY: all clean clean-aux distclean watch wordcount stage-assets
+.PHONY: all clean clean-aux distclean watch wordcount stage-assets sync-figures
+
+# Every figure the paper cites is vendored in docs/paper/figures/ so this
+# directory can be uploaded to Overleaf unchanged. These two are pipeline
+# outputs owned by the repo-root figures/ directory -- re-run sync-figures
+# after regenerating them. fig_pipeline_architecture.png is authored for the
+# paper, has no repo-root source, and is therefore not synced.
+PIPELINE_FIGURES = fig_pinn_arima_gru_ci.png fig_alloc_budget.png
 
 all: $(OUT)/$(JOBNAME).pdf
+
+sync-figures:
+	$(POWERSHELL) "New-Item -ItemType Directory -Force -Path 'figures' | Out-Null"
+	$(foreach f,$(PIPELINE_FIGURES),$(POWERSHELL) "Copy-Item -Path '../../figures/$(f)' -Destination 'figures' -Force" &&) true
 
 stage-assets:
 	$(POWERSHELL) "New-Item -ItemType Directory -Force -Path '$(OUT)' | Out-Null"
@@ -29,7 +40,7 @@ stage-assets:
 
 $(OUT)/$(JOBNAME).pdf: $(MAIN).tex sections/*.tex references.bib stage-assets
 	$(LATEXMK) $(LATEXMKFLAGS) $(MAIN).tex
-	$(MAKE) clean-aux
+	"$(MAKE)" clean-aux
 
 clean-aux:
 	$(POWERSHELL) "Remove-Item -Path '$(OUT)/*.aux','$(OUT)/*.log','$(OUT)/*.out','$(OUT)/*.toc','$(OUT)/*.bbl','$(OUT)/*.blg' -Force -ErrorAction SilentlyContinue"
