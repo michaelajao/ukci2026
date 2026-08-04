@@ -10,8 +10,7 @@ surge pipeline:
 
 Target directory: data/raw/supporting/
 
-Each downloaded file is verified by SHA-256 and recorded in
-data/raw/supporting/MANIFEST.txt alongside its source URL.
+Each downloaded file is verified by SHA-256.
 
 Usage:
     ukci-download-supporting-data
@@ -26,7 +25,6 @@ import argparse
 import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from pathlib import Path
 
 from utils import repo_root, sha256_file
@@ -111,29 +109,6 @@ def download_one(archive: Archive, dest_dir: Path, *, dry_run: bool) -> dict:
         return {"status": "error", "error": f"{type(exc).__name__}: {exc}"}
 
 
-def write_manifest(dest_dir: Path, records: list[dict]) -> None:
-    lines = [
-        "# External supporting datasets for UKCI 2026 critical-care surge pipeline.",
-        f"# Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}",
-        "# Source: data.supporting_downloads",
-        "",
-    ]
-    for archive, result in zip(ARCHIVES, records):
-        lines.append(f"label:       {archive.label}")
-        lines.append(f"description: {archive.description}")
-        lines.append(f"url:         {archive.url}")
-        lines.append(f"file:        {archive.filename}")
-        if result.get("status") == "ok":
-            lines.append(f"size:        {result['size']}")
-            lines.append(f"sha256:      {result['sha256']}")
-        else:
-            lines.append(f"status:      {result.get('status', 'unknown')}")
-            if "error" in result:
-                lines.append(f"error:       {result['error']}")
-        lines.append("")
-    (dest_dir / "MANIFEST.txt").write_text("\n".join(lines), encoding="utf-8")
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument(
@@ -161,10 +136,6 @@ def main() -> int:
             failures += 1
         time.sleep(0.5)
 
-    if not args.check:
-        write_manifest(dest, records)
-        print()
-        print(f"Manifest written: {dest / 'MANIFEST.txt'}")
     print()
     succ = len([r for r in records if r.get("status") in {"ok", "head_ok"}])
     print(f"Summary: {succ} OK, {failures} failed (of {len(ARCHIVES)} attempted)")

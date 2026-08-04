@@ -27,8 +27,7 @@ Output schema (long → pivoted to wide):
     mv_beds       float     section 7  (PRIMARY FORECASTING TARGET)
 
 Overlapping dates across archives are resolved by trusting the later archive
-(NHS England's official corrected figures). A provenance and quality report
-is written to ``data/processed/data_quality_report.md``.
+(NHS England's official corrected figures).
 
 Usage:
     ukci-build-regional-dataset
@@ -251,69 +250,6 @@ def validate(df: pd.DataFrame) -> list[str]:
     return issues
 
 
-def write_quality_report(
-    df: pd.DataFrame,
-    per_archive: list[pd.DataFrame],
-    issues: list[str],
-    out_path: Path,
-) -> None:
-    """Write a human-readable provenance + quality report."""
-    lines: list[str] = []
-    lines.append("# Regional daily dataset — data quality report")
-    lines.append("")
-    lines.append(f"Generated: {pd.Timestamp.utcnow():%Y-%m-%d %H:%M UTC}")
-    lines.append(f"Source files: {len(per_archive)} XLSX archive(s) in `data/raw/nhs/`")
-    lines.append("")
-    lines.append("## Archive coverage")
-    lines.append("")
-    lines.append("| Archive | rows extracted | min date | max date |")
-    lines.append("|---|---|---|---|")
-    for sub in per_archive:
-        if sub.empty:
-            continue
-        name = sub["source_archive"].iloc[0]
-        lines.append(
-            f"| `{name}` | {len(sub):,} | {sub['date'].min().date()} | "
-            f"{sub['date'].max().date()} |"
-        )
-    lines.append("")
-    lines.append("## Output dataset")
-    lines.append("")
-    lines.append(f"- Rows: {len(df):,}")
-    lines.append(f"- Date range: {df['date'].min().date()} – {df['date'].max().date()}")
-    lines.append(f"- Distinct regions: {df['region_code'].nunique()}")
-    lines.append(f"- Distinct dates: {df['date'].nunique()}")
-    lines.append("")
-    lines.append("### Per-metric summary statistics")
-    lines.append("")
-    lines.append("| metric | non-null | mean | std | min | max |")
-    lines.append("|---|---|---|---|---|---|")
-    for m in SECTIONS_TO_EXTRACT.values():
-        if m not in df.columns:
-            continue
-        s = df[m].dropna()
-        if s.empty:
-            lines.append(f"| {m} | 0 | – | – | – | – |")
-            continue
-        lines.append(
-            f"| {m} | {len(s):,} | {s.mean():.1f} | {s.std():.1f} | "
-            f"{s.min():.1f} | {s.max():.1f} |"
-        )
-    lines.append("")
-    lines.append("## Validation")
-    lines.append("")
-    if issues:
-        lines.append("Issues detected:")
-        lines.append("")
-        for it in issues:
-            lines.append(f"- {it}")
-    else:
-        lines.append("All checks passed: 7 regions, no date gaps, no missing target values.")
-    lines.append("")
-
-    out_path.write_text("\n".join(lines), encoding="utf-8")
-
-
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -351,10 +287,6 @@ def main() -> int:
     out_csv = PROCESSED_DIR / "regional_daily.csv"
     df.to_csv(out_csv, index=False)
     print(f"\nWrote {out_csv}  ({len(df):,} rows)")
-
-    out_md = PROCESSED_DIR / "data_quality_report.md"
-    write_quality_report(df, per_archive, issues, out_md)
-    print(f"Wrote {out_md}")
 
     if issues:
         print(f"\n{len(issues)} validation issue(s):")

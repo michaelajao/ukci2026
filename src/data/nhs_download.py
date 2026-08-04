@@ -31,10 +31,8 @@ from __future__ import annotations
 
 import argparse
 import sys
-import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
 
 from utils import raw_data_dir, repo_root, sha256_file
 
@@ -209,24 +207,6 @@ def parse_manual_urls(path: Path) -> list[Archive]:
     return archives
 
 
-def write_manifest(downloaded: Iterable[tuple[Archive, Path]]) -> None:
-    """Write a manifest of downloaded files with hashes for reproducibility."""
-    manifest_path = RAW_DIR / "MANIFEST.txt"
-    with manifest_path.open("w") as f:
-        f.write("# NHS England COVID-19 Hospital Activity download manifest\n")
-        f.write(f"# Generated: {time.strftime('%Y-%m-%d %H:%M:%S %Z')}\n")
-        f.write(f"# Source portal: {PORTAL_URL}\n\n")
-        for archive, path in downloaded:
-            f.write(f"label:       {archive.label}\n")
-            f.write(f"description: {archive.description}\n")
-            f.write(f"url:         {archive.url}\n")
-            f.write(f"file:        {path.name}\n")
-            f.write(f"size:        {path.stat().st_size}\n")
-            f.write(f"sha256:      {sha256sum(path)}\n")
-            f.write("\n")
-    print(f"\nManifest written: {manifest_path}")
-
-
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -270,9 +250,6 @@ def main() -> int:
         else:
             failed.append(archive)
         print()
-
-    if downloaded:
-        write_manifest(downloaded)
 
     print(f"Summary: {len(downloaded)} downloaded, {len(failed)} failed")
 
