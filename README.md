@@ -33,27 +33,24 @@ ukci-build-regional-features
 # 4. Train forecasters (PINN-SEIRD + baselines)
 ukci-train-forecasters
 
-# 5. Rebuild paper-facing forecast outputs
+# 5. Rebuild forecast evaluation outputs
 ukci-forecast-evaluation all
 
 # 6. Generate scenarios and run the optimisation
 ukci-run-allocation-e2
 ```
 
-Forecast evaluation artifacts are generated from saved outputs. The CSVs are the
-internal source of truth for manuscript values; enter those values into the
-LaTeX tables directly:
+Forecast evaluation artifacts are generated from saved outputs:
 
 ```bash
-ukci-forecast-evaluation sources   # list CSVs used as paper source tables
-ukci-forecast-evaluation all       # rebuild metrics, Table 1, and forecast figure
+ukci-forecast-evaluation sources   # list the source CSVs behind the headline tables
+ukci-forecast-evaluation all       # rebuild metrics, headline tables, and forecast figure
 ```
 
-For the main paper, the point-forecast table is sourced from
-`results/forecasting/table1_paper.csv`, the quantile table from
-`results/forecasting/table_quantile_metrics.csv`, and the allocation table from
-`results/allocation/table2_allocation.csv`. Detailed regional metrics remain
-available for supplementary analysis.
+The point-forecast results live in `results/forecasting/table1_paper.csv`,
+the quantile metrics in `results/forecasting/table_quantile_metrics.csv`, and
+the allocation results in `results/allocation/table2_allocation.csv`. Detailed
+regional metrics remain available for supplementary analysis.
 
 When running checks without activating the environment first, use:
 
@@ -85,9 +82,9 @@ available after the editable install.
 
 Reusable research logic and command entry points live under `src`. Editable
 installs expose the `ukci-*` console commands declared in `pyproject.toml`.
-Results and figures are committed as the shared source of truth so co-authors
-get paper-facing tables and figures without re-running the heavy pipeline; only
-bulky raw NHS data and LaTeX build artifacts are gitignored.
+Results and figures are committed so the headline tables and figures are
+available without re-running the heavy pipeline; only bulky raw NHS data is
+gitignored.
 
 ```text
 ukci2026/
@@ -112,7 +109,6 @@ ukci2026/
 ### Branching
 
 - `main` - protected, only via PR
-- `paper/draft` - paper writing, LaTeX
 - `forecast/<feature>` - forecasting experiments
 - `opt/<feature>` - optimisation experiments
 - `data/<task>` - data ingestion and processing

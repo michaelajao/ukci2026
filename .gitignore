@@ -105,13 +105,12 @@ data/processed/*.md
 # Regenerated training log
 results/forecasting/train_log.txt
 
-# Results and figures are COMMITTED as the shared source of truth so the
-# co-author gets paper-facing tables/figures without re-running the heavy
-# pipeline. Do not ignore results/ or figures/ contents. (Bulky raw NHS data
-# is still ignored above; large model checkpoints are ignored via *.pt/*.pth.)
+# Results and figures are COMMITTED so headline tables/figures are available
+# without re-running the heavy pipeline. Do not ignore results/ or figures/
+# contents. (Bulky raw NHS data is still ignored above; large model
+# checkpoints are ignored via *.pt/*.pth.)
 
-# Paper, presentation, and admin documents live in Overleaf / locally —
-# the repository is the public code + data artefact referenced by the paper.
+# Local documents and build outputs
 docs/
 output/
 
