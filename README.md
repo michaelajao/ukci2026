@@ -81,13 +81,6 @@ available after the editable install.
 | `ukci-run-allocation-revision` | Revision-pass allocation re-runs |
 | `ukci-build-allocation-figures` | Build allocation figures from saved results |
 
-## Documentation
-
-| Document | Purpose |
-|---|---|
-| [`docs/paper/`](docs/paper/) | UKCI conference manuscript and bundled Springer SVProc files (build with `make`; PDF at `output/pdf/ukci2026_camera_ready.pdf`) |
-| [`docs/presentation.md`](docs/presentation.md) | Marp slide deck for the talk (renders to `presentation.pdf`) |
-
 ## Repository layout
 
 Reusable research logic and command entry points live under `src`. Editable
@@ -98,7 +91,6 @@ bulky raw NHS data and LaTeX build artifacts are gitignored.
 
 ```text
 ukci2026/
-|-- docs/                          # Conference manuscript + Springer template
 |-- data/
 |   |-- raw/                       # NHS XLSX archives (gitignored, downloaded)
 |   |-- processed/                 # Tidy regional CSV
@@ -111,7 +103,6 @@ ukci2026/
 |   `-- utils.py                   # Shared infrastructure helpers
 |-- results/                       # Output tables and metrics (committed)
 |-- figures/                       # Output figures (committed)
-|-- docs/presentation.md           # Marp slide deck
 |-- pyproject.toml
 `-- README.md
 ```
