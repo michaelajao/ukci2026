@@ -18,8 +18,6 @@ Outputs (via ``ukci-run-allocation-e2``):
 Figures (via ``ukci-build-allocation-figures``):
     figures/fig_alloc_budget.png         allocation heatmap + budget frontier
 
-Metaheuristic implementations remain in :mod:`optimization.regional_allocation`
-for extension experiments, but the seven-region paper command does not run them.
 """
 
 from __future__ import annotations
@@ -60,9 +58,6 @@ POLICY_LABELS = {
     "greedy_shortage_first":    "Greedy shortage-first",
     "deterministic_milp":       "Deterministic LP",
     "robust_milp_cvar1":        "Risk-averse LP ($\\lambda_3{=}1$)",
-    "genetic_algorithm":        "Genetic Algorithm",
-    "nsga2_repr_point":         "NSGA-II (repr.\\ point)",
-    "simulated_annealing":      "Simulated Annealing",
 }
 
 REVISION_FORECASTERS = (
@@ -156,16 +151,7 @@ def main() -> int:
         greedy_shortage_first(p),
         solve_deterministic(p),
         solve_robust(p),
-        # Metaheuristics are not reported at seven-region scale: the LP is
-        # exact in <0.1 s, so GA/NSGA-II/SA add no tractability benefit.
-        # Code retained (commented) for the planned trust-level journal
-        # extension; uncomment this block and the Pareto export below.
-        # solve_ga(p, pop_size=50, n_gen=40),
-        # None,  # placeholder for NSGA-II (returns (sol, F, X))
-        # solve_sa(p, n_iter=400),
     ]
-    # sol_n, pareto_F, pareto_X = solve_nsga2(p, pop_size=50, n_gen=40)
-    # solutions[7] = sol_n
 
     rows = []
     alloc_rows = []
@@ -210,16 +196,6 @@ def main() -> int:
     df.to_csv(OUT_DIR / "table2_allocation.csv", index=False)
     alloc.to_csv(OUT_DIR / "e2_per_region_b.csv", index=False)
 
-    # NSGA-II Pareto export, commented with the metaheuristics above.
-    # Uncomment together for the trust-level extension.
-    # pareto_df = pd.DataFrame({
-    #     "surge_beds": pareto_F[:, 0],
-    #     "expected_unmet": pareto_F[:, 1],
-    #     "transfer_burden": pareto_F[:, 2],
-    # })
-    # pareto_df.to_csv(OUT_DIR / "nsga2_pareto.csv", index=False)
-    # print(f"\nNSGA-II Pareto front: {len(pareto_F)} non-dominated points")
-
     print(f"Wrote {OUT_DIR / 'table2_allocation.csv'}")
     print(f"Wrote {OUT_DIR / 'e2_per_region_b.csv'}")
     return 0
@@ -229,8 +205,8 @@ def main() -> int:
 # Figures (consume the CSV outputs above)
 # ---------------------------------------------------------------------------
 
-# A policy ordering that puts naive baselines first, exact methods next,
-# metaheuristics last — for a readable heatmap row order.
+# A policy ordering that puts naive baselines first, exact methods next —
+# for a readable heatmap row order.
 HEATMAP_POLICY_ORDER = (
     "Status quo (no surge)",
     "Population-proportional",
@@ -238,14 +214,9 @@ HEATMAP_POLICY_ORDER = (
     "Greedy shortage-first",
     "Deterministic LP",
     "Risk-averse LP ($\\lambda_3{=}1$)",
-    "Genetic Algorithm",
-    "NSGA-II (repr.\\ point)",
-    "Simulated Annealing",
 )
 
-# Policies shown in the UKCI paper. The metaheuristics are retained in the
-# code (HEATMAP_POLICY_ORDER) for the planned trust-level journal extension
-# but are not reported at seven-region scale, where the LP is exact.
+# Policies reported at seven-region scale, where the LP is exact.
 PAPER_POLICY_ORDER = (
     "Status quo (no surge)",
     "Population-proportional",
@@ -381,94 +352,6 @@ def _figure_alloc_budget() -> "Path":
     return save_figure(fig, "fig_alloc_budget", close=True)
 
 
-def _figure_nsga2_pareto() -> "Path":
-    """3-objective NSGA-II Pareto front (surge beds vs unmet vs transfer)."""
-    import matplotlib.pyplot as plt
-    from evaluation.figures import (
-        FULL_WIDTH_IN, apply_paper_style, save_figure,
-    )
-
-    apply_paper_style()
-    pareto = pd.read_csv(OUT_DIR / "nsga2_pareto.csv")
-    table2 = pd.read_csv(OUT_DIR / "table2_allocation.csv")
-
-    repr_row = table2.set_index("method_key").loc["nsga2_repr_point"]
-    deterministic = table2.set_index("method_key").loc["deterministic_milp"]
-    robust = table2.set_index("method_key").loc["robust_milp_cvar1"]
-    ga = table2.set_index("method_key").loc["genetic_algorithm"]
-
-    fig, (ax_l, ax_r) = plt.subplots(
-        1, 2, figsize=(FULL_WIDTH_IN, 3.6), layout="constrained",
-        gridspec_kw={"wspace": 0.18},
-    )
-
-    sc = ax_l.scatter(
-        pareto["surge_beds"], pareto["expected_unmet"],
-        c=pareto["transfer_burden"], cmap="viridis",
-        s=22, edgecolor="white", linewidths=0.4,
-    )
-    cbar = fig.colorbar(sc, ax=ax_l, shrink=0.9, pad=0.02)
-    cbar.set_label("Transfer burden (bed·km)", fontsize=8)
-    cbar.ax.tick_params(labelsize=7)
-    ax_l.scatter(
-        deterministic["Total surge beds"], deterministic["Scenario-weighted unmet"],
-        marker="s", s=70, color="#D55E00", edgecolor="black",
-        label="Deterministic MILP", zorder=5,
-    )
-    ax_l.scatter(
-        robust["Total surge beds"], robust["Scenario-weighted unmet"],
-        marker="D", s=70, color="#0072B2", edgecolor="black",
-        label="Risk-averse LP", zorder=5,
-    )
-    ax_l.scatter(
-        ga["Total surge beds"], ga["Scenario-weighted unmet"],
-        marker="^", s=70, color="#009E73", edgecolor="black",
-        label="Genetic Algorithm", zorder=5,
-    )
-    ax_l.scatter(
-        repr_row["Total surge beds"], repr_row["Scenario-weighted unmet"],
-        marker="*", s=160, color="#CC79A7", edgecolor="black",
-        label="NSGA-II repr.\\ point", zorder=6,
-    )
-    ax_l.set_xlabel("Total surge beds (budget used)")
-    ax_l.set_ylabel("Scenario-weighted unmet demand")
-    ax_l.set_title("Pareto front: surge vs scenario-weighted unmet", fontsize=10)
-    ax_l.legend(frameon=False, fontsize=7, loc="upper right")
-
-    ax_r.scatter(
-        pareto["transfer_burden"], pareto["expected_unmet"],
-        c=pareto["surge_beds"], cmap="plasma",
-        s=22, edgecolor="white", linewidths=0.4,
-    )
-    cbar2 = fig.colorbar(
-        ax_r.collections[0], ax=ax_r, shrink=0.9, pad=0.02,
-    )
-    cbar2.set_label("Total surge beds", fontsize=8)
-    cbar2.ax.tick_params(labelsize=7)
-    ax_r.scatter(
-        robust["Transfer burden"], robust["Scenario-weighted unmet"],
-        marker="D", s=70, color="#0072B2", edgecolor="black", zorder=5,
-    )
-    ax_r.scatter(
-        ga["Transfer burden"], ga["Scenario-weighted unmet"],
-        marker="^", s=70, color="#009E73", edgecolor="black", zorder=5,
-    )
-    ax_r.scatter(
-        repr_row["Transfer burden"], repr_row["Scenario-weighted unmet"],
-        marker="*", s=160, color="#CC79A7", edgecolor="black", zorder=6,
-    )
-    ax_r.set_xlabel("Transfer burden (bed·km)")
-    ax_r.set_ylabel("Scenario-weighted unmet demand")
-    ax_r.set_title("Pareto front: transfer vs scenario-weighted unmet", fontsize=10)
-
-    fig.suptitle(
-        "NSGA-II 3-objective Pareto front "
-        "($f_1$ surge / $f_2$ unmet / $f_3$ transfer)",
-        fontsize=10,
-    )
-    return save_figure(fig, "fig_nsga2_pareto", close=True)
-
-
 def _figure_budget_tradeoff() -> "Path":
     """Exact cost-shortage frontier from the risk-averse-LP budget sweep:
     scenario-weighted and worst-case unmet demand against the surge budget."""
@@ -506,9 +389,6 @@ def _pretty(label: str) -> str:
     paper."""
     return (label
             .replace("Risk-averse LP ($\\lambda_3{=}1$)", "Risk-averse LP")
-            .replace("NSGA-II (repr.\\ point)", "NSGA-II")
-            .replace("Genetic Algorithm", "GA")
-            .replace("Simulated Annealing", "SA")
             .replace("Status quo (no surge)", "Status quo"))
 
 
@@ -854,11 +734,9 @@ def run_allocation_revision_main() -> int:
 
 
 def build_allocation_figures_main() -> int:
-    """Build the single combined paper allocation figure from the saved
-    CSVs: (a) per-region surge heatmap and (b) the exact budget
-    cost-shortage frontier, merged into one float to fit the 12-page cap.
-    The standalone heatmap/budget and NSGA-II Pareto figures are retained
-    (commented) for the trust-level journal extension."""
+    """Build the single combined allocation figure from the saved CSVs:
+    (a) per-region surge heatmap and (b) the exact budget cost-shortage
+    frontier, merged into one float."""
     required = [
         OUT_DIR / "e2_per_region_b.csv",
         OUT_DIR / "e6_budget_sweep.csv",
@@ -869,9 +747,6 @@ def build_allocation_figures_main() -> int:
             print("Run ukci-run-allocation-e2 / sweeps first.", file=sys.stderr)
             return 1
     out_fig = _figure_alloc_budget()
-    # out_heatmap = _figure_allocation_heatmap()   # trust-level extension
-    # out_budget = _figure_budget_tradeoff()       # trust-level extension
-    # out_pareto = _figure_nsga2_pareto()          # trust-level extension
     print(f"Wrote {out_fig}")
     return 0
 

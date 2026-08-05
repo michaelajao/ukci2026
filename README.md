@@ -119,7 +119,7 @@ Conventional Commits format:
 
 - `feat(forecast): add PINN-SEIRD per-region module`
 - `fix(data): handle NHS region renaming in 2022-08 archive`
-- `experiment(opt): NSGA-II on London trust subset`
+- `experiment(opt): budget sweep at tighter fractions`
 - `docs(method): expand multi-quantile loss derivation`
 
 ### Checks

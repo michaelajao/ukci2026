@@ -1,9 +1,8 @@
-"""Regional bed-surge allocation — data + MILP + baselines + metaheuristics.
+"""Regional bed-surge allocation — data + LP formulations + baselines.
 
-Per the 12 May 2026 author decision to reduce file count, this single
-module consolidates what would otherwise be four separate files
-(data prep, MILP, naive baselines, metaheuristics) for Phase C of the
-UKCI 2026 pipeline. Section markers below split the responsibilities:
+This single module consolidates data prep, the exact LPs, and the naive
+baseline policies for Phase C of the UKCI 2026 pipeline. Section markers
+below split the responsibilities:
 
   §1. Region centroids, great-circle distance / travel-time matrices,
       baseline-capacity computation, scenario generation from PinnGRU
@@ -15,10 +14,6 @@ UKCI 2026 pipeline. Section markers below split the responsibilities:
   §3. Naive baseline policies (status quo, population-proportional,
       demand-proportional, greedy-shortage-first) sharing an LP slave
       that fills in transfers and unmet demand given a fixed ``b``.
-
-  §4. Metaheuristics — single-objective GA, multi-objective NSGA-II
-      and a SA comparator, all via pymoo / hand-rolled SA, sharing the
-      same encoding and LP slave.
 
 Hybrid-scope formulation: sites collapse to NHS regions (``j ≡ r``),
 every region is always "open" (no ``x_j`` binary), per-bed cost uniform,
@@ -666,143 +661,6 @@ def greedy_shortage_first(
 
 
 # ===========================================================================
-# §5. Metaheuristics (GA, NSGA-II, SA via pymoo / hand-rolled)
-# ===========================================================================
-
-def _decode_repair(y: np.ndarray, p: AllocationProblem) -> np.ndarray:
-    y = np.clip(y, 0.0, 1.0)
-    b_peak = y * p.max_expansion
-    total = float(b_peak.sum())
-    if total > p.budget and total > 1e-9:
-        b_peak = b_peak * (p.budget / total)
-    return b_peak
-
-
-def _evaluate(p, y, transfer_cost_weight: float = 1e-3):
-    b_peak = _decode_repair(y, p)
-    _, _, eu, tb, wc = _lp_slave(p, b_peak, transfer_cost_weight)
-    return b_peak, eu, tb, wc
-
-
-def solve_ga(
-    p: AllocationProblem,
-    pop_size: int = 60,
-    n_gen: int = 50,
-    transfer_cost_weight: float = 1e-3,
-    cvar_weight: float = 0.5,
-    seed: int = 0,
-) -> AllocationSolution:
-    """Single-objective GA on scalarised
-    ``U_pi + alpha*transfer + beta*u_worst``."""
-    from pymoo.algorithms.soo.nonconvex.ga import GA
-    from pymoo.core.problem import ElementwiseProblem
-    from pymoo.operators.crossover.sbx import SBX
-    from pymoo.operators.mutation.pm import PM
-    from pymoo.operators.sampling.rnd import FloatRandomSampling
-    from pymoo.optimize import minimize as pymoo_minimize
-
-    class _Scalar(ElementwiseProblem):
-        def __init__(self):
-            super().__init__(n_var=p.n_regions, n_obj=1, n_constr=0,
-                             xl=np.zeros(p.n_regions), xu=np.ones(p.n_regions))
-
-        def _evaluate(self, x, out, *args, **kwargs):
-            _, eu, tb, wc = _evaluate(p, x, transfer_cost_weight)
-            out["F"] = eu + transfer_cost_weight * tb + cvar_weight * wc
-
-    t0 = time.time()
-    res = pymoo_minimize(
-        _Scalar(),
-        GA(pop_size=pop_size, sampling=FloatRandomSampling(),
-           crossover=SBX(prob=0.9, eta=15),
-           mutation=PM(prob=1.0 / p.n_regions, eta=20),
-           eliminate_duplicates=True),
-        ("n_gen", n_gen), seed=seed, verbose=False,
-    )
-    return _wrap_solution(p, "genetic_algorithm",
-                          _decode_repair(res.X, p),
-                          time.time() - t0, transfer_cost_weight)
-
-
-def solve_nsga2(
-    p: AllocationProblem,
-    pop_size: int = 60,
-    n_gen: int = 50,
-    seed: int = 0,
-):
-    """Multi-objective NSGA-II returning Pareto front of
-    ``(surge_beds, E[unmet], transfer_burden)`` plus a representative
-    closest-to-ideal point packaged as an ``AllocationSolution``."""
-    from pymoo.algorithms.moo.nsga2 import NSGA2
-    from pymoo.core.problem import ElementwiseProblem
-    from pymoo.operators.crossover.sbx import SBX
-    from pymoo.operators.mutation.pm import PM
-    from pymoo.operators.sampling.rnd import FloatRandomSampling
-    from pymoo.optimize import minimize as pymoo_minimize
-
-    class _Multi(ElementwiseProblem):
-        def __init__(self):
-            super().__init__(n_var=p.n_regions, n_obj=3, n_constr=0,
-                             xl=np.zeros(p.n_regions), xu=np.ones(p.n_regions))
-
-        def _evaluate(self, x, out, *args, **kwargs):
-            b_peak, eu, tb, _ = _evaluate(p, x)
-            out["F"] = np.array([float(b_peak.sum()), eu, tb])
-
-    t0 = time.time()
-    res = pymoo_minimize(
-        _Multi(),
-        NSGA2(pop_size=pop_size, sampling=FloatRandomSampling(),
-              crossover=SBX(prob=0.9, eta=15),
-              mutation=PM(prob=1.0 / p.n_regions, eta=20),
-              eliminate_duplicates=True),
-        ("n_gen", n_gen), seed=seed, verbose=False,
-    )
-    runtime = time.time() - t0
-    F, X = res.F, res.X
-    F_norm = (F - F.min(axis=0)) / (F.ptp(axis=0) + 1e-12)
-    idx = int(np.argmin(np.linalg.norm(F_norm, axis=1)))
-    sol = _wrap_solution(p, "nsga2_repr_point",
-                         _decode_repair(X[idx], p), runtime)
-    return sol, F, X
-
-
-def solve_sa(
-    p: AllocationProblem,
-    n_iter: int = 500,
-    T0: float = 50.0,
-    cooling: float = 0.97,
-    step_sigma: float = 0.15,
-    transfer_cost_weight: float = 1e-3,
-    cvar_weight: float = 0.5,
-    seed: int = 0,
-) -> AllocationSolution:
-    """Hand-rolled SA on the same scalarised objective as GA."""
-    rng = np.random.default_rng(seed)
-    t0 = time.time()
-    y_cur = rng.uniform(0.0, 1.0, size=p.n_regions)
-
-    def score(y):
-        _, eu, tb, wc = _evaluate(p, y, transfer_cost_weight)
-        return eu + transfer_cost_weight * tb + cvar_weight * wc
-
-    cur = score(y_cur)
-    best_y, best_f = y_cur.copy(), cur
-    T = T0
-    for _ in range(n_iter):
-        y_new = np.clip(y_cur + rng.normal(0.0, step_sigma, size=p.n_regions), 0.0, 1.0)
-        f_new = score(y_new)
-        if f_new < cur or rng.random() < np.exp(-(f_new - cur) / max(T, 1e-9)):
-            y_cur, cur = y_new, f_new
-            if f_new < best_f:
-                best_y, best_f = y_new.copy(), f_new
-        T *= cooling
-    return _wrap_solution(p, "simulated_annealing",
-                          _decode_repair(best_y, p),
-                          time.time() - t0, transfer_cost_weight)
-
-
-# ===========================================================================
 # Smoke test
 # ===========================================================================
 
@@ -819,8 +677,6 @@ if __name__ == "__main__":
         ("greedy",              lambda: greedy_shortage_first(p)),
         ("deterministic_milp",  lambda: solve_deterministic(p)),
         ("robust_milp",         lambda: solve_robust(p)),
-        ("ga",                  lambda: solve_ga(p, pop_size=40, n_gen=30)),
-        ("sa",                  lambda: solve_sa(p, n_iter=300)),
     ]
     for name, fn in funcs:
         sol = fn()
@@ -829,10 +685,3 @@ if __name__ == "__main__":
               f"transfer={sol.transfer_burden:8.1f}  "
               f"surge={sol.total_surge_beds:5.0f}  "
               f"runtime={sol.runtime_s:.2f}s")
-    sol_n, F, X = solve_nsga2(p, pop_size=40, n_gen=30)
-    print(f"{'nsga2 (repr)':25s}  U_pi={sol_n.expected_unmet:6.1f}  "
-          f"worst={sol_n.worst_case_unmet:6.1f}  "
-          f"transfer={sol_n.transfer_burden:8.1f}  "
-          f"surge={sol_n.total_surge_beds:5.0f}  "
-          f"runtime={sol_n.runtime_s:.2f}s  "
-          f"Pareto-front size={len(F)}")
