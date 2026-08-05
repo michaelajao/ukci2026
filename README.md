@@ -47,9 +47,9 @@ ukci-forecast-evaluation sources   # list the source CSVs behind the headline ta
 ukci-forecast-evaluation all       # rebuild metrics, headline tables, and forecast figure
 ```
 
-The point-forecast results live in `results/forecasting/table1_paper.csv`,
-the quantile metrics in `results/forecasting/table_quantile_metrics.csv`, and
-the allocation results in `results/allocation/table2_allocation.csv`. Detailed
+The point-forecast results live in `results/forecasting/point_forecast_summary.csv`,
+the quantile metrics in `results/forecasting/quantile_calibration_metrics.csv`, and
+the allocation results in `results/allocation/allocation_policy_comparison.csv`. Detailed
 regional metrics remain available for supplementary analysis.
 
 ## Command reference

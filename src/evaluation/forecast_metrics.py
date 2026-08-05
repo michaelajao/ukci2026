@@ -1,4 +1,4 @@
-"""Forecast metrics for the UKCI 2026 paper.
+"""Forecast metrics for the UKCI 2026 pipeline.
 
 Implements the full metric set:
 

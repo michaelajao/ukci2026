@@ -1,6 +1,6 @@
-"""Paper matplotlib settings and helpers.
+"""Publication matplotlib settings and helpers.
 
-This is the single plotting style module for the UKCI 2026 paper. Keep plot
+This is the single plotting style module for the UKCI 2026 pipeline. Keep plot
 logic in the analysis modules, but keep typography, colours, figure sizes,
 line styles, and export conventions here so every figure has the same visual
 grammar.
@@ -11,8 +11,8 @@ Conventions:
   (max width 117 mm = 4.6 in for a single column, 240 mm = 9.4 in for
   full width).
 - Wave colour bands (Alpha / Delta / Omicron) use a fixed palette so
-  figures across the paper line up.
-- Saving writes PNG by default; request PDF only for manuscript assets that
+  figures line up across the pipeline.
+- Saving writes PNG by default; request PDF only for publication assets that
   benefit from vector output.
 """
 
@@ -40,12 +40,12 @@ FULL_WIDTH_IN: float = 9.4
 HALF_WIDTH_IN: float = 7.0
 """Intermediate width for dense one-row panels that need more room."""
 
-PAPER_DPI: int = 300
+FIGURE_DPI: int = 300
 """Default raster export resolution."""
 
 # Keep this dictionary close to the working settings already used by the
 # figures. Additions are conservative and mostly make defaults explicit.
-PAPER_RC_PARAMS: dict[str, object] = {
+FIGURE_RC_PARAMS: dict[str, object] = {
     "font.family": "serif",
     "font.size": 9,
     "axes.titlesize": 9,
@@ -62,8 +62,8 @@ PAPER_RC_PARAMS: dict[str, object] = {
     "lines.linewidth": 1.2,
     "lines.markersize": 3.0,
     "patch.linewidth": 0.8,
-    "figure.dpi": PAPER_DPI,
-    "savefig.dpi": PAPER_DPI,
+    "figure.dpi": FIGURE_DPI,
+    "savefig.dpi": FIGURE_DPI,
     "savefig.bbox": "tight",
     "savefig.pad_inches": 0.02,
     "pdf.fonttype": 42,
@@ -145,13 +145,13 @@ FORECASTER_STYLES: tuple[dict[str, object], ...] = (
 # ---------------------------------------------------------------------------
 
 
-def apply_paper_style() -> None:
-    """Apply a single matplotlib style suitable for the LNNS manuscript.
+def apply_publication_style() -> None:
+    """Apply a single matplotlib style suitable for publication figures.
 
     Call once near the top of a figure script. Subsequent calls are
     idempotent.
     """
-    mpl.rcParams.update(PAPER_RC_PARAMS)
+    mpl.rcParams.update(FIGURE_RC_PARAMS)
 
 
 def overlay_wave_bands(ax: plt.Axes, *, alpha: float = 0.45) -> None:
@@ -181,7 +181,7 @@ def save_figure(
 ) -> Path:
     """Save ``fig`` as PNG (and optionally PDF) under ``figures/``.
 
-    The paper renders fine from PNG at 300 dpi; PDFs are only produced when
+    Figures render fine from PNG at 300 dpi; PDFs are only produced when
     explicitly requested (``pdf=True``).
 
     Args:
@@ -199,7 +199,7 @@ def save_figure(
         base = figures_dir(str(base))
     base.parent.mkdir(parents=True, exist_ok=True)
     png_path = base.with_suffix(".png")
-    fig.savefig(png_path, dpi=PAPER_DPI)
+    fig.savefig(png_path, dpi=FIGURE_DPI)
     if pdf:
         fig.savefig(base.with_suffix(".pdf"))
     if close:

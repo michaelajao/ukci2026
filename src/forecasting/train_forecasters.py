@@ -15,7 +15,7 @@ Outputs:
   results/forecasting/forecasts.parquet   long-form: model, origin, region, horizon,
                                           y_hat, q_lo, q_hi (NaN for point models),
                                           y_true
-  results/forecasting/table_metrics.csv   metrics per (model, horizon) and overall
+  results/forecasting/forecast_metrics.csv   metrics per (model, horizon) and overall
 
 Rolling-origin protocol:
   - Origins every ORIGIN_STRIDE=14 days from test_start + LOOKBACK to
@@ -598,7 +598,7 @@ def run_pinn_ablations_main() -> int:
         print(f"  -> {out_path}  ({len(fc)} forecasts, {time.time() - t_start:.1f}s)")
 
     print("\nAblation forecasts written. Rebuild Table 1 with:")
-    print("  ukci-forecast-evaluation table1")
+    print("  ukci-forecast-evaluation summary")
     return 0
 
 

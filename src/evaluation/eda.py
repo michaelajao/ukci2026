@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Exploratory data analysis for the UKCI 2026 NHS critical-care surge paper.
+"""Exploratory data analysis for the UKCI 2026 NHS critical-care surge pipeline.
 
 Loads the tidy regional CSV produced by ``ukci-build-regional-dataset``
-and emits paper-quality figures into ``figures/`` plus summary tables into
+and emits publication-quality figures into ``figures/`` plus summary tables into
 ``results/eda/``.
 
 Artefacts produced:
 
 ==================================  ============================================
-Output                              Role in the paper
+Output                              Role in the study
 ==================================  ============================================
 fig_regional_mv_beds.{pdf,png}      §5 — headline MV-bed time series (target)
 fig_metric_overview.{pdf,png}       §3 — all four observed metrics per region
@@ -21,8 +21,8 @@ fig_regional_acf.{pdf,png}          §4 / appendix — per-region ACF (robustnes
 fig_lead_lag.{pdf,png}              §4 — admissions→MV beds lag structure
 fig_weekly_seasonality.{pdf,png}    §4 — day-of-week reporting effect
 fig_region_context.{pdf,png}        §3 / §5 — population + peak MV per region
-table_regional_summary.csv          Appendix Table A1 — region × wave statistics
-table_wave_summary.csv              §5 inline numbers — per-wave aggregate stats
+regional_summary.csv          Appendix Table A1 — region × wave statistics
+wave_summary.csv              §5 inline numbers — per-wave aggregate stats
 ==================================  ============================================
 
 Run from the repository root:
@@ -49,7 +49,7 @@ from evaluation.figures import (  # noqa: E402
     FULL_WIDTH_IN,
     REGION_PALETTE,
     WAVE_PERIODS,
-    apply_paper_style,
+    apply_publication_style,
     overlay_wave_bands,
     save_figure,
 )
@@ -737,7 +737,7 @@ def table_regional_summary(df: pd.DataFrame) -> Path:
         .reset_index()
     )
     EDA_OUT.mkdir(parents=True, exist_ok=True)
-    out_path = EDA_OUT / "table_regional_summary.csv"
+    out_path = EDA_OUT / "regional_summary.csv"
     summary.to_csv(out_path, index=False)
     return out_path
 
@@ -763,7 +763,7 @@ def table_wave_summary(df: pd.DataFrame) -> Path:
         .reset_index()
     )
     EDA_OUT.mkdir(parents=True, exist_ok=True)
-    out_path = EDA_OUT / "table_wave_summary.csv"
+    out_path = EDA_OUT / "wave_summary.csv"
     summary.to_csv(out_path, index=False)
     return out_path
 
@@ -779,7 +779,7 @@ def main() -> int:
             f"Tidy regional CSV not found at {REGIONAL_CSV}. "
             f"Run ukci-build-regional-dataset first."
         )
-    apply_paper_style()
+    apply_publication_style()
     df = load_tidy_csv()
     print(f"Loaded {len(df):,} rows from {REGIONAL_CSV.relative_to(REPO_ROOT)}")
 

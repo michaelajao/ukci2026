@@ -1,9 +1,9 @@
-"""Forecast evaluation artifacts for the UKCI 2026 paper.
+"""Forecast evaluation artifacts for the UKCI 2026 pipeline.
 
-This module owns the paper-facing forecast evaluation pipeline:
+This module owns the forecast evaluation pipeline:
 
 - metric CSVs from rolling-origin forecasts;
-- paper Table 1 CSV from saved model/ablation forecasts;
+- headline point-forecast summary CSV from saved model/ablation forecasts;
 - the regional forecast panel figure.
 
 The primitive metric definitions remain in :mod:`evaluation.forecast_metrics`.
@@ -149,7 +149,7 @@ def metric_table_from_detail(detail):
 
 
 def build_metric_tables():
-    """Write ``table_metrics_detail.csv`` and ``table_metrics.csv``."""
+    """Write ``forecast_metrics_detail.csv`` and ``forecast_metrics.csv``."""
     if not FORECASTS.exists():
         raise FileNotFoundError(f"{FORECASTS} not found. Run ukci-train-forecasters first.")
     import pandas as pd
@@ -158,15 +158,15 @@ def build_metric_tables():
     detail = metric_detail_from_forecasts(forecasts)
     table = metric_table_from_detail(detail)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    detail.to_csv(OUT_DIR / "table_metrics_detail.csv", index=False)
-    table.to_csv(OUT_DIR / "table_metrics.csv", index=False)
+    detail.to_csv(OUT_DIR / "forecast_metrics_detail.csv", index=False)
+    table.to_csv(OUT_DIR / "forecast_metrics.csv", index=False)
     return detail, table
 
 
 def build_metric_tables_main() -> int:
     detail, table = build_metric_tables()
-    print(f"Wrote {OUT_DIR / 'table_metrics_detail.csv'} ({len(detail):,} rows)")
-    print(f"Wrote {OUT_DIR / 'table_metrics.csv'} ({len(table):,} rows)")
+    print(f"Wrote {OUT_DIR / 'forecast_metrics_detail.csv'} ({len(detail):,} rows)")
+    print(f"Wrote {OUT_DIR / 'forecast_metrics.csv'} ({len(table):,} rows)")
     print()
     print(table[table["horizon"] == "all"].set_index("model").round(3).to_string())
     return 0
@@ -187,7 +187,7 @@ def load_all_model_forecasts():
         df["model"] = model_key
         parts.append(df)
     if missing:
-        print("WARN: missing forecast files; omitted from paper table:")
+        print("WARN: missing forecast files; omitted from summary table:")
         for filename in missing:
             print(f"  - {filename}")
     if not parts:
@@ -195,8 +195,8 @@ def load_all_model_forecasts():
     return pd.concat(parts, ignore_index=True)
 
 
-def build_paper_table(detail):
-    """Build paper Table 1 from metric detail rows."""
+def build_summary_table(detail):
+    """Build the headline point-forecast summary from metric detail rows."""
     agg = (
         detail.groupby(["model", "horizon"])
         .agg(rmse=("rmse", "mean"), mae=("mae", "mean"), under_rate=("underestimation_rate", "mean"))
@@ -228,8 +228,8 @@ def build_paper_table(detail):
     return pd.DataFrame(rows)
 
 
-def format_paper_table_csv(table):
-    """Round and stringify the paper table for direct manuscript reading."""
+def format_summary_table_csv(table):
+    """Round and stringify the summary table for direct reading."""
     out = table.copy()
     numeric_cols = ["RMSE h=7", "RMSE h=14", "RMSE h=21", "RMSE h=28", "MAE h=14"]
     for col in numeric_cols:
@@ -238,30 +238,30 @@ def format_paper_table_csv(table):
     return out
 
 
-def build_paper_table1():
-    """Write the paper-ready forecast CSV from saved model outputs."""
+def build_point_forecast_summary():
+    """Write the headline forecast summary CSV from saved model outputs."""
     forecasts = load_all_model_forecasts()
     detail = metric_detail_from_forecasts(forecasts)
-    table = build_paper_table(detail)
-    formatted = format_paper_table_csv(table).drop(columns=["model_key"])
-    formatted.to_csv(OUT_DIR / "table1_paper.csv", index=False)
+    table = build_summary_table(detail)
+    formatted = format_summary_table_csv(table).drop(columns=["model_key"])
+    formatted.to_csv(OUT_DIR / "point_forecast_summary.csv", index=False)
     return formatted
 
 
-def build_paper_table1_main() -> int:
-    table = build_paper_table1()
-    print(f"Wrote {OUT_DIR / 'table1_paper.csv'}")
+def build_point_forecast_summary_main() -> int:
+    table = build_point_forecast_summary()
+    print(f"Wrote {OUT_DIR / 'point_forecast_summary.csv'}")
     print()
     print(table.to_string(index=False))
     return 0
 
 
 def _metric_for_origin_sample(sub, sample_origins, metric: str) -> float:
-    """Compute a paper-table metric after resampling rolling origins.
+    """Compute a summary-table metric after resampling rolling origins.
 
     Origins are the independent resampling unit. For RMSE and MAE we first
     compute each region's metric across the sampled origins, then macro-average
-    across regions, matching the paper table's region-level aggregation.
+    across regions, matching the summary table's region-level aggregation.
     Underestimation is averaged across all sampled region-origin pairs.
     """
     import numpy as np
@@ -432,15 +432,15 @@ def build_uncertainty_tables():
     uncertainty = pd.DataFrame(rows)
     tests = _paired_tests_against_comparators(forecasts)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    uncertainty.to_csv(OUT_DIR / "table1_uncertainty.csv", index=False)
-    tests.to_csv(OUT_DIR / "table1_paired_tests.csv", index=False)
+    uncertainty.to_csv(OUT_DIR / "point_forecast_uncertainty.csv", index=False)
+    tests.to_csv(OUT_DIR / "paired_significance_tests.csv", index=False)
     return uncertainty, tests
 
 
 def build_uncertainty_tables_main() -> int:
     uncertainty, tests = build_uncertainty_tables()
-    print(f"Wrote {OUT_DIR / 'table1_uncertainty.csv'} ({len(uncertainty):,} rows)")
-    print(f"Wrote {OUT_DIR / 'table1_paired_tests.csv'} ({len(tests):,} rows)")
+    print(f"Wrote {OUT_DIR / 'point_forecast_uncertainty.csv'} ({len(uncertainty):,} rows)")
+    print(f"Wrote {OUT_DIR / 'paired_significance_tests.csv'} ({len(tests):,} rows)")
     print()
     print(tests.round(4).to_string(index=False))
     return 0
@@ -456,11 +456,11 @@ def build_forecast_panel_figure(horizon: int = 14) -> Path:
         FORECASTER_STYLES,
         FULL_WIDTH_IN,
         TRUTH_COLOUR,
-        apply_paper_style,
+        apply_publication_style,
         save_figure,
     )
 
-    apply_paper_style()
+    apply_publication_style()
     forecasts_path = OUT_DIR / "forecasts.parquet"
     daily_path = ROOT / "data" / "processed" / "regional_daily.csv"
 
@@ -559,12 +559,12 @@ def build_pinn_arima_ci_figure() -> Path:
     from evaluation.figures import (
         FORECASTER_STYLES,
         FULL_WIDTH_IN,
-        apply_paper_style,
+        apply_publication_style,
         save_figure,
     )
 
-    uncertainty_path = OUT_DIR / "table1_uncertainty.csv"
-    tests_path = OUT_DIR / "table1_paired_tests.csv"
+    uncertainty_path = OUT_DIR / "point_forecast_uncertainty.csv"
+    tests_path = OUT_DIR / "paired_significance_tests.csv"
     if not uncertainty_path.exists() or not tests_path.exists():
         build_uncertainty_tables()
     else:
@@ -581,7 +581,7 @@ def build_pinn_arima_ci_figure() -> Path:
         ("pinn_gru", "PinnGRU", style_by_model["pinn_gru"]),
     ]
 
-    apply_paper_style()
+    apply_publication_style()
     fig, (ax_rmse, ax_diff) = plt.subplots(
         1, 2, figsize=(FULL_WIDTH_IN, 3.2), layout="constrained",
         gridspec_kw={"width_ratios": [1.05, 1.0]},
@@ -648,16 +648,16 @@ def build_pinn_arima_ci_figure_main() -> int:
     return 0
 
 
-def print_paper_sources() -> int:
-    """Print the CSVs that should be treated as manuscript source tables."""
+def print_source_tables() -> int:
+    """Print the CSVs that back the headline result tables."""
     sources = [
-        OUT_DIR / "table1_paper.csv",
-        OUT_DIR / "table_quantile_metrics.csv",
-        OUT_DIR / "table_metrics.csv",
-        OUT_DIR / "table_metrics_detail.csv",
-        OUT_DIR / "table1_uncertainty.csv",
-        OUT_DIR / "table1_paired_tests.csv",
-        ROOT / "results" / "allocation" / "table2_allocation.csv",
+        OUT_DIR / "point_forecast_summary.csv",
+        OUT_DIR / "quantile_calibration_metrics.csv",
+        OUT_DIR / "forecast_metrics.csv",
+        OUT_DIR / "forecast_metrics_detail.csv",
+        OUT_DIR / "point_forecast_uncertainty.csv",
+        OUT_DIR / "paired_significance_tests.csv",
+        ROOT / "results" / "allocation" / "allocation_policy_comparison.csv",
     ]
     for path in sources:
         status = "exists" if path.exists() else "missing"
@@ -672,7 +672,7 @@ def main(argv: list[str] | None = None) -> int:
         nargs="?",
         default="all",
         choices=(
-            "all", "metrics", "table1", "uncertainty", "figure",
+            "all", "metrics", "summary", "uncertainty", "figure",
             "pinn-arima-ci", "sources",
         ),
         help="Forecast evaluation artifact to build or inspect.",
@@ -681,8 +681,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.artifact == "metrics":
         return build_metric_tables_main()
-    if args.artifact == "table1":
-        return build_paper_table1_main()
+    if args.artifact == "summary":
+        return build_point_forecast_summary_main()
     if args.artifact == "figure":
         return build_forecast_figure_main()
     if args.artifact == "pinn-arima-ci":
@@ -690,10 +690,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.artifact == "uncertainty":
         return build_uncertainty_tables_main()
     if args.artifact == "sources":
-        return print_paper_sources()
+        return print_source_tables()
 
     build_metric_tables_main()
-    build_paper_table1_main()
+    build_point_forecast_summary_main()
     build_uncertainty_tables_main()
     build_pinn_arima_ci_figure_main()
     build_forecast_figure_main()

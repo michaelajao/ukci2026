@@ -12,7 +12,7 @@ inter-region transfers with great-circle distance × 1.3 cost, 20% budget):
     6. Risk-averse LP (scenario-weighted objective + q90 tail penalty)
 
 Outputs (via ``ukci-run-allocation-e2``):
-    results/allocation/table2_allocation.csv      one row per policy
+    results/allocation/allocation_policy_comparison.csv      one row per policy
     results/allocation/e2_per_region_b.csv        per-region b allocations
 
 Figures (via ``ukci-build-allocation-figures``):
@@ -109,8 +109,8 @@ def _cheap_policy_solutions(p):
     ]
 
 
-def _table2_policy_solutions(p):
-    """Exact and heuristic policies for tighter-budget manuscript panels."""
+def _headline_policy_solutions(p):
+    """Exact and heuristic policies for the tighter-budget comparisons."""
     return [
         status_quo(p),
         population_proportional(p),
@@ -193,10 +193,10 @@ def main() -> int:
         formatters={c: "{:5.1f}".format for c in alloc.columns if c != "policy"},
     ))
 
-    df.to_csv(OUT_DIR / "table2_allocation.csv", index=False)
+    df.to_csv(OUT_DIR / "allocation_policy_comparison.csv", index=False)
     alloc.to_csv(OUT_DIR / "e2_per_region_b.csv", index=False)
 
-    print(f"Wrote {OUT_DIR / 'table2_allocation.csv'}")
+    print(f"Wrote {OUT_DIR / 'allocation_policy_comparison.csv'}")
     print(f"Wrote {OUT_DIR / 'e2_per_region_b.csv'}")
     return 0
 
@@ -216,8 +216,8 @@ HEATMAP_POLICY_ORDER = (
     "Risk-averse LP ($\\lambda_3{=}1$)",
 )
 
-# Policies reported at seven-region scale, where the LP is exact.
-PAPER_POLICY_ORDER = (
+# Headline policies reported at seven-region scale, where the LP is exact.
+HEADLINE_POLICY_ORDER = (
     "Status quo (no surge)",
     "Population-proportional",
     "Demand-proportional",
@@ -232,13 +232,13 @@ def _figure_allocation_heatmap() -> "Path":
     import matplotlib.pyplot as plt
     import numpy as np
     from evaluation.figures import (
-        FULL_WIDTH_IN, apply_paper_style, save_figure,
+        FULL_WIDTH_IN, apply_publication_style, save_figure,
     )
 
-    apply_paper_style()
+    apply_publication_style()
     alloc = pd.read_csv(OUT_DIR / "e2_per_region_b.csv")
     alloc = alloc.set_index("policy")
-    alloc = alloc.loc[[p for p in PAPER_POLICY_ORDER if p in alloc.index]]
+    alloc = alloc.loc[[p for p in HEADLINE_POLICY_ORDER if p in alloc.index]]
 
     regions = list(alloc.columns)
     values = alloc.to_numpy(dtype=float).T  # (R, P)
@@ -277,13 +277,13 @@ def _figure_alloc_budget() -> "Path":
     frontier vs the surge budget."""
     import matplotlib.pyplot as plt
     from matplotlib.gridspec import GridSpec
-    from evaluation.figures import apply_paper_style, save_figure
+    from evaluation.figures import apply_publication_style, save_figure
 
-    apply_paper_style()
+    apply_publication_style()
     alloc = pd.read_csv(OUT_DIR / "e2_per_region_b.csv").set_index("policy")
     # Status quo is omitted: its allocation is identically zero by
     # definition, and it appears in neither Table 2 nor panel (c).
-    alloc = alloc.loc[[p for p in PAPER_POLICY_ORDER
+    alloc = alloc.loc[[p for p in HEADLINE_POLICY_ORDER
                        if p in alloc.index and p != "Status quo (no surge)"]]
     regions = list(alloc.columns)
     values = alloc.to_numpy(dtype=float).T  # (R, P)
@@ -357,10 +357,10 @@ def _figure_budget_tradeoff() -> "Path":
     scenario-weighted and worst-case unmet demand against the surge budget."""
     import matplotlib.pyplot as plt
     from evaluation.figures import (
-        FULL_WIDTH_IN, apply_paper_style, save_figure,
+        FULL_WIDTH_IN, apply_publication_style, save_figure,
     )
 
-    apply_paper_style()
+    apply_publication_style()
     sweep = pd.read_csv(OUT_DIR / "e6_budget_sweep.csv")
     sweep = sweep.sort_values("budget_fraction")
     x = sweep["budget_fraction"] * 100.0
@@ -570,7 +570,7 @@ def run_allocation_sweeps_main() -> int:
 
 
 def build_all_origin_policy_distribution() -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Evaluate the manuscript allocation policies at every full-coverage test
+    """Evaluate the headline allocation policies at every full-coverage test
     origin. Uses the Table-2 policy set (adds greedy shortage-first to the
     cheap policies) so the all-origin panel reports the same policies as the
     single peak-origin panel; greedy is the slow one (~10 s/origin)."""
@@ -581,7 +581,7 @@ def build_all_origin_policy_distribution() -> tuple[pd.DataFrame, pd.DataFrame]:
     rows = []
     for origin in origins:
         p = load_allocation_problem(origin=origin)
-        for sol in _table2_policy_solutions(p):
+        for sol in _headline_policy_solutions(p):
             rows.append(_solution_row(sol, origin=origin))
 
     detail = pd.DataFrame(rows)
@@ -611,7 +611,7 @@ def build_tighter_budget_policy_tables() -> pd.DataFrame:
     rows = []
     for frac in REVISION_BUDGET_FRACTIONS:
         p = load_allocation_problem(budget_fraction=frac)
-        for sol in _table2_policy_solutions(p):
+        for sol in _headline_policy_solutions(p):
             rows.append(_solution_row(sol, origin=p.origin, budget_fraction=frac))
     table = pd.DataFrame(rows)
     table.to_csv(OUT_DIR / "e8_budget_policy_comparison.csv", index=False)
@@ -628,7 +628,7 @@ def build_tau_policy_comparison() -> pd.DataFrame:
             p = load_allocation_problem(
                 max_travel_min=float(tau), budget_fraction=frac,
             )
-            for sol in _table2_policy_solutions(p):
+            for sol in _headline_policy_solutions(p):
                 row = _solution_row(sol, origin=p.origin, budget_fraction=frac)
                 row["tau_min"] = float(tau)
                 rows.append(row)
@@ -645,7 +645,7 @@ def build_transfer_cap_policy_comparison() -> pd.DataFrame:
     rows = []
     for cap in REVISION_TRANSFER_CAPS:
         p = load_allocation_problem(max_transfer_out=cap)
-        for sol in _table2_policy_solutions(p):
+        for sol in _headline_policy_solutions(p):
             row = _solution_row(sol, origin=p.origin, budget_fraction=0.20)
             row["transfer_cap"] = np.nan if cap is None else float(cap)
             rows.append(row)
@@ -706,7 +706,7 @@ def build_stress_forecast_robustness() -> pd.DataFrame:
 
 
 def run_allocation_revision_main() -> int:
-    """Run compact revision analyses requested by the manuscript review."""
+    """Run the compact revision analyses (E5 stress, E8-E10 sweeps)."""
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     print("=== E7: all-origin exact/closed-form policy distribution ===")
     detail, summary = build_all_origin_policy_distribution()
