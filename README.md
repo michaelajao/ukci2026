@@ -22,9 +22,9 @@ python -m venv .venv
 source .venv/bin/activate            # Windows PowerShell: .venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"
 
-# 2. Download NHS data (one-off, ~50 MB total)
+# 2. Download NHS data (one-off, ~2 MB total)
 ukci-download-nhs-data
-ukci-download-supporting-data        # ONS populations, geography
+ukci-download-supporting-data        # ONS mid-2021 population estimates
 
 # 3. Build the regional tidy dataset and features
 ukci-build-regional-dataset
@@ -52,12 +52,6 @@ the quantile metrics in `results/forecasting/table_quantile_metrics.csv`, and
 the allocation results in `results/allocation/table2_allocation.csv`. Detailed
 regional metrics remain available for supplementary analysis.
 
-When running checks without activating the environment first, use:
-
-```bash
-python -m compileall -q src
-```
-
 ## Command reference
 
 All `ukci-*` console commands are declared in `pyproject.toml` and become
@@ -66,12 +60,12 @@ available after the editable install.
 | Command | Purpose |
 |---|---|
 | `ukci-download-nhs-data` | Download NHS England COVID-19 hospital-activity archives |
-| `ukci-download-supporting-data` | Download ONS populations and geography |
+| `ukci-download-supporting-data` | Download ONS mid-2021 population estimates |
 | `ukci-build-regional-dataset` | Build the tidy per-region daily dataset |
-| `ukci-build-regional-features` | Derive modelling features (lags, slopes, splits) |
+| `ukci-build-regional-features` | Aggregate ONS populations to NHS-region totals |
 | `ukci-train-forecasters` | Train PINN-SEIRD and baseline forecasters |
 | `ukci-run-pinn-ablations` | Run the PINN ablation study |
-| `ukci-forecast-evaluation` | Rebuild forecast metrics, Table 1, and figures |
+| `ukci-forecast-evaluation` | Rebuild forecast metrics, headline tables, and figures |
 | `ukci-run-eda` | Generate exploratory-data-analysis figures |
 | `ukci-run-allocation-e2` | Run the core allocation experiment (deterministic + risk-averse LP + baselines) |
 | `ukci-run-allocation-sweeps` | Budget / travel-cap / tail-weight sensitivity sweeps |
@@ -89,9 +83,8 @@ gitignored.
 ```text
 ukci2026/
 |-- data/
-|   |-- raw/                       # NHS XLSX archives (gitignored, downloaded)
-|   |-- processed/                 # Tidy regional CSV
-|   `-- graphs/                    # NHS region adjacency, distance, correlation
+|   |-- raw/                       # NHS + ONS source files (gitignored, downloaded)
+|   `-- processed/                 # Tidy regional daily CSV + population totals
 |-- src/                           # Python packages and command entry points
 |   |-- data/                      # NHS ingestion, splits, scenarios
 |   |-- forecasting/               # PINN-SEIRD, multi-quantile loss, baselines
@@ -102,31 +95,6 @@ ukci2026/
 |-- figures/                       # Output figures (committed)
 |-- pyproject.toml
 `-- README.md
-```
-
-## Development workflow
-
-### Branching
-
-- `main` - protected, only via PR
-- `forecast/<feature>` - forecasting experiments
-- `opt/<feature>` - optimisation experiments
-- `data/<task>` - data ingestion and processing
-
-### Commits
-
-Conventional Commits format:
-
-- `feat(forecast): add PINN-SEIRD per-region module`
-- `fix(data): handle NHS region renaming in 2022-08 archive`
-- `experiment(opt): budget sweep at tighter fractions`
-- `docs(method): expand multi-quantile loss derivation`
-
-### Checks
-
-```bash
-python -m compileall -q src
-ruff check src
 ```
 
 ## License
