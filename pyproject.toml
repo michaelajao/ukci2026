@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "critical-care-surge"
 version = "0.1.0"
-description = "Multi-quantile forecasting and robust surge allocation for NHS England critical care (UKCI 2026)"
+description = "Multi-quantile forecasting and risk-averse surge allocation for NHS England critical care (UKCI 2026)"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -20,7 +20,7 @@ keywords = [
     "physics-informed neural networks",
     "epidemic forecasting",
     "quantile forecasting",
-    "robust optimization",
+    "risk-averse optimization",
     "NHS",
     "critical care",
 ]
@@ -66,7 +66,7 @@ prophet = ["prophet>=1.1"]
 
 [project.urls]
 Repository = "https://github.com/michaelajao/ukci2026"
-Documentation = "https://github.com/michaelajao/ukci2026/tree/main/docs"
+Documentation = "https://github.com/michaelajao/ukci2026#readme"
 
 [project.scripts]
 ukci-forecast-evaluation = "evaluation.forecast_evaluation:main"
@@ -115,7 +115,6 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-testpaths = ["tests"]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration (deselect with '-m \"not integration\"')",

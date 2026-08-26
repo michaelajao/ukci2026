@@ -10,7 +10,8 @@ Modelling, Coventry University)
 
 This repository implements the full forecast-to-decision pipeline: per-region
 physics-informed neural epidemic forecasting, demand scenario generation, and
-robust optimisation for NHS England critical-care surge capacity planning.
+risk-averse scenario-weighted optimisation for NHS England critical-care surge
+capacity planning.
 
 ## Quickstart
 
@@ -88,7 +89,7 @@ ukci2026/
 |-- src/                           # Python packages and command entry points
 |   |-- data/                      # NHS ingestion, splits, scenarios
 |   |-- forecasting/               # PINN-SEIRD, multi-quantile loss, baselines
-|   |-- optimization/              # LP, risk-averse LP, heuristics, sensitivity sweeps
+|   |-- optimization/              # LP, risk-averse LP, sensitivity sweeps
 |   |-- evaluation/                # Forecast and allocation metrics, EDA
 |   `-- utils.py                   # Shared infrastructure helpers
 |-- results/                       # Output tables and metrics (committed)
